@@ -24,7 +24,7 @@ const App: React.FC = () => {
 
   const fetchData = async () => {
     const { data, error } = await supabase
-      .from('your-table')
+      .from('users')
       .select('*');
 
 
