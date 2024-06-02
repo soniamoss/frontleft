@@ -7,6 +7,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { supabase } from '../../supabaseClient';
 import HomeScreen from '../HomeScreen';
+import PhoneLoginScreen from '../../screens/PhoneLoginScreen';
 
 
 // Initialize Stack Navigator
@@ -38,7 +39,8 @@ const App: React.FC = () => {
 
   return (
     <NavigationContainer independent={true}>
-      <Stack.Navigator initialRouteName="Home">
+      <Stack.Navigator initialRouteName="PhoneLogin">
+      <Stack.Screen name="PhoneLogin" component={PhoneLoginScreen} options={{ title: 'Doost' }} />
         <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
         <Stack.Screen name="Data" options={{ title: 'Data from Supabase' }}>
           {() => (

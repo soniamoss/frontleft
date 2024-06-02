@@ -14,6 +14,7 @@ import Constants from 'expo-constants';
 // const SUPABASE_KEY = Constants.manifest2.extra.SUPABASE_KEY;
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY;
+const SUPABASE_TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER;
 
 
 
