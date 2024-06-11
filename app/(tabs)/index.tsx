@@ -5,9 +5,14 @@ import { View, Text, StyleSheet, Alert } from 'react-native';
 import { registerRootComponent } from 'expo';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { supabase } from '../../supabaseClient';
 import HomeScreen from '../HomeScreen';
 import PhoneLoginScreen from '../../screens/PhoneLoginScreen';
+import firstname from '../../screens/firstname';
+import lastname from '../../screens/lastname';
+import email from '../../screens/email';
+
 
 
 // Initialize Stack Navigator
@@ -27,8 +32,6 @@ const App: React.FC = () => {
     const { data, error } = await supabase
       .from('users')
       .select('*');
-
-
     if (error) {
       console.error('Error fetching data:', error);
     } else {
@@ -37,10 +40,14 @@ const App: React.FC = () => {
   };
 
 
+
   return (
     <NavigationContainer independent={true}>
-      <Stack.Navigator initialRouteName="PhoneLogin">
-      <Stack.Screen name="PhoneLogin" component={PhoneLoginScreen} options={{ title: 'Doost' }} />
+      <Stack.Navigator initialRouteName="email">
+      <Stack.Screen name="email" component={email} options={{ title: 'Doost'}} />
+      <Stack.Screen name="firstname" component={firstname} options={{ title: 'Doost'}} />
+      <Stack.Screen name="lastname" component={lastname} options={{ title: 'Doost'}} />
+      <Stack.Screen name="PhoneLogin" component={PhoneLoginScreen} options={{ title: 'Doost'}} />
         <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
         <Stack.Screen name="Data" options={{ title: 'Data from Supabase' }}>
           {() => (
@@ -72,10 +79,3 @@ registerRootComponent(App);
 
 
 export default App;
-
-
-
-
-
-
-
