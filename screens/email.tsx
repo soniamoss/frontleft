@@ -9,13 +9,19 @@ const EmailScreen: React.FC = () => {
 
   const handleNext = () => {
     // Navigate to the last name screen passing the first name
-    //navigation.navigate('LastNameScreen', { firstName });
+    navigation.navigate('UsernameScreen');
+  };
+  const handleExit = () => {
+    navigation.navigate('IntroScreen');
   };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={24} color="black" />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.closeButton} onPress={handleExit}>
+        <Ionicons name="close" size={24} color="black" />
       </TouchableOpacity>
       <Text style={styles.text}>What's your email?</Text>
       <TextInput
@@ -25,7 +31,9 @@ const EmailScreen: React.FC = () => {
         onChangeText={setEmail}
       />
       <Text style={styles.text}>How can we reach you</Text>
-      <Button title="Continue" onPress={handleNext} />
+      <TouchableOpacity style={styles.button} onPress={handleNext}>
+        <Text style={styles.buttonText}>Continue</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -40,10 +48,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 20,
     fontWeight: 'bold',
+    fontFamily:'poppins',
+    color:'#3F407C',
   },
   backButton: {
     position: 'absolute',
-    top: 20,
+    top: 60,
     left: 20,
   },
   input: {
@@ -51,6 +61,25 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     marginVertical: 10,
+  },
+  button: {
+    position: 'absolute',
+    bottom: 20,
+    width: '60%',
+    paddingVertical: 15,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 30, 
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#3D4353',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
   },
 });
 

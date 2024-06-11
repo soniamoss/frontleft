@@ -9,9 +9,11 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { supabase } from '../../supabaseClient';
 import HomeScreen from '../HomeScreen';
 import PhoneLoginScreen from '../../screens/PhoneLoginScreen';
-import firstname from '../../screens/firstname';
-import lastname from '../../screens/lastname';
-import email from '../../screens/email';
+import IntroScreen from '../../screens/intro';
+import FirstNameScreen from '../../screens/firstname';
+import LastNameScreen from '../../screens/lastname';
+import EmailScreen from '../../screens/email';
+import UsernameScreen from '../../screens/username';
 
 
 
@@ -43,11 +45,13 @@ const App: React.FC = () => {
 
   return (
     <NavigationContainer independent={true}>
-      <Stack.Navigator initialRouteName="email">
-      <Stack.Screen name="email" component={email} options={{ title: 'Doost'}} />
-      <Stack.Screen name="firstname" component={firstname} options={{ title: 'Doost'}} />
-      <Stack.Screen name="lastname" component={lastname} options={{ title: 'Doost'}} />
-      <Stack.Screen name="PhoneLogin" component={PhoneLoginScreen} options={{ title: 'Doost'}} />
+      <Stack.Navigator initialRouteName="IntroScreen">
+      <Stack.Screen name="IntroScreen" component={IntroScreen} options={{ headerShown: false}} />
+      <Stack.Screen name="PhoneLoginScreen" component={PhoneLoginScreen} options={{ headerShown: false}} />
+      <Stack.Screen name="FirstNameScreen" component={FirstNameScreen} options={{ headerShown: false}} />
+      <Stack.Screen name="LastNameScreen" component={LastNameScreen} options={{ headerShown: false}} />
+      <Stack.Screen name="EmailScreen" component={EmailScreen} options={{ headerShown: false}} />
+      <Stack.Screen name="UsernameScreen" component={UsernameScreen} options={{ headerShown: false}} />
         <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
         <Stack.Screen name="Data" options={{ title: 'Data from Supabase' }}>
           {() => (

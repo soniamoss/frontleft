@@ -4,9 +4,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert,TouchableOpacity} from 'react-native';
 import { supabase } from '../supabaseClient';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-
-
+import {useNavigation } from '@react-navigation/native';
 
 
 const PhoneLoginScreen: React.FC = () => {
@@ -32,16 +30,28 @@ const PhoneLoginScreen: React.FC = () => {
       Alert.alert('Error', error.message);
     } else {
       Alert.alert('Success', 'Phone number verified!');
-      //navigation.navigate('FirstNameScreen');
+      navigation.navigate('FirstNameScreen');
     }
   };
 
-  console.log('PhoneLoginScreen rendered'); // checks if its rendering 
+  const handleBack = () => {
+    navigation.goBack(); // Navigate back to the previous screen
+  };
+
+
+  const handleExit = () => {
+    navigation.navigate('IntroScreen');
+  };
+
+  //console.log('PhoneLoginScreen rendered'); // checks if its rendering 
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
         <Ionicons name="arrow-back" size={24} color="black" />
+      </TouchableOpacity>  
+      <TouchableOpacity style={styles.closeButton} onPress={handleExit}>
+        <Ionicons name="close" size={24} color="black" />
       </TouchableOpacity>
       {!isOtpSent ? (
         <>
@@ -53,7 +63,9 @@ const PhoneLoginScreen: React.FC = () => {
             onChangeText={setPhone}
             keyboardType="phone-pad"
           />
-          <Button title="Send Code" onPress={handleSendOtp} />
+          <TouchableOpacity style={styles.button} onPress={handleSendOtp}>
+        <Text style={styles.buttonText}>Send Verification Text</Text>
+          </TouchableOpacity>
         </>
       ) : (
         <>
@@ -65,7 +77,9 @@ const PhoneLoginScreen: React.FC = () => {
             onChangeText={setOtp}
             keyboardType="number-pad"
           />
-          <Button title="Confirm" onPress={handleVerifyOtp} />
+          <TouchableOpacity style={styles.button} onPress={handleVerifyOtp}>
+        <Text style={styles.buttonText}>Confirm</Text>
+          </TouchableOpacity>
         </>
       )}
     </View>
@@ -77,15 +91,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF', 
+
   },
   text: {
     marginBottom: 30, // Adjust as needed
     fontSize: 20, // Adjust font size
     fontWeight: 'bold', // Make text bold
+    fontFamily:'poppins',
+    color:'#3F407C',
   },
   backButton: {
     position: 'absolute',
-    top: 20, // Adjust as necessary
+    top: 60, // Adjust as necessary
     left: 20, // Adjust as necessary
   },
   input: {
@@ -93,6 +111,25 @@ const styles = StyleSheet.create({
     padding: 10,
     borderWidth: 1,
     marginVertical: 10,
+  },
+  button: {
+    position: 'absolute',
+    bottom: 260,
+    width: '60%',
+    paddingVertical: 15,
+    backgroundColor: '#F5F5F5',
+    borderRadius: 30, 
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#3D4353',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 60,
+    right: 20,
   },
 });
 

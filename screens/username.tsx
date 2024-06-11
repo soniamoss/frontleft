@@ -3,14 +3,15 @@ import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'rea
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-const LastNameScreen: React.FC = () => {
-  const [lastName, setlastName] = useState('');
+const UsernameScreen: React.FC = () => {
+  const [username, setUsername] = useState('');
   const navigation = useNavigation();
 
   const handleNext = () => {
     // Navigate to the last name screen passing the first name
-    navigation.navigate('EmailScreen');
+    //navigation.navigate('LastNameScreen', { firstName });
   };
+
   const handleExit = () => {
     navigation.navigate('IntroScreen');
   };
@@ -23,18 +24,17 @@ const LastNameScreen: React.FC = () => {
       <TouchableOpacity style={styles.closeButton} onPress={handleExit}>
         <Ionicons name="close" size={24} color="black" />
       </TouchableOpacity>
-      <Text style={styles.text}>What's your last name?</Text>
+      <Text style={styles.text}>Create a username</Text>
       <TextInput
         style={styles.input}
-        placeholder="Last Name"
-        value={lastName}
-        onChangeText={setlastName}
+        placeholder="username"
+        value={username} 
+        onChangeText={setUsername}
       />
-      <Text style={styles.text}>Your family's claim to fame</Text>
+      <Text style={styles.text}>Have fun with it</Text>
       <TouchableOpacity style={styles.button} onPress={handleNext}>
         <Text style={styles.buttonText}>Continue</Text>
-      </TouchableOpacity>
-    </View>
+      </TouchableOpacity>    </View>
   );
 };
 
@@ -43,14 +43,12 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-   
   },
   text: {
     marginBottom: 10,
     fontSize: 20,
     fontWeight: 'bold',
-    fontFamily:'poppins',
-    color:'#3F407C',
+    color:'#3F407C'
   },
   backButton: {
     position: 'absolute',
@@ -84,4 +82,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LastNameScreen;
+export default UsernameScreen;
