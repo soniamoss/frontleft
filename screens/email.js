@@ -1,11 +1,11 @@
+import { StatusBar } from 'expo-status-bar';
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-const EmailScreen: React.FC = () => {
+const EmailScreen  = ({navigation}) => {
   const [email, setEmail] = useState('');
-  const navigation = useNavigation();
 
   const handleNext = () => {
     // Navigate to the last name screen passing the first name
@@ -23,14 +23,15 @@ const EmailScreen: React.FC = () => {
       <TouchableOpacity style={styles.closeButton} onPress={handleExit}>
         <Ionicons name="close" size={24} color="black" />
       </TouchableOpacity>
+      <Image source={require('../assets/images/postcard.png')} style={styles.image} />
       <Text style={styles.text}>What's your email?</Text>
       <TextInput
         style={styles.input}
-        placeholder="Email"
+        placeholder=""
         value={email}
         onChangeText={setEmail}
       />
-      <Text style={styles.text}>How can we reach you</Text>
+      <Text style={styles.textsmaller}>How can we reach you</Text>
       <TouchableOpacity style={styles.button} onPress={handleNext}>
         <Text style={styles.buttonText}>Continue</Text>
       </TouchableOpacity>
@@ -38,38 +39,55 @@ const EmailScreen: React.FC = () => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
   },
   text: {
-    marginBottom: 10,
-    fontSize: 20,
+    marginBottom: 30,
+    fontSize: 20, 
     fontWeight: 'bold',
-    fontFamily:'poppins',
-    color:'#3F407C',
+    fontFamily: 'poppins',
+    color: '#3F407C',
+    textAlign: 'left', // Align text center
+    bottom: 22,
+    left: 20,
+  },
+  textsmaller: {
+    fontSize: 11,
+    fontWeight: 'bold',
+    fontFamily: 'poppins',
+    textAlign: 'center',
+    color: '#3B429F',
+    marginBottom: 16,
+    zIndex: 1, // Ensure the text is above the image
   },
   backButton: {
     position: 'absolute',
     top: 60,
     left: 20,
+    zIndex: 1, // Ensure the button is above the image
   },
   input: {
-    width: '80%',
-    padding: 10,
-    borderWidth: 1,
-    marginVertical: 10,
+    width: '74%',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderColor: 'black',
+    marginBottom: 60,
   },
   button: {
-    position: 'absolute',
-    bottom: 20,
     width: '60%',
     paddingVertical: 15,
     backgroundColor: '#F5F5F5',
-    borderRadius: 30, 
+    borderRadius: 30,
     alignItems: 'center',
+    top:16,
+    zIndex: 1, // Ensure the button is above the image
   },
   buttonText: {
     color: '#3D4353',
@@ -80,6 +98,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 60,
     right: 20,
+    zIndex: 1, // Ensure the button is above the image
+  },
+  image: {
+    position: 'absolute',
+    width: 40, // Adjust width as needed
+    height: 40, // Adjust height as needed
+    top: 260, // Adjust top position as needed
+    left: 48,
+  
   },
 });
 

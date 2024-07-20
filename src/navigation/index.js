@@ -1,15 +1,23 @@
-// index.tsx
+// index.js
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
-import { registerRootComponent } from 'expo';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { supabase } from '../../supabaseClient';
-import HomeScreen from '../HomeScreen';
-import PhoneLoginScreen from '../../screens/PhoneLoginScreen';
 import IntroScreen from '../../screens/intro';
+
+import Home from '../../screens/Home';
+import HomeTab from '../screens/BottomTabs/HomeTab';
+import FriendsTab from '../screens/BottomTabs/FriendsTab';
+import ProfileTab from '../screens/BottomTabs/ProfileTab';
+
+
+
+
+import { registerRootComponent } from 'expo';
+import { supabase } from '../../supabaseClient';
+import PhoneLoginScreen from '../../screens/PhoneLogin';
 import FirstNameScreen from '../../screens/firstname';
 import LastNameScreen from '../../screens/lastname';
 import EmailScreen from '../../screens/email';
@@ -17,12 +25,47 @@ import UsernameScreen from '../../screens/username';
 
 
 
-// Initialize Stack Navigator
 const Stack = createStackNavigator();
+const Tab = createBottomTabNavigator();
 
 
-const App: React.FC = () => {
-  const [data, setData] = useState<any[]>([]);
+export default function AppNavigation(){
+  function MyStack() {
+    return (
+      <Stack.Navigator>
+        <Stack.Screen name="Tabs" component={MyTabs} />
+      </Stack.Navigator>
+    );
+  }
+
+
+  function MyTabs() {
+    return (
+      <Tab.Navigator>
+        <Tab.Screen name="HomeTab" component={HomeTab} />
+        <Tab.Screen name="FriendsTab" component={FriendsTab} />
+        <Tab.Screen name="ProfileTab" component={ProfileTab} />
+      </Tab.Navigator>
+    );
+  }
+
+
+  return(
+    <NavigationContainer>
+      <MyStack/>
+
+    </NavigationContainer>
+  )
+}
+
+
+/*
+// Initialize Stack Navigator
+
+
+
+const App = () => {
+  const [data, setData] = useState([]);
 
 
   useEffect(() => {
@@ -41,7 +84,7 @@ const App: React.FC = () => {
     }
   };
 
-
+console.log("hello");
 
   return (
     <NavigationContainer independent={true}>
@@ -83,3 +126,6 @@ registerRootComponent(App);
 
 
 export default App;
+
+
+*/

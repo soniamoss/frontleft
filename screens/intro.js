@@ -1,22 +1,25 @@
-import React from 'react';
+import { StatusBar } from 'expo-status-bar';
 import { View, Image, StyleSheet, Text, TouchableOpacity, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import colors from '../styles/colors';
-import PhoneLoginScreen from '../screens/PhoneLoginScreen';
+import PhoneLoginScreen from './PhoneLogin';
 
 
-const IntroScreen: React.FC = () => {
-    const navigation = useNavigation(); 
+const IntroScreen = ({navigation}) => {
+   
   
     const handleCreateAccount = () => {
       navigation.navigate('PhoneLoginScreen'); // Navigate to the phone login screen
     };
 
+
   return (
     <View style={styles.container}>
-       <Text style={styles.text}>Doost</Text> 
-       <TouchableOpacity style={styles.button} onPress={handleCreateAccount}>
-        <Text style={styles.buttonText}>Create Account</Text>
+       <Text style={styles.text}>Doost</Text>
+       <Text style={styles.textsmaller}>Where events and friends meet</Text> 
+       <Text style={styles.textPrivacy}>By tapping ‘Sign in’ / ‘Create account’, you agree to {'\n'} our Terms of Service. Learn how we process your {'\n'}data in our Privacy Policy. </Text>
+       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('PhoneLoginScreen')}>
+        <Text style={styles.buttonText}>Create Account/Sign In</Text>
       </TouchableOpacity>
     </View>
   );
@@ -29,22 +32,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#28397E33', 
   },
-  signInButtonContainer: {
-    position: 'absolute',
-    bottom: 30,
-    fontSize: 15,
-    backgroundColor: 'transparent',
-    fontFamily:'Proxima Nova',
-  },
   text: {
-    fontSize: 48,
+    fontSize: 80,
     fontWeight: 'bold', 
+    fontFamily:'Chicle',
     color:'#3F407C',
+  },
+  textsmaller: {
+    fontSize:16 ,
+    fontWeight: 'bold', 
+    fontFamily:'Chicle',
+    color:'#3F407C',
+  },
+  textPrivacy: {
+    fontSize: 11, // Adjust font size
+    top: 170,
+    fontWeight: 400, // Make text bold
+    fontFamily:'poppins',
+    textAlign: 'left',
+    color:'#3D4353',
   },
   button: {
     position: 'absolute',
-    bottom: 68,
-    width: '60%',
+    bottom: 60,
+    width: '66%',
     paddingVertical: 15,
     backgroundColor: '#3F407C',
     borderRadius: 30, 
@@ -53,7 +64,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#FFFFFF',
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: 400,
   },
 
 });
@@ -67,4 +78,3 @@ export default IntroScreen;
     height: 200, 
     resizeMode: 'contain',
   }*/
-

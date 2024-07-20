@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.0",
-    "@react-navigation/native": "^6.0.2",
+    "@react-navigation/bottom-tabs": "^6.6.1",
+    "@react-navigation/native": "^6.1.18",
     "@react-navigation/stack": "^6.3.29",
     "@supabase/supabase-js": "^2.43.4",
     "expo": "~51.0.8",

@@ -1,6 +1,6 @@
 // HomeScreen.tsx
 
-
+import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { Image, StyleSheet, Platform } from 'react-native';
 import { HelloWave } from '@/components/HelloWave';
@@ -9,7 +9,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 
-const HomeScreen: React.FC = () => {
+const HomeScreen  = ({navigation}) => {
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -26,7 +26,7 @@ const HomeScreen: React.FC = () => {
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
+          Edit <ThemedText type="defaultSemiBold">app/(tabs)/App.js</ThemedText> to see changes.
           Press{' '}
           <ThemedText type="defaultSemiBold">
             {Platform.select({ ios: 'cmd + d', android: 'cmd + m' })}
