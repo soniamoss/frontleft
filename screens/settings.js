@@ -19,9 +19,7 @@ const ProfilePage = () => {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.image} onPress={handleSettings}>
-        <Image source={require('@/assets/images/settings.png')} />
-      </TouchableOpacity>
+      
 
       {/* Profile Picture */}
       <Image source={{ uri: profileData.profilePicture }} style={styles.profilePicture} />
@@ -38,18 +36,23 @@ const ProfilePage = () => {
         <Text style={styles.numOfFriends}>{profileData.numOfFriends} friends</Text>
 
         {/* Buttons */}
-        <View style={styles.buttonContainer}>
+        <View style={styles.buttonContainer} >
           <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Going</Text>
+            <Text style={styles.buttonText}>Notifications</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Interested</Text>
+            <Text style={styles.buttonText}>Privacy</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button}>
-            <Text style={styles.buttonText}>Extra Tickets</Text>
+            <Text style={styles.buttonText}>Contact Us</Text>
           </TouchableOpacity>
         </View>
       </View>
+      <Text style= {styles.text}> Name</Text>
+      <Text style= {styles.textsmaller}> Where events and friends meet</Text>
+      <TouchableOpacity style={styles.buttonLog}>
+          <Text style={styles.buttonTextLog}>Log Out </Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -86,23 +89,38 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   buttonContainer: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     justifyContent: 'space-between',
     width: '100%',
     marginTop: 20,
   },
   button: {
-    flex: 1,
-    marginHorizontal: 5,
-    paddingVertical: 10,
-    backgroundColor: 'transparent',
+    marginHorizontal: 8,
+    paddingVertical: 35,
+    paddingHorizontal: 100,
+    backgroundColor: '#FFFF',
     borderRadius: 5,
-    alignItems: 'center',
-    top: 60,
-    right: 10,
+    alignItems: 'flex-start',
+    justifyContent: 'left', // Ensure text is centered vertically
+    marginBottom: 20, // Add this line to create space between buttons
   },
   buttonText: {
-    color: '#9CA9B7',
+    fontSize: 20,
+    fontWeight: 'bold', 
+    fontFamily:'Chicle',
+    color:'#3F407C',
+    bottom: 18,
+  },
+  buttonLog: {
+    position: 'absolute',
+    bottom: 10,
+    width: '30%',
+    paddingVertical: 15,
+    backgroundColor: 'transparent',
+    alignItems: 'center',
+  },
+  buttonTextLog: {
+    color: '#DF5A76',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -111,6 +129,20 @@ const styles = StyleSheet.create({
     top: 60,
     right: 20,
     zIndex: 1,
+  },
+  text: {
+    fontSize: 80,
+    fontWeight: 'bold', 
+    fontFamily:'Chicle',
+    color:'#3F407C',
+    bottom: 18,
+  },
+  textsmaller: {
+    fontSize:16 ,
+    fontWeight: 'bold', 
+    fontFamily:'Chicle',
+    color:'#3F407C',
+    bottom: 24,
   },
 });
 

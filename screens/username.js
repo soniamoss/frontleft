@@ -11,7 +11,7 @@ const UsernameScreen  = ({navigation}) => {
 
 
   const handleNext = () => {
-    navigation.navigate('Home');
+    navigation.navigate('Tabs');
   };
 
 

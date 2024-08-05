@@ -1,14 +1,22 @@
 // index.js
+console.log('hi');
+/*
+import { AppRegistry } from 'react-native';
+import App from '../../App'; 
+import {name as appName} from './app.json';
+
+AppRegistry.registerComponent(appName, () => App);
+*/
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import IntroScreen from '../../screens/intro';
+import IntroScreen from '../screens/intro';
 
-import Home from '../../screens/Home';
-import HomeTab from '../screens/BottomTabs/HomeTab';
+import Home from '../screens/Home';
+import HomeTab from '../screens/BottomTabs/ExploreTab';
 import FriendsTab from '../screens/BottomTabs/FriendsTab';
 import ProfileTab from '../screens/BottomTabs/ProfileTab';
 
@@ -16,12 +24,13 @@ import ProfileTab from '../screens/BottomTabs/ProfileTab';
 
 
 import { registerRootComponent } from 'expo';
-import { supabase } from '../../supabaseClient';
-import PhoneLoginScreen from '../../screens/PhoneLogin';
-import FirstNameScreen from '../../screens/firstname';
-import LastNameScreen from '../../screens/lastname';
-import EmailScreen from '../../screens/email';
-import UsernameScreen from '../../screens/username';
+import { supabase } from '../supabaseClient';
+import PhoneLoginScreen from '../screens/PhoneLogin';
+import FirstNameScreen from '../screens/firstname';
+import LastNameScreen from '../screens/lastname';
+import EmailScreen from '../screens/email';
+import UsernameScreen from '../screens/username';
+import settings from '../screens/settings';
 
 
 
@@ -32,8 +41,17 @@ const Tab = createBottomTabNavigator();
 export default function AppNavigation(){
   function MyStack() {
     return (
-      <Stack.Navigator>
-        <Stack.Screen name="Tabs" component={MyTabs} />
+      <Stack.Navigator screenOptions={{ headerShown: false}}>
+     
+      <Stack.Screen name="IntroScreen" component={IntroScreen} options={{ headerShown: false}} />
+      <Stack.Screen name="PhoneLoginScreen" component={PhoneLoginScreen} options={{ headerShown: false}} />
+      <Stack.Screen name="FirstNameScreen" component={FirstNameScreen} options={{ headerShown: false}} />
+      <Stack.Screen name="LastNameScreen" component={LastNameScreen} options={{ headerShown: false}} />
+      <Stack.Screen name="EmailScreen" component={EmailScreen} options={{ headerShown: false}} />
+      <Stack.Screen name="UsernameScreen" component={UsernameScreen} options={{ headerShown: false}} />
+        <Stack.Screen name="Tabs" component={MyTabs} options={{ headerShown: false}}/>
+        <Stack.Screen name="Profile" component={ProfileTab} options={{ headerShown: false }} />
+        <Stack.Screen name="Settings" component={settings} options={{ headerShown: false }}/>
       </Stack.Navigator>
     );
   }
@@ -42,16 +60,16 @@ export default function AppNavigation(){
   function MyTabs() {
     return (
       <Tab.Navigator>
-        <Tab.Screen name="HomeTab" component={HomeTab} />
-        <Tab.Screen name="FriendsTab" component={FriendsTab} />
-        <Tab.Screen name="ProfileTab" component={ProfileTab} />
+        <Tab.Screen name="Explore" component={HomeTab} options={{ headerShown: false}}/>
+        <Tab.Screen name="Friends" component={FriendsTab}options={{ headerShown: false}} />
+        <Tab.Screen name="Profile" component={ProfileTab} options={{ headerShown: false}}/>
       </Tab.Navigator>
     );
   }
 
 
   return(
-    <NavigationContainer>
+    <NavigationContainer independent={true}>
       <MyStack/>
 
     </NavigationContainer>

@@ -1,4 +1,5 @@
 // App.js
+/*
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
@@ -9,14 +10,14 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { supabase } from './supabaseClient';
 
 
-function App(){
+const App = () => {
   return (
     <View style = {styles.container}>
       <Text>Hi</Text>
     </View>
     
   );
-}
+};
 
 
 const styles = StyleSheet.create({
@@ -29,5 +30,5 @@ const styles = StyleSheet.create({
 });
 
 
-export default registerRootComponent(App);
-
+export default App;
+*/

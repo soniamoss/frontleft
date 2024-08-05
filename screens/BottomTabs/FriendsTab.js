@@ -5,7 +5,7 @@ import React from 'react'
 export default function FriendsTab(){
     return(
         <View>
-            <Text>Home</Text>
+            <Text>Friends</Text>
         </View>
     )
 }

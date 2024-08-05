@@ -2,9 +2,12 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../supabaseClient';
 
 const FirstNameScreen = ({navigation}) => {
   const [firstName, setFirstName] = useState('');
+
+
   
 
   const handleNext = () => {
@@ -18,6 +21,8 @@ const FirstNameScreen = ({navigation}) => {
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
+
+  
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
@@ -45,6 +50,9 @@ const FirstNameScreen = ({navigation}) => {
       </View>
     </TouchableWithoutFeedback>
   );
+
+  script
+
 };
 
 const styles = StyleSheet.create({

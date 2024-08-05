@@ -14,7 +14,7 @@ const ProfilePage = () => {
   };
 
   const handleSettings = () => {
-    navigation.navigate('Settings');
+    navigation.navigate('settings');
   };
 
   return (
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingVertical: 40, 
   },
   profilePicture: {
     width: 100,
