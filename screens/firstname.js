@@ -15,7 +15,7 @@ const FirstNameScreen = ({navigation}) => {
 
       const { data, error } = await supabase
       .from('profiles')
-      .upsert({ id: user.id, first_name: firstName })
+      .upsert({ user_id: user.id, first_name: firstName })
       .select()
 
     }

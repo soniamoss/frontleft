@@ -21,13 +21,39 @@ const PhoneLoginScreen  = ({navigation}) => {
     }
   };
 
+  const checkOnboardingStatus = async () => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('onboarding_complete')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // if (profile.onboarding_complete) {
+      //   navigation.navigate('Tabs');
+      // } else {
+        navigation.navigate('FirstNameScreen');
+      // }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error.message);
+    }
+
+  }
+
   const handleVerifyOtp = async () => {
     const { error } = await supabase.auth.verifyOtp({ phone, token: otp, type: 'sms' });
     if (error) {
       Alert.alert('Error', error.message);
     } else {
+
       Alert.alert('Success', 'Phone number verified!');
-      navigation.navigate('FirstNameScreen');
+      checkOnboardingStatus(); 
+      // navigation.navigate('FirstNameScreen');
     }
   };
 

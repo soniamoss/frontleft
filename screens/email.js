@@ -13,7 +13,7 @@ const EmailScreen  = ({navigation}) => {
 
     const { data, error } = await supabase
     .from('profiles')
-    .upsert({ id: user.id, email: email })
+    .upsert({ user_id: user.id, email: email })
     .select()
 
   }

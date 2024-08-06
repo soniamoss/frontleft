@@ -13,7 +13,7 @@ const LastNameScreen  = ({navigation}) => {
 
     const { data, error } = await supabase
     .from('profiles')
-    .upsert({ id: user.id, last_name: lastName })
+    .upsert({ user_id: user.id, last_name: lastName })
     .select()
 
   }
