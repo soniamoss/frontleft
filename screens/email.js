@@ -3,11 +3,23 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../supabaseClient';
 
 const EmailScreen  = ({navigation}) => {
   const [email, setEmail] = useState('');
 
+  const setEmailInDB = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const { data, error } = await supabase
+    .from('profiles')
+    .upsert({ id: user.id, email: email })
+    .select()
+
+  }
+
   const handleNext = () => {
+    setEmailInDB(); 
     // Navigate to the last name screen passing the first name
     navigation.navigate('UsernameScreen');
   };

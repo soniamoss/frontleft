@@ -1,15 +1,25 @@
 import { StatusBar } from 'expo-status-bar';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../supabaseClient';
 
 const LastNameScreen  = ({navigation}) => {
   const [lastName, setlastName] = useState('');
   
+  const setLastNameInDB = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const { data, error } = await supabase
+    .from('profiles')
+    .upsert({ id: user.id, last_name: lastName })
+    .select()
+
+  }
 
   const handleNext = () => {
-    // Navigate to the last name screen passing the first name
+    setLastNameInDB(); 
     navigation.navigate('EmailScreen');
   };
   const handleExit = () => {
@@ -110,4 +120,7 @@ const styles = StyleSheet.create({
   
   },
 });
+
+
+
 export default LastNameScreen;

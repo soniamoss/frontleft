@@ -3,14 +3,22 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../supabaseClient';
 
 
 const UsernameScreen  = ({navigation}) => {
   const [username, setUsername] = useState('');
 
+  const setUserNameInDB = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
 
+    const { data, error } = await supabase
+    .from('profiles')
+    .upsert({ id: user.id, username: username })
+    .select()
 
   const handleNext = () => {
+    setUserNameInDB(); 
     navigation.navigate('Tabs');
   };
 
@@ -115,6 +123,8 @@ const styles = StyleSheet.create({
   
   },
 });
+
+}
 
 export default UsernameScreen;
 

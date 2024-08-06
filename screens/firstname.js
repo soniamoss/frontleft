@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+
+
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../supabaseClient';
 
+
 const FirstNameScreen = ({navigation}) => {
   const [firstName, setFirstName] = useState('');
 
+    const setFirstNameInDB = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      const { data, error } = await supabase
+      .from('profiles')
+      .upsert({ id: user.id, first_name: firstName })
+      .select()
+
+    }
+
+    
 
   
 
   const handleNext = () => {
+    setFirstNameInDB(); 
     navigation.navigate('LastNameScreen');
   };
 
@@ -51,9 +66,12 @@ const FirstNameScreen = ({navigation}) => {
     </TouchableWithoutFeedback>
   );
 
-  script
-
 };
+
+
+// const { data: { user } } = await supabase.auth.getUser()
+// console.log( "LOOK AT ME" + data ); 
+
 
 const styles = StyleSheet.create({
   container: {
