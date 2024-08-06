@@ -20,10 +20,6 @@ const FirstNameScreen = ({navigation}) => {
 
     }
 
-    
-
-  
-
   const handleNext = async () => {
     if (!firstName) {
       console.error('First name is required.');

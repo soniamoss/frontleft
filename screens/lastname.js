@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Image, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../supabaseClient';
@@ -29,8 +29,12 @@ const LastNameScreen  = ({navigation}) => {
   const handleExit = () => {
     navigation.navigate('IntroScreen');
   };
+  const dismissKeyboard = () => {
+    Keyboard.dismiss();
+  };
 
   return (
+    <TouchableWithoutFeedback onPress={dismissKeyboard}>
     <View style={styles.container}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <Ionicons name="arrow-back" size={24} color="black" />
@@ -51,6 +55,7 @@ const LastNameScreen  = ({navigation}) => {
         <Text style={styles.buttonText}>Continue</Text>
       </TouchableOpacity>
     </View>
+    </TouchableWithoutFeedback>
   );
 };
 
