@@ -18,9 +18,12 @@ const EmailScreen  = ({navigation}) => {
 
   }
 
-  const handleNext = () => {
-    setEmailInDB(); 
-    // Navigate to the last name screen passing the first name
+  const handleNext = async () => {
+    if (!email) {
+      console.error('Email is required.');
+      return;
+    }
+    await setEmailInDB(); 
     navigation.navigate('UsernameScreen');
   };
   const handleExit = () => {

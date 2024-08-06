@@ -16,9 +16,14 @@ const UsernameScreen  = ({navigation}) => {
     .from('profiles')
     .upsert({ id: user.id, username: username })
     .select()
+  }
 
-  const handleNext = () => {
-    setUserNameInDB(); 
+  const handleNext = async () => {
+    if (!username) {
+      console.error('Username is required.');
+      return;
+    }
+    await setUserNameInDB(); 
     navigation.navigate('Tabs');
   };
 
@@ -123,8 +128,6 @@ const styles = StyleSheet.create({
   
   },
 });
-
-}
 
 export default UsernameScreen;
 

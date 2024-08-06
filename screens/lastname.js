@@ -18,8 +18,12 @@ const LastNameScreen  = ({navigation}) => {
 
   }
 
-  const handleNext = () => {
-    setLastNameInDB(); 
+  const handleNext = async () => {
+    if (!lastName) {
+      console.error('Last name is required.');
+      return;
+    }
+    await setLastNameInDB(); 
     navigation.navigate('EmailScreen');
   };
   const handleExit = () => {

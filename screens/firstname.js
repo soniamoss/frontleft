@@ -24,8 +24,12 @@ const FirstNameScreen = ({navigation}) => {
 
   
 
-  const handleNext = () => {
-    setFirstNameInDB(); 
+  const handleNext = async () => {
+    if (!firstName) {
+      console.error('First name is required.');
+      return;
+    }
+    await setFirstNameInDB(); 
     navigation.navigate('LastNameScreen');
   };
 
