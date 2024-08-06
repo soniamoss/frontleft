@@ -26,18 +26,36 @@ const PhoneLoginScreen  = ({navigation}) => {
       const { data: { user }, error: userError } = await supabase.auth.getUser();
       if (userError) throw userError;
 
+      
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('onboarding_complete')
         .eq('user_id', user.id)
-        .single();
+        .select(); 
 
-      if (profileError) throw profileError;
+ 
+      if ( profile.length === 0 ) {
+        
+        const { data, error } = await supabase
+        .from('profiles')
+        .upsert({ user_id: user.id })
+        .select()
 
-      if (profile.onboarding_complete) {
-        navigation.navigate('Tabs');
-      } else {
         navigation.navigate('FirstNameScreen');
+      
+      } 
+      
+      if (profile.length > 0 ) {
+        
+        if (profile[0].onboarding_complete == true) {
+          
+          navigation.navigate('Tabs');
+        } 
+        
+        if (profile[0].onboarding_complete == false) {
+          
+          navigation.navigate('FirstNameScreen');
+        }
       }
     } catch (error) {
       console.error('Error checking onboarding status:', error.message);
@@ -53,7 +71,6 @@ const PhoneLoginScreen  = ({navigation}) => {
 
       Alert.alert('Success', 'Phone number verified!');
       checkOnboardingStatus(); 
-      // navigation.navigate('FirstNameScreen');
     }
   };
 
