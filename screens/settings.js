@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 const ProfilePage = () => {
@@ -13,13 +14,11 @@ const ProfilePage = () => {
     numOfFriends: 123,
   };
 
-  const handleSettings = () => {
-    navigation.navigate('Settings');
-  };
-
   return (
     <View style={styles.container}>
-      
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back" size={24} color="black" />
+        </TouchableOpacity>
 
       {/* Profile Picture */}
       <Image source={{ uri: profileData.profilePicture }} style={styles.profilePicture} />
@@ -93,6 +92,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     marginTop: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 60,
+    left: 20,
+    zIndex: 1, // Ensure the button is above the image
   },
   button: {
     marginHorizontal: 8,

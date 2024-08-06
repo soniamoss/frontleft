@@ -51,7 +51,7 @@ export default function AppNavigation(){
       <Stack.Screen name="UsernameScreen" component={UsernameScreen} options={{ headerShown: false}} />
         <Stack.Screen name="Tabs" component={MyTabs} options={{ headerShown: false}}/>
         <Stack.Screen name="Profile" component={ProfileTab} options={{ headerShown: false }} />
-        <Stack.Screen name="Settings" component={settings} options={{ headerShown: false }}/>
+        <Stack.Screen name="settings" component={settings} options={{ headerShown: false }}/>
       </Stack.Navigator>
     );
   }
