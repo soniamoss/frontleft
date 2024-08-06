@@ -34,11 +34,11 @@ const PhoneLoginScreen  = ({navigation}) => {
 
       if (profileError) throw profileError;
 
-      // if (profile.onboarding_complete) {
-      //   navigation.navigate('Tabs');
-      // } else {
+      if (profile.onboarding_complete) {
+        navigation.navigate('Tabs');
+      } else {
         navigation.navigate('FirstNameScreen');
-      // }
+      }
     } catch (error) {
       console.error('Error checking onboarding status:', error.message);
     }
