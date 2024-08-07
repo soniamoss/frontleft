@@ -68,7 +68,6 @@ const PhoneLoginScreen  = ({navigation}) => {
     if (error) {
       Alert.alert('Error', error.message);
     } else {
-
       Alert.alert('Success', 'Phone number verified!');
       checkOnboardingStatus(); 
     }

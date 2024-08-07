@@ -1,20 +1,13 @@
 // index.js
-console.log('hi');
-/*
-import { AppRegistry } from 'react-native';
-import App from '../../App'; 
-import {name as appName} from './app.json';
-
-AppRegistry.registerComponent(appName, () => App);
-*/
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import IntroScreen from '../screens/intro';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import IntroScreen from '../screens/intro';
 import Home from '../screens/Home';
 import HomeTab from '../screens/BottomTabs/ExploreTab';
 import FriendsTab from '../screens/BottomTabs/FriendsTab';
@@ -31,6 +24,8 @@ import LastNameScreen from '../screens/lastname';
 import EmailScreen from '../screens/email';
 import UsernameScreen from '../screens/username';
 import settings from '../screens/settings';
+import getContacts from '../screens/getContacts';
+import Notifications from '../screens/Notifications';
 
 
 
@@ -42,13 +37,17 @@ export default function AppNavigation(){
   function MyStack() {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false}}>
-     
+    
       <Stack.Screen name="IntroScreen" component={IntroScreen} options={{ headerShown: false}} />
       <Stack.Screen name="PhoneLoginScreen" component={PhoneLoginScreen} options={{ headerShown: false}} />
       <Stack.Screen name="FirstNameScreen" component={FirstNameScreen} options={{ headerShown: false}} />
       <Stack.Screen name="LastNameScreen" component={LastNameScreen} options={{ headerShown: false}} />
       <Stack.Screen name="EmailScreen" component={EmailScreen} options={{ headerShown: false}} />
       <Stack.Screen name="UsernameScreen" component={UsernameScreen} options={{ headerShown: false}} />
+
+      <Stack.Screen name="getContacts" component={getContacts} options={{ headerShown: false}} />
+      <Stack.Screen name="Notifications" component={Notifications} options={{ headerShown: false}} />
+
         <Stack.Screen name="Tabs" component={MyTabs} options={{ headerShown: false}}/>
         <Stack.Screen name="Profile" component={ProfileTab} options={{ headerShown: false }} />
         <Stack.Screen name="settings" component={settings} options={{ headerShown: false }}/>

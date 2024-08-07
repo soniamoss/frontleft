@@ -1,11 +1,30 @@
-import {View, Text} from 'react-native'
-import React from 'react'
+import React from 'react';
+import {View, StyleSheet, ScrollView} from 'react-native';
 
-
-export default function HomeTab(){
-    return(
-        <View>
-            <Text>Explore</Text>
+const ViewStyleProps = () => {
+  return (
+        <View style={styles.container}>
+            <View style={styles.box} />
         </View>
-    )
-}
+    
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'space-between',
+    //backgroundColor: '',
+    padding: 20,
+    margin: 10,
+  },
+  box: {
+    flex: 0.3,
+    backgroundColor: '#ffff',
+    borderRadius: 20,
+   
+  },
+  
+});
+
+export default ViewStyleProps;
