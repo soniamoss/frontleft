@@ -24,7 +24,7 @@ const UsernameScreen  = ({navigation}) => {
       return;
     }
     await setUserNameInDB(); 
-    navigation.navigate('Tabs');
+    navigation.navigate('getContacts');
   };
 
   const handleExit = () => {

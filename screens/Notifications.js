@@ -1,8 +1,12 @@
 
 import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const Notifications = () => {
+  const navigation = useNavigation();
+
+
   useEffect(() => {
     Alert.alert(
       '"Doost" Would Like to Send You Notifications',
@@ -23,8 +27,15 @@ const Notifications = () => {
     );
   }, []);
 
+  const handleNext = () => {
+    navigation.navigate('Tabs');
+  };
+
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.button} onPress={handleNext}>
+        <Text style={styles.buttonText}>Skip</Text>
+      </TouchableOpacity>
       <Text style={styles.text}>Allow Notifications</Text>
       <Text style={styles.textother}>
         We'll notify you when your friends are {'\n'}attending, intrested in, or have tickets {'\n'}for an event, along with other exciting{'\n'} updates!
@@ -55,6 +66,18 @@ const styles = StyleSheet.create({
     color: '#3D4353',
     marginTop: 13,
     zIndex: 1,
+  },
+  button: {
+    width: '20%',
+    position: 'absolute',
+    top: 50,
+    left: 368,
+    zIndex: 1,// Ensure the button is above the image
+  },
+  buttonText: {
+    color: '##3B429F',
+    fontSize: 15,
+    fontWeight: 400,
   },
 });
 

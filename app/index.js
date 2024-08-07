@@ -26,6 +26,7 @@ import UsernameScreen from '../screens/username';
 import settings from '../screens/settings';
 import getContacts from '../screens/getContacts';
 import Notifications from '../screens/Notifications';
+import ShowContacts from '../screens/contacts';
 
 
 
@@ -37,19 +38,23 @@ export default function AppNavigation(){
   function MyStack() {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false}}>
-    
-      
+
+      <Stack.Screen name="getContacts" component={getContacts} options={{ headerShown: false}} />
+      <Stack.Screen name="ShowContacts" component={ShowContacts} options={{ headerShown: false}} />
+      <Stack.Screen name="Notifications" component={Notifications} options={{ headerShown: false}} />
+      <Stack.Screen name="Tabs" component={MyTabs} options={{ headerShown: false}}/>
+
+
+
       <Stack.Screen name="IntroScreen" component={IntroScreen} options={{ headerShown: false}} />
       <Stack.Screen name="PhoneLoginScreen" component={PhoneLoginScreen} options={{ headerShown: false}} />
       <Stack.Screen name="FirstNameScreen" component={FirstNameScreen} options={{ headerShown: false}} />
       <Stack.Screen name="LastNameScreen" component={LastNameScreen} options={{ headerShown: false}} />
       <Stack.Screen name="EmailScreen" component={EmailScreen} options={{ headerShown: false}} />
       <Stack.Screen name="UsernameScreen" component={UsernameScreen} options={{ headerShown: false}} />
-      <Stack.Screen name="getContacts" component={getContacts} options={{ headerShown: false}} />
       
-      <Stack.Screen name="Notifications" component={Notifications} options={{ headerShown: false}} />
+      
 
-        <Stack.Screen name="Tabs" component={MyTabs} options={{ headerShown: false}}/>
         <Stack.Screen name="Profile" component={ProfileTab} options={{ headerShown: false }} />
         <Stack.Screen name="settings" component={settings} options={{ headerShown: false }}/>
       </Stack.Navigator>
