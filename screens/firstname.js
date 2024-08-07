@@ -15,7 +15,7 @@ const FirstNameScreen = ({navigation}) => {
 
       const { data, error } = await supabase
       .from('profiles')
-      .upsert({ user_id: user.id, first_name: firstName })
+      .upsert({ phonenumber_id: user.phone, phonenumber: user.phone, first_name: firstName })
       .select()
 
     }
@@ -143,3 +143,5 @@ const styles = StyleSheet.create({
 });
 
 export default FirstNameScreen;
+
+

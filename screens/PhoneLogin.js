@@ -30,7 +30,7 @@ const PhoneLoginScreen  = ({navigation}) => {
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('onboarding_complete')
-        .eq('user_id', user.id)
+        .eq('phonenumber', user.phone)
         .select(); 
 
  
@@ -38,7 +38,7 @@ const PhoneLoginScreen  = ({navigation}) => {
         
         const { data, error } = await supabase
         .from('profiles')
-        .upsert({ user_id: user.id })
+        .upsert({ phonenumber_id: user.phone, phonenumber: user.phone, })
         .select()
 
         navigation.navigate('FirstNameScreen');

@@ -14,7 +14,7 @@
 
 //     const { data, error } = await supabase
 //     .from('profiles')
-//     .upsert({ user_id: user.id, username: username, onboarding_complete: true })
+//     .upsert({ phonenumber_id: user.phone, phonenumber: user.phone, username: username, onboarding_complete: true })
 //     .select()
 //   }
 
