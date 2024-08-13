@@ -15,11 +15,6 @@ export default function ShowContacts() {
   const [searchText, setSearchText] = useState('');
   const navigation = useNavigation();
 
-
-  
-
-
-
   useEffect(() => {
     (async () => {
       const { status } = await Contacts.requestPermissionsAsync();
