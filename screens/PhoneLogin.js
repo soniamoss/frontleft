@@ -38,7 +38,7 @@ const PhoneLoginScreen  = ({navigation}) => {
         
         const { data, error } = await supabase
         .from('profiles')
-        .upsert({ phonenumber_id: user.phone, phonenumber: user.phone, })
+        .upsert({ user_id: user.uid, phonenumber: user.phone, })
         .select()
 
         navigation.navigate('FirstNameScreen');

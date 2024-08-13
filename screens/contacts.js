@@ -1,9 +1,12 @@
 
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, TouchableWithoutFeedback, Keyboard, Button, Alert } from 'react-native';
 import * as Contacts from 'expo-contacts';
 import { supabase } from '../supabaseClient';
 import { useNavigation } from '@react-navigation/native';
+import { addFriend } from '../services/friendshipService';
+
+
 
 export default function ShowContacts() {
   const [matchingProfiles, setMatchingProfiles] = useState([]);
@@ -59,6 +62,16 @@ export default function ShowContacts() {
     }
   };
 
+  const handleAddFriend = async () => {
+    const user = await getCurrentUser();
+    const result = await addFriend(user.user_id, profile.user_id);
+    if (result.success) {
+      Alert.alert('Success', 'Friend request sent successfully!');
+    } else {
+      Alert.alert('Error', result.message || 'Failed to send friend request.');
+    }
+  };
+
   const handleNext = () => {
     navigation.navigate('Notifications');
   };
@@ -107,7 +120,7 @@ export default function ShowContacts() {
                     style={styles.profilePicture}
                   />
                   <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
-                  <TouchableOpacity style={styles.buttonAdd} onPress={() => handleAddProfile(profile)}>
+                  <TouchableOpacity style={styles.buttonAdd} onPress={handleAddFriend}>
                     <Text style={styles.buttonTextAdd}>Add</Text>
                   </TouchableOpacity>
                   <Image source={require('@/assets/images/X.png')} style={styles.image} />

@@ -5,17 +5,18 @@ import { View, Text, TextInput, StyleSheet, TouchableOpacity, TouchableWithoutFe
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../supabaseClient';
+import { getCurrentUser } from '../services/userService'; 
 
 
 const FirstNameScreen = ({navigation}) => {
   const [firstName, setFirstName] = useState('');
 
     const setFirstNameInDB = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await getCurrentUser();
 
       const { data, error } = await supabase
       .from('profiles')
-      .upsert({ phonenumber_id: user.phone, phonenumber: user.phone, first_name: firstName })
+      .upsert({ user_id: user.uid, phonenumber: user.phone, first_name: firstName })
       .select()
 
     }
@@ -68,9 +69,6 @@ const FirstNameScreen = ({navigation}) => {
 
 };
 
-
-// const { data: { user } } = await supabase.auth.getUser()
-// console.log( "LOOK AT ME" + data ); 
 
 
 const styles = StyleSheet.create({

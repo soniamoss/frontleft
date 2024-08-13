@@ -4,16 +4,17 @@ import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Image, Tou
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../supabaseClient';
+import { getCurrentUser } from '../services/userService'; 
 
 const EmailScreen  = ({navigation}) => {
   const [email, setEmail] = useState('');
 
   const setEmailInDB = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser();
 
     const { data, error } = await supabase
     .from('profiles')
-    .upsert({ phonenumber_id: user.phone, phonenumber: user.phone, email: email })
+    .upsert({ user_id: user.uid, phonenumber: user.phone, email: email })
     .select()
 
   }

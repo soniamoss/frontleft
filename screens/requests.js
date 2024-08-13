@@ -1,50 +1,52 @@
-
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
-import * as Contacts from 'expo-contacts';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';
 import { supabase } from '../supabaseClient';
 import { useNavigation } from '@react-navigation/native';
+import { getCurrentUser } from '../services/userService';
+import { validate as isValidUUID, version as getUUIDVersion } from 'uuid';
+
+
+
 
 export default function ShowContacts() {
   const [matchingProfiles, setMatchingProfiles] = useState([]);
   const [filteredProfiles, setFilteredProfiles] = useState([]);
+  const [friendRequests, setFriendRequests] = useState([]); // State for friend requests
   const [searchText, setSearchText] = useState('');
+  const [loading, setLoading] = useState(true);
   const navigation = useNavigation();
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Contacts.requestPermissionsAsync();
-      if (status === 'granted') {
-        const { data } = await Contacts.getContactsAsync({
-          fields: [Contacts.Fields.PhoneNumbers],
-        });
-
-        if (data.length > 0) {
-          const numbers = data.map(contact => (
-            contact.phoneNumbers ? contact.phoneNumbers.map(phoneNumber => 
-              phoneNumber.number.replace(/[+() -]/g, '').replace(/^\d{10}$/, '1$&')
-            ) : []
-          )).flat(2);
-          
-          fetchMatchingProfiles(numbers);
-        }
+    const fetchFriendRequests = async () => {
+      const user = await getCurrentUser();
+      if (!user) {
+        console.error('Could not retrieve current user data.');
+        return;
       }
-    })();
+
+      const { data, error } = await supabase
+        .from('friendships')
+        .select('id, user_id, friend_id, status')
+        .eq('friend_id', user.id)
+        .eq('status', 'pending');
+
+      
+
+      if (error) {
+        console.error('Error fetching friend requests:', error);
+      } else {
+        
+        setFriendRequests(data);
+      }
+      setLoading(false);
+    };
+
+    fetchFriendRequests();
   }, []);
 
-  const fetchMatchingProfiles = async (numbers) => {
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .in('phonenumber', numbers);
-
-    if (error) {
-      console.error('Error fetching profiles:', error);
-    } else {
-      setMatchingProfiles(profiles);
-      setFilteredProfiles(profiles);
-    }
-  };
+  if (loading) {
+    return <ActivityIndicator size="large" />;
+  }
 
   const handleSearch = (text) => {
     setSearchText(text);
@@ -64,7 +66,6 @@ export default function ShowContacts() {
   };
 
   const handleAddProfile = (profile) => {
-    // Implement your logic to add the profile
     console.log('Add profile:', profile);
   };
 
@@ -76,48 +77,44 @@ export default function ShowContacts() {
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
 
-
         {/* Box */}
         <View style={styles.box}>
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Add or search friends"
-              value={searchText}
-              onChangeText={handleSearch}
-            />
-          </View>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search friends"
+            value={searchText}
+            onChangeText={handleSearch}
+          />
 
           <View style={styles.headerContainer}>
-            <Text style={styles.text}>Requests</Text>
-            <TouchableOpacity style={styles.buttonAddAll}>
-              <Text style={styles.buttonText}>Add All</Text>
-            </TouchableOpacity>
+            <Text style={styles.requestsText}>Requests ({friendRequests.length})</Text>
+            <View style={styles.requestsTabsContainer}>
+              <TouchableOpacity style={styles.requestTab}>
+                <Text style={styles.requestTabActive}>Received</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.requestTab}>
+                <Text style={styles.requestTabInactive}>Sent</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
-          <ScrollView style={styles.profileListContainer}>
-            {filteredProfiles.length > 0 ? (
-              filteredProfiles.map((profile, index) => (
-                <View key={index} style={styles.profileContainer}>
-                  <Image
-                    source={{ uri: profile.profile_picture || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJUAAACUCAMAAACtIJvYAAAAMFBMVEXk5ueutLenrrHn6eqrsbTq7O26v8LJzc/Gysza3d7h4+Sxt7rW2du2u77d4OHP0tSSCQHEAAADg0lEQVR4nO2byZLrIAwAwaxm8///7YCdmayOkWJB6j36kENOXUKITWZsMBgMBoPBYDAYDAaDweDbEIXeEleyi5vDYqy1S0iOfYOaELPVXk6yME0yauNUZzHhDJeS3yGnuLiOXoJZ/qC0MXnTK8cEM9NLpzVgPHTREi7uOq1etofU8tZpDVdqHS5hjqQKjUdR2BopPjXVqotUGcWGWpWRWqM1t9ISYaqV4ty7Rlap3imPoW8TLPW+Tj1pmRZaYgGM38rcwMp5oJSMilwKMP9+aVC1BHT8MppcqrZ+3iIDtVaES3GpiTMrIEKVM4tWSsFzfQ3WQprvCiWV853UKiFmYCEmQqnjDegOkrK+C42TyolFaMXQVpYwsRKmWq1QVqwEXZn/8IRWM1aKc0or5BTMiUWYV/+a1fSVVpSxAp1u7vnvKoPDVlHSfR9+HaQ8FCIOOBsT5c5d4DbIOa0o91eMYXd9pHcgCjcJSTcyyONgucWilELXUeqbBkxtIL8sQs1C4hmYUYhQ0eb6CjxYxOf5Deha2CJUTDhgJY30Tgy8GLa6cRcaoCUN/a3ohXorSX77eKW6wrd6A9ioLA+Svn7eIkKdVOs2gvT6HfxOSnd4qtcHdatJ9XxCLO/CJXmzl8EHLacfOyyuTqaL0uaV9FPrBy//2J7NH3ljk8x9wOQkddeGlA3B3KLLIcOXn2jDd3QVZTGlWJozTvRuJ9r47QRzF+7+7CKklJtLM5iOZfDkml4+am3NElKHqJX2tLBlk5RP/VfbP9EE5xoGTbFgtN/vcvqbjTn3F9die1WC9KpG7VZ4HpdEPCmFCpZDL0BKAWN0ERPO+OooPURMEwVMpZ0mvjoxqQn6B/KKhwrTrZgP58Zrt9kR6KXn8/JLMPNpnK5eZy3caoY1Eb3X4ssZ4cqDd57T6hU/36SKdGKgLlr80+4G9KP8e6/PDtToW/8jrY/uaSDXHEDQfbegu5dmWp5SikvUVKSNVAERLXqprAWWIpp9d0BnIrwpFIOEtWWJD5o8QFqwKn/6MrOnBZiIyPc2jFWst8I3U8C1qm+UWhSFK7VSc4v594u0dbtAhW1aQFL1UF53aX0elZnVoqrf4qus2jpVtr9DPiA5hZp1p3Wu87qPY9AtoXiOW3tmdOMXmuN2B5qj1oHV4ZeG7RbmG453f62r1cqhlZ46cGg1GAwGg8Fg8IIf2AYpSbp2A2QAAAAASUVORK5CYII=' }}
-                    style={styles.profilePicture}
-                  />
-                  <View style={styles.profileInfo}>
-                    <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
-                    <Text style={styles.profileUsername}>{profile.username}</Text>
-                  </View>
-                  <TouchableOpacity style={styles.buttonAdd} onPress={() => handleAddProfile(profile)}>
-                    <Text style={styles.buttonTextAdd}>Add</Text>
-                  </TouchableOpacity>
-                  <Image source={require('@/assets/images/X.png')} style={styles.image} />
+          {/* Friend Requests Section */}
+          <ScrollView style={styles.requestsContainer}>
+            {friendRequests.length > 0 ? (
+              friendRequests.map((request, index) => (
+                <View key={index} style={styles.requestContainer}>
+                  <Text style={styles.profileName}>Friend Request from User ID: {request.user_id}</Text>
+                  <Text style={styles.profileUsername}>Status: {request.status}</Text>
+                  {/* Add buttons for Accept/Reject or other actions if needed */}
                 </View>
               ))
             ) : (
-              <Text style={styles.noProfilesText}>No matching profiles found</Text>
+              <Text style={styles.noRequestsText}>No requests at this time. Go add some friends!</Text>
             )}
           </ScrollView>
         </View>
+
+        {/* Navigation */}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -126,109 +123,111 @@ export default function ShowContacts() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'transparent',
+    backgroundColor: '#F9F9F9',
   },
-  buttonSkip: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    zIndex: 1, // Ensure the button stays above the box
+  tabsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#F9F9F9',
+    paddingVertical: 10,
+  },
+  tab: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  tabText: {
+    color: '#9E9E9E',
+    fontSize: 16,
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: '#3B429F',
+  },
+  activeTabText: {
+    color: '#3B429F',
+    fontWeight: 'bold',
   },
   box: {
     flex: 1,
-    width: '90%',
-    maxHeight: '80%', // Limit the height of the box
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 16,
-    marginTop: 70, // Space from top of the screen
-    alignSelf: 'center',
-    justifyContent: 'flex-start',
-  },
-  searchContainer: {
-    marginBottom: 10,
+    marginTop: 10,
+    marginHorizontal: 20,
   },
   searchInput: {
     height: 40,
-    borderColor: '#ccc',
+    borderColor: '#E0E0E0',
     borderWidth: 1,
-    borderRadius: 4,
+    borderRadius: 8,
     paddingHorizontal: 10,
+    marginBottom: 20,
   },
   headerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginVertical: 10,
+    marginBottom: 10,
   },
-  text: {
+  requestsText: {
     color: '#3D4353',
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700',
-    fontFamily: 'poppins',
   },
-  buttonAddAll: {
-    paddingVertical: 10,
-    borderRadius: 26,
-    alignItems: 'center',
+  requestsTabsContainer: {
+    flexDirection: 'row',
   },
-  buttonText: {
+  requestTab: {
+    paddingHorizontal: 10,
+  },
+  requestTabActive: {
     color: '#3B429F',
-    fontSize: 15,
-    fontWeight: '400',
+    fontWeight: 'bold',
   },
-  buttonAdd: {
-    width: '24%',
-    paddingVertical: 12,
-    backgroundColor: '#F5F5F5',
-    borderRadius: 26,
-    alignItems: 'center',
-    marginTop: 8,
+  requestTabInactive: {
+    color: '#9E9E9E',
   },
-  buttonTextAdd: {
-    color: '#3B429F',
-    fontSize: 15,
-    fontWeight: '400',
-  },
-  image: {
-    left:14,
-    //marginLeft: 8,
-  },
-  profileListContainer: {
+  requestsContainer: {
     flexGrow: 1,
   },
-  profileContainer: {
-    marginVertical: 5,
-    padding: 20,
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    position: 'relative',
-  },
-  profilePicture: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    position: 'absolute',
-    left: 0,
-  },
-  profileInfo: {
-    flex: 1,
-    marginLeft: 60,
-    justifyContent: 'center',
+  requestContainer: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
   },
   profileName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
+    color: '#3D4353',
   },
   profileUsername: {
-    fontSize: 15,
-    fontWeight: '400',
+    fontSize: 14,
+    color: '#9E9E9E',
   },
-  noProfilesText: {
-    color: '#888',
+  noRequestsText: {
+    color: '#3B429F',
     textAlign: 'center',
-    marginVertical: 20,
+    marginTop: 50,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  navigationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    backgroundColor: '#FFFFFF',
+  },
+  navigationItem: {
+    paddingVertical: 10,
+  },
+  navigationText: {
+    color: '#9E9E9E',
+    fontSize: 14,
+  },
+  activeNavigationText: {
+    color: '#3B429F',
+    fontWeight: 'bold',
   },
 });

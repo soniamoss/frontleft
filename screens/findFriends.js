@@ -1,15 +1,24 @@
 
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import * as Contacts from 'expo-contacts';
 import { supabase } from '../supabaseClient';
 import { useNavigation } from '@react-navigation/native';
+import { addFriend } from '../services/friendshipService';
+import { getCurrentUser } from '../services/userService'; 
+
+
 
 export default function ShowContacts() {
   const [matchingProfiles, setMatchingProfiles] = useState([]);
   const [filteredProfiles, setFilteredProfiles] = useState([]);
   const [searchText, setSearchText] = useState('');
   const navigation = useNavigation();
+
+
+  
+
+
 
   useEffect(() => {
     (async () => {
@@ -56,6 +65,17 @@ export default function ShowContacts() {
       setFilteredProfiles(filtered);
     } else {
       setFilteredProfiles(matchingProfiles);
+    }
+  };
+
+  const handleAddFriend = async (friendID) => {
+    const user = await getCurrentUser();
+    console.log("USERID", user); 
+    const result = await addFriend(user.id, friendID);
+    if (result.success) {
+      Alert.alert('Success', 'Friend request sent successfully!');
+    } else {
+      Alert.alert('Error', result.message || 'Failed to send friend request.');
     }
   };
 
@@ -107,9 +127,10 @@ export default function ShowContacts() {
                     <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
                     <Text style={styles.profileUsername}>{profile.username}</Text>
                   </View>
-                  <TouchableOpacity style={styles.buttonAdd} onPress={() => handleAddProfile(profile)}>
+                  <TouchableOpacity style={styles.buttonAdd} onPress={() => handleAddFriend(profile.user_id)}>
                     <Text style={styles.buttonTextAdd}>Add</Text>
                   </TouchableOpacity>
+
                   <Image source={require('@/assets/images/X.png')} style={styles.image} />
                 </View>
               ))

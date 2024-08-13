@@ -39,9 +39,8 @@ export default function AppNavigation(){
     return (
       <Stack.Navigator screenOptions={{ headerShown: false}}>
 
-<Stack.Screen name="getContacts" component={getContacts} options={{ headerShown: false}} />
-      <Stack.Screen name="ShowContacts" component={ShowContacts} options={{ headerShown: false}} />
-      <Stack.Screen name="Notifications" component={Notifications} options={{ headerShown: false}} />
+      
+
 
 
       <Stack.Screen name="IntroScreen" component={IntroScreen} options={{ headerShown: false}} />
@@ -50,7 +49,13 @@ export default function AppNavigation(){
       <Stack.Screen name="LastNameScreen" component={LastNameScreen} options={{ headerShown: false}} />
       <Stack.Screen name="EmailScreen" component={EmailScreen} options={{ headerShown: false}} />
       <Stack.Screen name="UsernameScreen" component={UsernameScreen} options={{ headerShown: false}} />
+
+      <Stack.Screen name="getContacts" component={getContacts} options={{ headerShown: false}} />
+      <Stack.Screen name="ShowContacts" component={ShowContacts} options={{ headerShown: false}} />
+      <Stack.Screen name="Notifications" component={Notifications} options={{ headerShown: false}} />
       
+
+
       <Stack.Screen name="Tabs" component={MyTabs} options={{ headerShown: false}}/>
 
       
