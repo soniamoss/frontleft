@@ -100,6 +100,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderColor: 'black',
     marginBottom: 60,
+    fontSize: 36, // Increased font size for larger text
+    textAlign: 'center', // Center text within the input
   },
   button: {
     width: '60%',
@@ -125,9 +127,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: 40, // Adjust width as needed
     height: 40, // Adjust height as needed
-    top: 260, // Adjust top position as needed
+    top: 246, // Adjust top position as needed
     left: 48,
-  
   },
 });
 

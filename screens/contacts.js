@@ -106,9 +106,9 @@ export default function ShowContacts() {
 
           <View style={styles.headerContainer}>
             <Text style={styles.text}>Contacts</Text>
-            <TouchableOpacity style={styles.buttonAddAll}>
+            {/* <TouchableOpacity style={styles.buttonAddAll}>
               <Text style={styles.buttonText}>Add All</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           <ScrollView style={styles.profileListContainer}>
@@ -119,11 +119,14 @@ export default function ShowContacts() {
                     source={{ uri: profile.profile_picture || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJUAAACUCAMAAACtIJvYAAAAMFBMVEXk5ueutLenrrHn6eqrsbTq7O26v8LJzc/Gysza3d7h4+Sxt7rW2du2u77d4OHP0tSSCQHEAAADg0lEQVR4nO2byZLrIAwAwaxm8///7YCdmayOkWJB6j36kENOXUKITWZsMBgMBoPBYDAYDAaDweDbEIXeEleyi5vDYqy1S0iOfYOaELPVXk6yME0yauNUZzHhDJeS3yGnuLiOXoJZ/qC0MXnTK8cEM9NLpzVgPHTREi7uOq1etofU8tZpDVdqHS5hjqQKjUdR2BopPjXVqotUGcWGWpWRWqM1t9ISYaqV4ty7Rlap3imPoW8TLPW+Tj1pmRZaYgGM38rcwMp5oJSMilwKMP9+aVC1BHT8MppcqrZ+3iIDtVaES3GpiTMrIEKVM4tWSsFzfQ3WQprvCiWV853UKiFmYCEmQqnjDegOkrK+C42TyolFaMXQVpYwsRKmWq1QVqwEXZn/8IRWM1aKc0or5BTMiUWYV/+a1fSVVpSxAp1u7vnvKoPDVlHSfR9+HaQ8FCIOOBsT5c5d4DbIOa0o91eMYXd9pHcgCjcJSTcyyONgucWilELXUeqbBkxtIL8sQs1C4hmYUYhQ0eb6CjxYxOf5Deha2CJUTDhgJY30Tgy8GLa6cRcaoCUN/a3ohXorSX77eKW6wrd6A9ioLA+Svn7eIkKdVOs2gvT6HfxOSnd4qtcHdatJ9XxCLO/CJXmzl8EHLacfOyyuTqaL0uaV9FPrBy//2J7NH3ljk8x9wOQkddeGlA3B3KLLIcOXn2jDd3QVZTGlWJozTvRuJ9r47QRzF+7+7CKklJtLM5iOZfDkml4+am3NElKHqJX2tLBlk5RP/VfbP9EE5xoGTbFgtN/vcvqbjTn3F9die1WC9KpG7VZ4HpdEPCmFCpZDL0BKAWN0ERPO+OooPURMEwVMpZ0mvjoxqQn6B/KKhwrTrZgP58Zrt9kR6KXn8/JLMPNpnK5eZy3caoY1Eb3X4ssZ4cqDd57T6hU/36SKdGKgLlr80+4G9KP8e6/PDtToW/8jrY/uaSDXHEDQfbegu5dmWp5SikvUVKSNVAERLXqprAWWIpp9d0BnIrwpFIOEtWWJD5o8QFqwKn/6MrOnBZiIyPc2jFWst8I3U8C1qm+UWhSFK7VSc4v594u0dbtAhW1aQFL1UF53aX0elZnVoqrf4qus2jpVtr9DPiA5hZp1p3Wu87qPY9AtoXiOW3tmdOMXmuN2B5qj1oHV4ZeG7RbmG453f62r1cqhlZ46cGg1GAwGg8Fg8IIf2AYpSbp2A2QAAAAASUVORK5CYII=' }}
                     style={styles.profilePicture}
                   />
-                  <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
+                  <View style={styles.profileInfo}>
+                    <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
+                    <Text style={styles.profileUsername}>{profile.username}</Text>
+                  </View>
                   <TouchableOpacity style={styles.buttonAdd} onPress={handleAddFriend}>
                     <Text style={styles.buttonTextAdd}>Add</Text>
                   </TouchableOpacity>
-                  <Image source={require('@/assets/images/X.png')} style={styles.image} />
+                  {/* <Image source={require('@/assets/images/X.png')} style={styles.image} /> */}
                 </View>
               ))
             ) : (
@@ -162,10 +165,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   searchInput: {
-    height: 40,
-    borderColor: '#ccc',
+    height: 50,
+    borderColor: '#CEDBEA',
     borderWidth: 1,
-    borderRadius: 4,
+    borderRadius: 8,
     paddingHorizontal: 10,
   },
   headerContainer: {
@@ -180,26 +183,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'poppins',
   },
-  buttonAddAll: {
-    paddingVertical: 10,
-    borderRadius: 26,
-    alignItems: 'center',
-  },
+  // buttonAddAll: {
+  //   paddingVertical: 10,
+  //   borderRadius: 26,
+  //   alignItems: 'center',
+  // },
   buttonText: {
     color: '#3B429F',
     fontSize: 15,
     fontWeight: '400',
   },
   buttonAdd: {
-    width: '24%',
+    width: '34%',
     paddingVertical: 12,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#3F407C',
     borderRadius: 26,
     alignItems: 'center',
     marginTop: 8,
+    left: 20,
   },
   buttonTextAdd: {
-    color: '#3B429F',
+    color: '#FFFF',
     fontSize: 15,
     fontWeight: '400',
   },
@@ -224,17 +228,24 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     position: 'absolute',
-    left: 0,
+    left: 10,
   },
   profileName: {
     fontSize: 18,
     fontWeight: '600',
-    flex: 1,
-    marginLeft: 60,
+  },
+  profileUsername: {
+    fontSize: 15,
+    fontWeight: '400',
   },
   noProfilesText: {
     color: '#888',
     textAlign: 'center',
     marginVertical: 20,
+  },
+  profileInfo: {
+    flex: 1,
+    marginLeft: 60,
+    justifyContent: 'center',
   },
 });

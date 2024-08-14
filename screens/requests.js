@@ -263,7 +263,7 @@ export default function ShowContacts() {
             onChangeText={handleSearch}
           />
           
-          <Text style={styles.requestsText}>Requests</Text>
+          <Text style={styles.requestsText}>Requests ({friendRequests.length})</Text>
 
           <View style={styles.requestsTabsContainer}>
             <TouchableOpacity style={styles.requestTab} onPress={() => handleTabChange('received')}>
@@ -299,9 +299,9 @@ export default function ShowContacts() {
                   <View key={index} style={styles.requestContainer}>
                     <Text style={styles.profileName}>Request sent to User ID: {request.friend_id}</Text>
                     <View style={styles.buttonContainer}>
-                      <TouchableOpacity style={styles.statusButton}>
+                      {/* <TouchableOpacity style={styles.statusButton}>
                         <Text style={styles.buttonText}>{request.status}</Text>
-                      </TouchableOpacity>
+                      </TouchableOpacity> */}
                     </View>
                   </View>
                 ))
@@ -333,12 +333,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   searchInput: {
-    height: 40,
-    borderColor: '#E0E0E0',
+    height: 50,
+    borderColor: '#EBF1F7',
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 20,
+    placeholderTextColor: '#3D4353', 
   },
   requestsTabsContainer: {
     flexDirection: 'row',
@@ -357,7 +358,7 @@ const styles = StyleSheet.create({
   },
   requestsText: {
     color: '#3D4353',
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '700',
     marginBottom: 10, // Adjust margin to align with tabs
   },

@@ -47,9 +47,9 @@ const ProfilePage = () => {
         <TouchableOpacity style={styles.eventTab} onPress={() => handleTabChange('interested')}>
           <Text style={currentTab === 'interested' ? styles.eventTabActive : styles.eventsTabInactive}>Interested</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.eventTab} onPress={() => handleTabChange('extraTickets')}>
+        {/* <TouchableOpacity style={styles.eventTab} onPress={() => handleTabChange('extraTickets')}>
           <Text style={currentTab === 'extraTickets' ? styles.eventTabActive : styles.eventsTabInactive}>Extra Tickets</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Events Section */}
@@ -120,15 +120,19 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   eventTab: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 40,
     paddingVertical:40,
   },
   eventTabActive: {
     color: '#3B429F',
-    fontWeight: 'bold',
+    fontWeight: '700',
+    fontSize:14,
   },
   eventsTabInactive: {
     color: '#9E9E9E',
+    fontWeight: '700',
+    fontSize:14,
+
   },
   eventsContainer: {
     flexGrow: 1,

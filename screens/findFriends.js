@@ -105,9 +105,9 @@ export default function ShowContacts() {
 
           <View style={styles.headerContainer}>
             <Text style={styles.text}>Find Friends</Text>
-            <TouchableOpacity style={styles.buttonAddAll}>
+            {/* <TouchableOpacity style={styles.buttonAddAll}>
               <Text style={styles.buttonText}>Add All</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           <ScrollView style={styles.profileListContainer}>
@@ -126,7 +126,7 @@ export default function ShowContacts() {
                     <Text style={styles.buttonTextAdd}>Add</Text>
                   </TouchableOpacity>
 
-                  <Image source={require('@/assets/images/X.png')} style={styles.image} />
+                  {/* <Image source={require('@/assets/images/X.png')} style={styles.image} /> */}
                 </View>
               ))
             ) : (
@@ -165,11 +165,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   searchInput: {
-    height: 40,
-    borderColor: '#ccc',
+    height: 50,
+    borderColor: '#EBF1F7',
     borderWidth: 1,
-    borderRadius: 4,
+    borderRadius: 8,
     paddingHorizontal: 10,
+    marginBottom: 20,
+    placeholderTextColor: '#3D4353', 
   },
   headerContainer: {
     flexDirection: 'row',
@@ -183,26 +185,27 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: 'poppins',
   },
-  buttonAddAll: {
-    paddingVertical: 10,
-    borderRadius: 26,
-    alignItems: 'center',
-  },
+  // buttonAddAll: {
+  //   paddingVertical: 10,
+  //   borderRadius: 26,
+  //   alignItems: 'center',
+  // },
   buttonText: {
     color: '#3B429F',
     fontSize: 15,
     fontWeight: '400',
   },
   buttonAdd: {
-    width: '24%',
+    width: '34%',
     paddingVertical: 12,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#3F407C',
     borderRadius: 26,
     alignItems: 'center',
     marginTop: 8,
+    left: 20,
   },
   buttonTextAdd: {
-    color: '#3B429F',
+    color: '#FFFF',
     fontSize: 15,
     fontWeight: '400',
   },

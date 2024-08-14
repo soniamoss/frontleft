@@ -368,11 +368,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   searchInput: {
-    height: 40,
-    borderColor: '#ccc',
+    height: 50,
+    borderColor: '#EBF1F7',
     borderWidth: 1,
-    borderRadius: 4,
+    borderRadius: 8,
     paddingHorizontal: 10,
+    marginBottom: 20,
+    placeholderTextColor: '#3D4353', 
   },
   headerContainer: {
     flexDirection: 'row',
