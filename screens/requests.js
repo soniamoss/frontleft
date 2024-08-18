@@ -83,6 +83,37 @@ export default function ShowContacts() {
     }
   };
 
+  const handleAcceptRequest = async (requestId) => {
+    // Update the friendship status to "Accepted"
+    const { error } = await supabase
+      .from('friendships')
+      .update({ status: 'accepted' })
+      .eq('id', requestId);
+
+    if (error) {
+      console.error('Error updating friendship status:', error);
+    } else {
+      // Refresh the friend requests list after the update
+      const user = await getCurrentUser();
+      if (user) {
+        const { data: updatedReceivedData } = await supabase
+          .from('friendships')
+          .select(`
+            *,
+            profiles!fk_user_id (
+              first_name,
+              last_name,
+              username
+            )
+          `)
+          .eq('friend_id', user.id)
+          .eq('status', 'pending');
+
+        setFriendRequests(updatedReceivedData);
+      }
+    }
+  };
+
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
@@ -123,8 +154,10 @@ export default function ShowContacts() {
                   <View key={index} style={styles.requestContainer}>
                     <Text style={styles.profileName}>{request.profiles.first_name} {request.profiles.last_name} {request.profiles.username}</Text>
                     <View style={styles.buttonContainer}>
-                      <TouchableOpacity style={styles.statusButton}>
-                        <Text style={styles.buttonText}>{request.status}</Text>
+                    <TouchableOpacity
+                        style={styles.statusButton}
+                        onPress={() => handleAcceptRequest(request.id)}>
+                        <Text style={styles.buttonText}>Accept</Text>
                       </TouchableOpacity>
                     </View>
                   </View>
