@@ -1,86 +1,137 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import * as Contacts from 'expo-contacts';
 import { supabase } from '../supabaseClient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { addFriend } from '../services/friendshipService';
-import { getCurrentUser } from '../services/userService'; 
-
-
+import { getCurrentUser } from '../services/userService';
 
 export default function ShowContacts() {
-  const [matchingProfiles, setMatchingProfiles] = useState([]);
-  const [filteredProfiles, setFilteredProfiles] = useState([]);
+  const [appContacts, setAppContacts] = useState([]);
+  const [nonAppContacts, setNonAppContacts] = useState([]);
   const [searchText, setSearchText] = useState('');
+  const [filteredProfiles, setFilteredProfiles] = useState([]);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    (async () => {
-      const { status } = await Contacts.requestPermissionsAsync();
-      if (status === 'granted') {
-        const { data } = await Contacts.getContactsAsync({
-          fields: [Contacts.Fields.PhoneNumbers],
-        });
+  // Use useFocusEffect to refresh the contacts whenever the screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      fetchContacts();
+    }, [])
+  );
 
-        if (data.length > 0) {
-          const numbers = data.map(contact => (
-            contact.phoneNumbers ? contact.phoneNumbers.map(phoneNumber => 
-              phoneNumber.number.replace(/[+() -]/g, '').replace(/^\d{10}$/, '1$&')
-            ) : []
-          )).flat(2);
-          
-          fetchMatchingProfiles(numbers);
-        }
-      }
-    })();
-  }, []);
+  const fetchContacts = async () => {
+    const user = await getCurrentUser();
 
-  const fetchMatchingProfiles = async (numbers) => {
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .in('phonenumber', numbers);
-
-    if (error) {
-      console.error('Error fetching profiles:', error);
-    } else {
-      setMatchingProfiles(profiles);
-      setFilteredProfiles(profiles);
+    // Step 1: Get user's device contacts
+    const { status } = await Contacts.requestPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permissions Denied', 'Access to contacts is required to find friends.');
+      return;
     }
+
+    const { data: deviceContacts } = await Contacts.getContactsAsync({
+      fields: [Contacts.Fields.PhoneNumbers],
+    });
+
+    if (!deviceContacts.length) {
+      Alert.alert('No Contacts Found', 'No contacts found on your device.');
+      return;
+    }
+
+    console.log('device contacts length', deviceContacts.length); 
+
+    // Extract and clean phone numbers
+    const phoneNumbers = deviceContacts
+      .flatMap(contact =>
+        contact.phoneNumbers
+          ? contact.phoneNumbers.map(phoneNumber =>
+              phoneNumber.number.replace(/[+() -]/g, '').replace(/^\d{10}$/, '1$&')
+            )
+          : []
+      )
+      .filter(Boolean);
+
+    // console.log('Cleaned Phone Numbers:', phoneNumbers);
+
+    // Step 2: Fetch profiles in the app that match the cleaned phone numbers
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*'); 
+      // .in('phonenumber', phoneNumbers);
+
+
+      console.log('data 1', profiles); 
+
+    if (profilesError) {
+      console.error('Error fetching profiles:', profilesError);
+    } else {
+      console.log('Matching profiles:', profiles);
+    }
+
+    // Step 3: Fetch friendship records to exclude already connected users
+    const { data: friendshipIds, error: friendshipError } = await supabase
+      .from('friendships')
+      .select('friend_id, user_id')
+      .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+
+    if (friendshipError) {
+      console.error('Error fetching friendship IDs:', friendshipError);
+      return;
+    }
+
+    const idsToExclude = friendshipIds.flatMap(friendship => [
+      friendship.friend_id,
+      friendship.user_id
+    ]);
+
+    // Filter out profiles that are already friends or are the current user
+    const filteredProfiles = profiles.filter(
+      profile => !idsToExclude.includes(profile.id) && profile.id !== user.id
+    );
+
+    setAppContacts(filteredProfiles);
+    setFilteredProfiles(filteredProfiles);
+
+    // Step 4: Display device contacts that are not in the app (simulate non-app contacts)
+    const nonAppContactsSample = deviceContacts.slice(0, 10).map(contact => ({
+      id: contact.id,
+      first_name: contact.name,
+      phone_number: contact.phoneNumbers ? contact.phoneNumbers[0].number : '',
+    }));
+
+    setNonAppContacts(nonAppContactsSample);
   };
 
   const handleSearch = (text) => {
     setSearchText(text);
     if (text) {
-      const filtered = matchingProfiles.filter(profile =>
+      const filtered = appContacts.filter(profile =>
         profile.first_name.toLowerCase().includes(text.toLowerCase()) ||
-        profile.last_name.toLowerCase().includes(text.toLowerCase())
+        profile.last_name.toLowerCase().includes(text.toLowerCase()) ||
+        profile.username.toLowerCase().includes(text.toLowerCase())
       );
       setFilteredProfiles(filtered);
     } else {
-      setFilteredProfiles(matchingProfiles);
+      setFilteredProfiles(appContacts);
     }
   };
 
   const handleAddFriend = async (friendID) => {
     const user = await getCurrentUser();
-    console.log("USERID", user); 
     const result = await addFriend(user.id, friendID);
     if (result.success) {
       Alert.alert('Success', 'Friend request sent successfully!');
+      fetchContacts(); // Refresh the list after adding a friend
     } else {
       Alert.alert('Error', result.message || 'Failed to send friend request.');
     }
   };
 
-  const handleNext = () => {
-    navigation.navigate('Notifications');
-  };
-
-  const handleAddProfile = (profile) => {
-    // Implement your logic to add the profile
-    console.log('Add profile:', profile);
+  const handleInvite = (contact) => {
+    // Implement your logic to send an invite (e.g., SMS or email)
+    console.log('Invite sent to:', contact.first_name, contact.phone_number);
+    Alert.alert('Invite Sent', `An invite has been sent to ${contact.first_name}`);
   };
 
   const dismissKeyboard = () => {
@@ -90,9 +141,6 @@ export default function ShowContacts() {
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <View style={styles.container}>
-
-
-        {/* Box */}
         <View style={styles.box}>
           <View style={styles.searchContainer}>
             <TextInput
@@ -105,33 +153,45 @@ export default function ShowContacts() {
 
           <View style={styles.headerContainer}>
             <Text style={styles.text}>Find Friends</Text>
-            {/* <TouchableOpacity style={styles.buttonAddAll}>
-              <Text style={styles.buttonText}>Add All</Text>
-            </TouchableOpacity> */}
           </View>
 
-          <ScrollView style={styles.profileListContainer}>
+          <ScrollView style={styles.scrollView}>
+            {/* App Contacts Section */}
             {filteredProfiles.length > 0 ? (
               filteredProfiles.map((profile, index) => (
                 <View key={index} style={styles.profileContainer}>
                   <Image
-                    source={{ uri: profile.profile_image_url || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJUAAACUCAMAAACtIJvYAAAAMFBMVEXk5ueutLenrrHn6eqrsbTq7O26v8LJzc/Gysza3d7h4+Sxt7rW2du2u77d4OHP0tSSCQHEAAADg0lEQVR4nO2byZLrIAwAwaxm8///7YCdmayOkWJB6j36kENOXUKITWZsMBgMBoPBYDAYDAaDweDbEIXeEleyi5vDYqy1S0iOfYOaELPVXk6yME0yauNUZzHhDJeS3yGnuLiOXoJZ/qC0MXnTK8cEM9NLpzVgPHTREi7uOq1etofU8tZpDVdqHS5hjqQKjUdR2BopPjXVqotUGcWGWpWRWqM1t9ISYaqV4ty7Rlap3imPoW8TLPW+Tj1pmRZaYgGM38rcwMp5oJSMilwKMP9+aVC1BHT8MppcqrZ+3iIDtVaES3GpiTMrIEKVM4tWSsFzfQ3WQprvCiWV853UKiFmYCEmQqnjDegOkrK+C42TyolFaMXQVpYwsRKmWq1QVqwEXZn/8IRWM1aKc0or5BTMiUWYV/+a1fSVVpSxAp1u7vnvKoPDVlHSfR9+HaQ8FCIOOBsT5c5d4DbIOa0o91eMYXd9pHcgCjcJSTcyyONgucWilELXUeqbBkxtIL8sQs1C4hmYUYhQ0eb6CjxYxOf5Deha2CJUTDhgJY30Tgy8GLa6cRcaoCUN/a3ohXorSX77eKW6wrd6A9ioLA+Svn7eIkKdVOs2gvT6HfxOSnd4qtcHdatJ9XxCLO/CJXmzl8EHLacfOyyuTqaL0uaV9FPrBy//2J7NH3ljk8x9wOQkddeGlA3B3KLLIcOXn2jDd3QVZTGlWJozTvRuJ9r47QRzF+7+7CKklJtLM5iOZfDkml4+am3NElKHqJX2tLBlk5RP/VfbP9EE5xoGTbFgtN/vcvqbjTn3F9die1WC9KpG7VZ4HpdEPCmFCpZDL0BKAWN0ERPO+OooPURMEwVMpZ0mvjoxqQn6B/KKhwrTrZgP58Zrt9kR6KXn8/JLMPNpnK5eZy3caoY1Eb3X4ssZ4cqDd57T6hU/36SKdGKgLlr80+4G9KP8e6/PDtToW/8jrY/uaSDXHEDQfbegu5dmWp5SikvUVKSNVAERLXqprAWWIpp9d0BnIrwpFIOEtWWJD5o8QFqwKn/6MrOnBZiIyPc2jFWst8I3U8C1qm+UWhSFK7VSc4v594u0dbtAhW1aQFL1UF53aX0elZnVoqrf4qus2jpVtr9DPiA5hZp1p3Wu87qPY9AtoXiOW3tmdOMXmuN2B5qj1oHV4ZeG7RbmG453f62r1cqhlZ46cGg1GAwGg8Fg8IIf2AYpSbp2A2QAAAAASUVORK5CYII=' }}
+                    source={{ uri: profile.profile_image_url || 'https://via.placeholder.com/50' }}
                     style={styles.profilePicture}
                   />
                   <View style={styles.profileInfo}>
                     <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
                     <Text style={styles.profileUsername}>{profile.username}</Text>
                   </View>
-                  <TouchableOpacity style={styles.buttonAdd} onPress={() => handleAddFriend(profile.user_id)}>
+                  <TouchableOpacity style={styles.buttonAdd} onPress={() => handleAddFriend(profile.id)}>
                     <Text style={styles.buttonTextAdd}>Add</Text>
                   </TouchableOpacity>
-
-                  {/* <Image source={require('@/assets/images/X.png')} style={styles.image} /> */}
                 </View>
               ))
             ) : (
               <Text style={styles.noProfilesText}>No matching profiles found</Text>
             )}
+
+            {/* Non-App Contacts Section */}
+            <View style={styles.nonAppContactsContainer}>
+              <Text style={styles.sectionTitle}>Invite Contacts</Text>
+              {nonAppContacts.map((contact, index) => (
+                <View key={index} style={styles.profileContainer}>
+                  <View style={styles.profileInfo}>
+                    <Text style={styles.profileName}>{contact.first_name}</Text>
+                    <Text style={styles.profileUsername}>{contact.phone_number}</Text>
+                  </View>
+                  <TouchableOpacity style={styles.inviteButton} onPress={() => handleInvite(contact)}>
+                    <Text style={styles.inviteButtonText}>Invite</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
           </ScrollView>
         </View>
       </View>
@@ -144,16 +204,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'transparent',
   },
-  buttonSkip: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-    zIndex: 1, // Ensure the button stays above the box
-  },
   box: {
     flex: 1,
     width: '90%',
-    maxHeight: '80%', // Limit the height of the box
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 16,
@@ -183,38 +236,9 @@ const styles = StyleSheet.create({
     color: '#3D4353',
     fontSize: 24,
     fontWeight: '700',
-    fontFamily: 'poppins',
   },
-  // buttonAddAll: {
-  //   paddingVertical: 10,
-  //   borderRadius: 26,
-  //   alignItems: 'center',
-  // },
-  buttonText: {
-    color: '#3B429F',
-    fontSize: 15,
-    fontWeight: '400',
-  },
-  buttonAdd: {
-    width: '34%',
-    paddingVertical: 12,
-    backgroundColor: '#3F407C',
-    borderRadius: 26,
-    alignItems: 'center',
-    marginTop: 8,
-    left: 20,
-  },
-  buttonTextAdd: {
-    color: '#FFFF',
-    fontSize: 15,
-    fontWeight: '400',
-  },
-  image: {
-    left:14,
-    //marginLeft: 8,
-  },
-  profileListContainer: {
-    flexGrow: 1,
+  scrollView: {
+    flex: 1,
   },
   profileContainer: {
     marginVertical: 5,
@@ -244,6 +268,40 @@ const styles = StyleSheet.create({
   profileUsername: {
     fontSize: 15,
     fontWeight: '400',
+  },
+  buttonAdd: {
+    width: '34%',
+    paddingVertical: 12,
+    backgroundColor: '#3F407C',
+    borderRadius: 26,
+    alignItems: 'center',
+    marginTop: 8,
+    left: 20,
+  },
+  buttonTextAdd: {
+    color: '#FFFF',
+    fontSize: 15,
+    fontWeight: '400',
+  },
+  inviteButton: {
+    backgroundColor: '#ff6347',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+  },
+  inviteButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  nonAppContactsContainer: {
+    marginTop: 30,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 10,
+    color: '#3D4353',
   },
   noProfilesText: {
     color: '#888',
