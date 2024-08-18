@@ -12,6 +12,24 @@ export default function ShowContacts() {
 
   useEffect(() => {
     fetchAcceptedFriends();
+
+    // Real-time subscription to changes in the 'friendships' table
+    const subscription = supabase
+      .channel('public:friendships')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'friendships' }, // Listen to all changes (insert, update, delete)
+        (payload) => {
+          console.log('Real-time change:', payload);
+          fetchAcceptedFriends(); // Re-fetch friends when a change is detected
+        }
+      )
+      .subscribe();
+
+    // Clean up the subscription when the component unmounts
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   const fetchAcceptedFriends = async () => {

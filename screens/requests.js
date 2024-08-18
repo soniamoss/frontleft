@@ -24,19 +24,17 @@ export default function ShowContacts() {
 
       // Fetch received friend requests
       const { data: receivedData, error: receivedError } = await supabase
-      .from('friendships')
-      .select(`
-        *,
-        profiles!fk_user_id (
-          first_name,
-          last_name,
-          username
-        )
-      `)
-      .eq('friend_id', user.id)
-      .eq('status', 'pending');
-    
-
+        .from('friendships')
+        .select(`
+          *,
+          profiles!fk_user_id (
+            first_name,
+            last_name,
+            username
+          )
+        `)
+        .eq('friend_id', user.id)
+        .eq('status', 'pending');
 
       if (receivedError) {
         console.error('Error fetching received friend requests:', receivedError);
@@ -46,17 +44,17 @@ export default function ShowContacts() {
 
       // Fetch sent friend requests
       const { data: sentData, error: sentError } = await supabase
-      .from('friendships')
-      .select(`
-        *,
-        profiles!fk_friend_id (
-          first_name,
-          last_name,
-          username
-        )
-      `)
-      .eq('user_id', user.id)
-      .eq('status', 'pending');
+        .from('friendships')
+        .select(`
+          *,
+          profiles!fk_friend_id (
+            first_name,
+            last_name,
+            username
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'pending');
 
       if (sentError) {
         console.error('Error fetching sent friend requests:', sentError);
@@ -68,6 +66,24 @@ export default function ShowContacts() {
     };
 
     fetchRequests();
+
+    // Real-time subscription to changes in the 'friendships' table
+    const subscription = supabase
+      .channel('public:friendships')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'friendships' },
+        (payload) => {
+          console.log('Real-time change detected:', payload);
+          fetchRequests(); // Refresh the friend requests when a change is detected
+        }
+      )
+      .subscribe();
+
+    // Clean up the subscription when the component unmounts
+    return () => {
+      supabase.removeChannel(subscription);
+    };
   }, []);
 
   const handleSearch = (text) => {
@@ -84,7 +100,7 @@ export default function ShowContacts() {
   };
 
   const handleAcceptRequest = async (requestId) => {
-    // Update the friendship status to "Accepted"
+    // Update the friendship status to "accepted"
     const { error } = await supabase
       .from('friendships')
       .update({ status: 'accepted' })
@@ -154,7 +170,7 @@ export default function ShowContacts() {
                   <View key={index} style={styles.requestContainer}>
                     <Text style={styles.profileName}>{request.profiles.first_name} {request.profiles.last_name} {request.profiles.username}</Text>
                     <View style={styles.buttonContainer}>
-                    <TouchableOpacity
+                      <TouchableOpacity
                         style={styles.statusButton}
                         onPress={() => handleAcceptRequest(request.id)}>
                         <Text style={styles.buttonText}>Accept</Text>
@@ -170,11 +186,6 @@ export default function ShowContacts() {
                 sentRequests.map((request, index) => (
                   <View key={index} style={styles.requestContainer}>
                     <Text style={styles.profileName}>{request.profiles.first_name} {request.profiles.last_name} {request.profiles.username}</Text>
-                    <View style={styles.buttonContainer}>
-                      {/* <TouchableOpacity style={styles.statusButton}>
-                        <Text style={styles.buttonText}>{request.status}</Text>
-                      </TouchableOpacity> */}
-                    </View>
                   </View>
                 ))
               ) : (
@@ -249,10 +260,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#3D4353',
-  },
-  profileUsername: {
-    fontSize: 14,
-    color: '#9E9E9E',
   },
   noRequestsText: {
     color: '#3B429F',

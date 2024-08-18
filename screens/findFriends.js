@@ -20,6 +20,26 @@ export default function ShowContacts() {
     }, [])
   );
 
+  useEffect(() => {
+    // Real-time subscription to the 'profiles' table
+    const subscription = supabase
+      .channel('public:profiles')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'profiles' }, // Listen to all changes (insert, update, delete)
+        payload => {
+          console.log('Real-time change:', payload);
+          fetchContacts(); // Re-fetch contacts whenever a change is detected
+        }
+      )
+      .subscribe();
+
+    return () => {
+      // Clean up the subscription when the component unmounts
+      supabase.removeChannel(subscription);
+    };
+  }, []);
+
   const fetchContacts = async () => {
     const user = await getCurrentUser();
 
@@ -50,41 +70,21 @@ export default function ShowContacts() {
       )
       .filter(Boolean);
 
-
     // Step 2: Fetch profiles in the app that match the cleaned phone numbers
-    // const batchSize = 200; // Adjust this value based on performance
-    // let profiles = [];
-    // for (let i = 0; i < phoneNumbers.length; i += batchSize) {
-    //   const batch = phoneNumbers.slice(i, i + batchSize);
-    //   const { data, profilesError } = await supabase
-    //     .from('profiles')
-    //     .select('*')
-    //     .in('phonenumber', batch);
-    
-    //     if (profilesError) {
-    //       console.error('Error fetching profiles:', profilesError);
-    //     } else {
-    //       console.log('Matching profiles:', profiles);
-    //     }
-    
-    //   profiles = profiles.concat(data);
-    // }
-    
-
-
     const { data: profiles, error: profilesError } = await supabase.rpc(
       'get_profiles_by_phonenumbers',
       {
-        phone_numbers: phoneNumbers
+        phone_numbers: phoneNumbers,
       }
     );
-    
+
+    console.log('HERE'); 
+
     if (profilesError) {
       console.error(profilesError);
     } else {
       console.log('profiles', profiles);
     }
-    
 
     // Step 3: Fetch friendship records to exclude already connected users
     const { data: friendshipIds, error: friendshipError } = await supabase
@@ -94,15 +94,14 @@ export default function ShowContacts() {
 
     if (friendshipError) {
       console.error('Error fetching friendship IDs:', friendshipError);
-    } else { 
+    } else {
       console.log('friendshipIds:', friendshipIds);
     }
 
     const idsToExclude = friendshipIds.flatMap(friendship => [
       friendship.friend_id,
-      friendship.user_id
+      friendship.user_id,
     ]);
-
 
     // Filter out profiles that are already friends or are the current user
     const filteredProfiles = profiles.filter(
@@ -187,7 +186,7 @@ export default function ShowContacts() {
                     <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
                     <Text style={styles.profileUsername}>{profile.username}</Text>
                   </View>
-                  <TouchableOpacity style={styles.buttonAdd} onPress={() => handleAddFriend(profile.id)}>
+                  <TouchableOpacity style={styles.buttonAdd} onPress={() => handleAddFriend(profile.user_id)}>
                     <Text style={styles.buttonTextAdd}>Add</Text>
                   </TouchableOpacity>
                 </View>
