@@ -39,8 +39,6 @@ export default function ShowContacts() {
       return;
     }
 
-    console.log('device contacts length', deviceContacts.length); 
-
     // Extract and clean phone numbers
     const phoneNumbers = deviceContacts
       .flatMap(contact =>
@@ -52,22 +50,41 @@ export default function ShowContacts() {
       )
       .filter(Boolean);
 
-    // console.log('Cleaned Phone Numbers:', phoneNumbers);
 
     // Step 2: Fetch profiles in the app that match the cleaned phone numbers
-    const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
-      .select('*'); 
-      // .in('phonenumber', phoneNumbers);
+    // const batchSize = 200; // Adjust this value based on performance
+    // let profiles = [];
+    // for (let i = 0; i < phoneNumbers.length; i += batchSize) {
+    //   const batch = phoneNumbers.slice(i, i + batchSize);
+    //   const { data, profilesError } = await supabase
+    //     .from('profiles')
+    //     .select('*')
+    //     .in('phonenumber', batch);
+    
+    //     if (profilesError) {
+    //       console.error('Error fetching profiles:', profilesError);
+    //     } else {
+    //       console.log('Matching profiles:', profiles);
+    //     }
+    
+    //   profiles = profiles.concat(data);
+    // }
+    
 
 
-      console.log('data 1', profiles); 
-
+    const { data: profiles, error: profilesError } = await supabase.rpc(
+      'get_profiles_by_phonenumbers',
+      {
+        phone_numbers: phoneNumbers
+      }
+    );
+    
     if (profilesError) {
-      console.error('Error fetching profiles:', profilesError);
+      console.error(profilesError);
     } else {
-      console.log('Matching profiles:', profiles);
+      console.log('profiles', profiles);
     }
+    
 
     // Step 3: Fetch friendship records to exclude already connected users
     const { data: friendshipIds, error: friendshipError } = await supabase
@@ -77,7 +94,8 @@ export default function ShowContacts() {
 
     if (friendshipError) {
       console.error('Error fetching friendship IDs:', friendshipError);
-      return;
+    } else { 
+      console.log('friendshipIds:', friendshipIds);
     }
 
     const idsToExclude = friendshipIds.flatMap(friendship => [
@@ -85,9 +103,10 @@ export default function ShowContacts() {
       friendship.user_id
     ]);
 
+
     // Filter out profiles that are already friends or are the current user
     const filteredProfiles = profiles.filter(
-      profile => !idsToExclude.includes(profile.id) && profile.id !== user.id
+      profile => !idsToExclude.includes(profile.user_id) && profile.user_id !== user.id
     );
 
     setAppContacts(filteredProfiles);
