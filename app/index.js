@@ -15,7 +15,6 @@ import ProfileTab from '../screens/BottomTabs/ProfileTab';
 
 
 
-
 import { registerRootComponent } from 'expo';
 import { supabase } from '../supabaseClient';
 import PhoneLoginScreen from '../screens/PhoneLogin';
@@ -28,6 +27,7 @@ import getContacts from '../screens/getContacts';
 import Notifications from '../screens/Notifications';
 import ShowContacts from '../screens/contacts';
 import SearchPage from '../screens/SearchPage';
+import EventDetails from '../screens/EventDetails';
 
 
 
@@ -57,6 +57,7 @@ export default function AppNavigation(){
       <Stack.Screen name="Tabs" component={MyTabs} options={{ headerShown: false}}/>
       <Stack.Screen name="ExplorePage" component={HomeTab} options={{ headerShown: false }}/>
       <Stack.Screen name="SearchPage" component={SearchPage} />
+      <Stack.Screen name="EventDetails" component={EventDetails} />
 
       <Stack.Screen name="Profile" component={ProfileTab} options={{ headerShown: false }} />
       <Stack.Screen name="settings" component={settings} options={{ headerShown: false }}/>

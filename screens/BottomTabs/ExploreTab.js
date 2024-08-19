@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, ImageBackground, ScrollView, TouchableOpacity, Image, Linking } from 'react-native';
+import { View, StyleSheet, Text, ImageBackground, ScrollView, TouchableOpacity, Image, Linking, Dimensions } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { supabase } from '../../supabaseClient';
 import { useNavigation } from '@react-navigation/native';
@@ -53,11 +53,14 @@ const ExplorePage = () => {
     navigation.navigate('SearchPage');
   };
 
+  const openEventDetailsPage = (event) => {
+    navigation.navigate('EventDetails', { event });
+  };
+
   const openLocationInMaps = (venue, city) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${venue}, ${city}`)}`;
     Linking.openURL(url).catch(err => console.error("Couldn't open Google Maps", err));
   };
-
 
   return (
     <View style={styles.container}>
@@ -109,41 +112,44 @@ const ExplorePage = () => {
           horizontal={false}
         >
           {events.map((event, index) => (
-            <View key={index} style={styles.box}>
-              <ImageBackground
-                source={{ uri: event.image_url || 'https://via.placeholder.com/344x257' }}
-                style={styles.imageBackground}
-                imageStyle={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
-              >
-                <View style={styles.artistInfo}>
-                  <Text style={styles.artistName}>{event.artist || 'Unknown Artist'}</Text>
-                  <Image source={require('@/assets/images/star.png')} style={styles.icon} />
-                </View>
-              </ImageBackground>
-              <View style={styles.boxContent}>
-                <View style={styles.eventDetailsContainer}>
-                  <Image source={require('@/assets/images/calender.png')} style={styles.iconSmall} />
-                  <Text style={styles.eventDetails}>
-                    {moment(`${event.date} ${event.time}`).format('MMM DD @ hh:mm A')}
-                  </Text>
-                </View>
-
-                <View style={styles.eventDetailsContainer}>
-                  <Image source={require('@/assets/images/pin.png')} style={styles.iconSmall} />
-                  <TouchableOpacity onPress={() => openLocationInMaps(event.venue, event.city)}>
-                    <Text style={styles.eventDetailsLink}>
-                      {event.venue || 'Venue not available'}
+            <TouchableOpacity key={index} onPress={() => openEventDetailsPage(event)}>
+              <View style={styles.box}>
+                <ImageBackground
+                  source={{ uri: event.image_url || 'https://via.placeholder.com/344x257' }}
+                  style={styles.imageBackground}
+                  imageStyle={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
+                >
+                  <View style={styles.artistInfo}>
+                    <Text style={styles.artistName}>{event.artist || 'Unknown Artist'}</Text>
+                  </View>
+                </ImageBackground>
+                <View style={styles.boxContent}>
+                  <View style={styles.eventDetailsContainer}>
+                    <Image source={require('@/assets/images/calender.png')} style={styles.iconSmall} />
+                    <Text style={styles.eventDetails}>
+                      {moment(`${event.date} ${event.time}`).format('MMM DD @ hh:mm A')}
                     </Text>
-                  </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.eventDetailsContainer}>
+                    <Image source={require('@/assets/images/pin.png')} style={styles.iconSmall} />
+                    <TouchableOpacity onPress={() => openLocationInMaps(event.venue, event.city)}>
+                      <Text style={styles.eventDetailsLink}>
+                        {event.venue || 'Venue not available'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
       )}
     </View>
   );
 };
+
+const { width } = Dimensions.get('window'); // Get the width of the screen
 
 const styles = StyleSheet.create({
   container: {
@@ -203,7 +209,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
     marginBottom: 20,
-    width: '100%',
+    width: width - 40, // Ensure the box takes up full width with padding
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
