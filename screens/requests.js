@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView, TextInput, TouchableWithoutFeedback, Keyboard, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { supabase } from '../supabaseClient';
 import { useNavigation } from '@react-navigation/native';
 import { getCurrentUser } from '../services/userService';
@@ -130,72 +130,69 @@ export default function ShowContacts() {
     }
   };
 
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
-
   const handleTabChange = (tab) => {
     setCurrentTab(tab);
   };
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={styles.container}>
-        <View style={styles.box}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search friends"
-            value={searchText}
-            onChangeText={handleSearch}
-          />
-          
-          <Text style={styles.requestsText}>Requests ({friendRequests.length})</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <View style={styles.box}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search friends"
+          value={searchText}
+          onChangeText={handleSearch}
+        />
+        
+        <Text style={styles.requestsText}>Requests ({friendRequests.length})</Text>
 
-          <View style={styles.requestsTabsContainer}>
-            <TouchableOpacity style={styles.requestTab} onPress={() => handleTabChange('received')}>
-              <Text style={currentTab === 'received' ? styles.requestTabActive : styles.requestTabInactive}>Received</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.requestTab} onPress={() => handleTabChange('sent')}>
-              <Text style={currentTab === 'sent' ? styles.requestTabActive : styles.requestTabInactive}>Sent</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Friend Requests Section */}
-          <ScrollView style={styles.requestsContainer}>
-            {loading ? (
-              <ActivityIndicator size="large" color="#0000ff" />
-            ) : currentTab === 'received' ? (
-              friendRequests.length > 0 ? (
-                friendRequests.map((request, index) => (
-                  <View key={index} style={styles.requestContainer}>
-                    <Text style={styles.profileName}>{request.profiles.first_name} {request.profiles.last_name} {request.profiles.username}</Text>
-                    <View style={styles.buttonContainer}>
-                      <TouchableOpacity
-                        style={styles.statusButton}
-                        onPress={() => handleAcceptRequest(request.id)}>
-                        <Text style={styles.buttonText}>Accept</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.noRequestsText}>No requests received at this time. Go add some friends!</Text>
-              )
-            ) : (
-              sentRequests.length > 0 ? (
-                sentRequests.map((request, index) => (
-                  <View key={index} style={styles.requestContainer}>
-                    <Text style={styles.profileName}>{request.profiles.first_name} {request.profiles.last_name} {request.profiles.username}</Text>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.noRequestsText}>No requests sent at this time. Go add some friends!</Text>
-              )
-            )}
-          </ScrollView>
+        <View style={styles.requestsTabsContainer}>
+          <TouchableOpacity style={styles.requestTab} onPress={() => handleTabChange('received')}>
+            <Text style={currentTab === 'received' ? styles.requestTabActive : styles.requestTabInactive}>Received</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.requestTab} onPress={() => handleTabChange('sent')}>
+            <Text style={currentTab === 'sent' ? styles.requestTabActive : styles.requestTabInactive}>Sent</Text>
+          </TouchableOpacity>
         </View>
+
+        {/* Friend Requests Section */}
+        <ScrollView style={styles.requestsContainer}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#0000ff" />
+          ) : currentTab === 'received' ? (
+            friendRequests.length > 0 ? (
+              friendRequests.map((request, index) => (
+                <View key={index} style={styles.requestContainer}>
+                  <Text style={styles.profileName}>{request.profiles.first_name} {request.profiles.last_name} {request.profiles.username}</Text>
+                  <View style={styles.buttonContainer}>
+                    <TouchableOpacity
+                      style={styles.statusButton}
+                      onPress={() => handleAcceptRequest(request.id)}>
+                      <Text style={styles.buttonText}>Accept</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noRequestsText}>No requests received at this time. Go add some friends!</Text>
+            )
+          ) : (
+            sentRequests.length > 0 ? (
+              sentRequests.map((request, index) => (
+                <View key={index} style={styles.requestContainer}>
+                  <Text style={styles.profileName}>{request.profiles.first_name} {request.profiles.last_name} {request.profiles.username}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noRequestsText}>No requests sent at this time. Go add some friends!</Text>
+            )
+          )}
+        </ScrollView>
       </View>
-    </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 

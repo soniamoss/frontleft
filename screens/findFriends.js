@@ -1,10 +1,12 @@
+
 import React, { useEffect, useState, useCallback } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import * as Contacts from 'expo-contacts';
 import { supabase } from '../supabaseClient';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { addFriend } from '../services/friendshipService';
 import { getCurrentUser } from '../services/userService';
+import * as SMS from 'expo-sms';
 
 export default function ShowContacts() {
   const [appContacts, setAppContacts] = useState([]);
@@ -13,7 +15,6 @@ export default function ShowContacts() {
   const [filteredProfiles, setFilteredProfiles] = useState([]);
   const navigation = useNavigation();
 
-  // Use useFocusEffect to refresh the contacts whenever the screen is focused
   useFocusEffect(
     useCallback(() => {
       fetchContacts();
@@ -21,21 +22,19 @@ export default function ShowContacts() {
   );
 
   useEffect(() => {
-    // Real-time subscription to the 'profiles' table
     const subscription = supabase
       .channel('public:profiles')
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'profiles' }, // Listen to all changes (insert, update, delete)
+        { event: '*', schema: 'public', table: 'profiles' },
         payload => {
           console.log('Real-time change:', payload);
-          fetchContacts(); // Re-fetch contacts whenever a change is detected
+          fetchContacts();
         }
       )
       .subscribe();
 
     return () => {
-      // Clean up the subscription when the component unmounts
       supabase.removeChannel(subscription);
     };
   }, []);
@@ -43,7 +42,6 @@ export default function ShowContacts() {
   const fetchContacts = async () => {
     const user = await getCurrentUser();
 
-    // Step 1: Get user's device contacts
     const { status } = await Contacts.requestPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert('Permissions Denied', 'Access to contacts is required to find friends.');
@@ -59,7 +57,6 @@ export default function ShowContacts() {
       return;
     }
 
-    // Extract and clean phone numbers
     const phoneNumbers = deviceContacts
       .flatMap(contact =>
         contact.phoneNumbers
@@ -70,7 +67,6 @@ export default function ShowContacts() {
       )
       .filter(Boolean);
 
-    // Step 2: Fetch profiles in the app that match the cleaned phone numbers
     const { data: profiles, error: profilesError } = await supabase.rpc(
       'get_profiles_by_phonenumbers',
       {
@@ -78,15 +74,12 @@ export default function ShowContacts() {
       }
     );
 
-    console.log('HERE'); 
-
     if (profilesError) {
       console.error(profilesError);
     } else {
       console.log('profiles', profiles);
     }
 
-    // Step 3: Fetch friendship records to exclude already connected users
     const { data: friendshipIds, error: friendshipError } = await supabase
       .from('friendships')
       .select('friend_id, user_id')
@@ -103,7 +96,6 @@ export default function ShowContacts() {
       friendship.user_id,
     ]);
 
-    // Filter out profiles that are already friends or are the current user
     const filteredProfiles = profiles.filter(
       profile => !idsToExclude.includes(profile.user_id) && profile.user_id !== user.id
     );
@@ -111,7 +103,6 @@ export default function ShowContacts() {
     setAppContacts(filteredProfiles);
     setFilteredProfiles(filteredProfiles);
 
-    // Step 4: Display device contacts that are not in the app (simulate non-app contacts)
     const nonAppContactsSample = deviceContacts.slice(0, 10).map(contact => ({
       id: contact.id,
       first_name: contact.name,
@@ -140,80 +131,89 @@ export default function ShowContacts() {
     const result = await addFriend(user.id, friendID);
     if (result.success) {
       Alert.alert('Success', 'Friend request sent successfully!');
-      fetchContacts(); // Refresh the list after adding a friend
+      fetchContacts();
     } else {
       Alert.alert('Error', result.message || 'Failed to send friend request.');
     }
   };
 
-  const handleInvite = (contact) => {
-    // Implement your logic to send an invite (e.g., SMS or email)
-    console.log('Invite sent to:', contact.first_name, contact.phone_number);
-    Alert.alert('Invite Sent', `An invite has been sent to ${contact.first_name}`);
-  };
-
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
+  const handleInvite = async (contact) => {
+    const message = `Hi ${contact.first_name}, I invite you to join our app! Click the link to download: [Your App Link]`;
+    console.log("set up the app link");
+  
+    const { result } = await SMS.sendSMSAsync(
+      [contact.phone_number],
+      message
+    );
+  
+    if (result === 'sent') {
+      console.log('Invite sent to:', contact.first_name, contact.phone_number);
+      Alert.alert('Invite Sent', `An invite has been sent to ${contact.first_name}`);
+    } else {
+      console.error('Failed to send invite');
+      Alert.alert('Error', 'Failed to send invite.');
+    }
   };
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={styles.container}>
-        <View style={styles.box}>
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Add or search friends"
-              value={searchText}
-              onChangeText={handleSearch}
-            />
-          </View>
-
-          <View style={styles.headerContainer}>
-            <Text style={styles.text}>Find Friends</Text>
-          </View>
-
-          <ScrollView style={styles.scrollView}>
-            {/* App Contacts Section */}
-            {filteredProfiles.length > 0 ? (
-              filteredProfiles.map((profile, index) => (
-                <View key={index} style={styles.profileContainer}>
-                  <Image
-                    source={{ uri: profile.profile_image_url || 'https://via.placeholder.com/50' }}
-                    style={styles.profilePicture}
-                  />
-                  <View style={styles.profileInfo}>
-                    <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
-                    <Text style={styles.profileUsername}>{profile.username}</Text>
-                  </View>
-                  <TouchableOpacity style={styles.buttonAdd} onPress={() => handleAddFriend(profile.user_id)}>
-                    <Text style={styles.buttonTextAdd}>Add</Text>
-                  </TouchableOpacity>
-                </View>
-              ))
-            ) : (
-              <Text style={styles.noProfilesText}>No matching profiles found</Text>
-            )}
-
-            {/* Non-App Contacts Section */}
-            <View style={styles.nonAppContactsContainer}>
-              <Text style={styles.sectionTitle}>Invite Contacts</Text>
-              {nonAppContacts.map((contact, index) => (
-                <View key={index} style={styles.profileContainer}>
-                  <View style={styles.profileInfo}>
-                    <Text style={styles.profileName}>{contact.first_name}</Text>
-                    <Text style={styles.profileUsername}>{contact.phone_number}</Text>
-                  </View>
-                  <TouchableOpacity style={styles.inviteButton} onPress={() => handleInvite(contact)}>
-                    <Text style={styles.inviteButtonText}>Invite</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </View>
-          </ScrollView>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <View style={styles.box}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Add or search friends"
+            value={searchText}
+            onChangeText={handleSearch}
+          />
         </View>
+
+        <View style={styles.headerContainer}>
+          <Text style={styles.text}>Find Friends</Text>
+        </View>
+
+        <ScrollView style={styles.scrollView}>
+          {/* App Contacts Section */}
+          {filteredProfiles.length > 0 ? (
+            filteredProfiles.map((profile, index) => (
+              <View key={index} style={styles.profileContainer}>
+                <Image
+                  source={{ uri: profile.profile_image_url || 'https://via.placeholder.com/50' }}
+                  style={styles.profilePicture}
+                />
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
+                  <Text style={styles.profileUsername}>{profile.username}</Text>
+                </View>
+                <TouchableOpacity style={styles.buttonAdd} onPress={() => handleAddFriend(profile.user_id)}>
+                  <Text style={styles.buttonTextAdd}>Add</Text>
+                </TouchableOpacity>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noProfilesText}>No matching profiles found</Text>
+          )}
+
+          {/* Non-App Contacts Section */}
+          <View style={styles.nonAppContactsContainer}>
+            <Text style={styles.sectionTitle}>Invite Contacts</Text>
+            {nonAppContacts.map((contact, index) => (
+              <View key={index} style={styles.profileContainer}>
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileName}>{contact.first_name}</Text>
+                  <Text style={styles.profileUsername}>{contact.phone_number}</Text>
+                </View>
+                <TouchableOpacity style={styles.inviteButton} onPress={() => handleInvite(contact)}>
+                  <Text style={styles.inviteButtonText}>Invite</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </View>
-    </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -225,6 +225,7 @@ const styles = StyleSheet.create({
   box: {
     flex: 1,
     width: '90%',
+    maxHeight: '80%', // Limit the height of the box
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 16,
@@ -256,7 +257,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   scrollView: {
-    flex: 1,
+    flexGrow: 1,
   },
   profileContainer: {
     marginVertical: 5,
@@ -302,13 +303,15 @@ const styles = StyleSheet.create({
     fontWeight: '400',
   },
   inviteButton: {
-    backgroundColor: '#ff6347',
+    backgroundColor: '#fff',
+    borderColor:'#3F407C',
+    borderWidth: 1,
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     borderRadius: 20,
   },
   inviteButtonText: {
-    color: '#fff',
+    color: '#3F407C',
     fontSize: 14,
     fontWeight: '600',
   },

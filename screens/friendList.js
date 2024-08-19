@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, TouchableOpacity, Image, ScrollView, TextInput, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { StyleSheet, View, Text, Image, ScrollView, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { supabase } from '../supabaseClient';
 import { useNavigation } from '@react-navigation/native';
 import { getCurrentUser } from '../services/userService';
@@ -11,8 +12,8 @@ export default function ShowContacts() {
   const navigation = useNavigation();
 
   useEffect(() => {
+    
     fetchAcceptedFriends();
-
     // Real-time subscription to changes in the 'friendships' table
     const subscription = supabase
       .channel('public:friendships')
@@ -86,48 +87,45 @@ export default function ShowContacts() {
     }
   };
 
-  const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
-
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <View style={styles.container}>
-        <View style={styles.box}>
-          <View style={styles.searchContainer}>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search friends"
-              value={searchText}
-              onChangeText={handleSearch}
-            />
-          </View>
-
-          <View style={styles.headerContainer}>
-            <Text style={styles.text}>Friends</Text>
-          </View>
-
-          <ScrollView style={styles.profileListContainer}>
-            {filteredProfiles.length > 0 ? (
-              filteredProfiles.map((profile, index) => (
-                <View key={index} style={styles.profileContainer}>
-                  <Image
-                    source={{ uri: profile.profile_image_url || 'https://via.placeholder.com/50' }}
-                    style={styles.profilePicture}
-                  />
-                  <View style={styles.profileInfo}>
-                    <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
-                    <Text style={styles.profileUsername}>{profile.username}</Text>
-                  </View>
-                </View>
-              ))
-            ) : (
-              <Text style={styles.noProfilesText}>No matching profiles found</Text>
-            )}
-          </ScrollView>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <View style={styles.box}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search friends"
+            value={searchText}
+            onChangeText={handleSearch}
+          />
         </View>
+
+        <View style={styles.headerContainer}>
+          <Text style={styles.text}>Friends</Text>
+        </View>
+
+        <ScrollView style={styles.profileListContainer}>
+          {filteredProfiles.length > 0 ? (
+            filteredProfiles.map((profile, index) => (
+              <View key={index} style={styles.profileContainer}>
+                <Image
+                  source={{ uri: profile.profile_image_url || 'https://via.placeholder.com/50' }}
+                  style={styles.profilePicture}
+                />
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
+                  <Text style={styles.profileUsername}>{profile.username}</Text>
+                </View>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noProfilesText}>No matching profiles found</Text>
+          )}
+        </ScrollView>
       </View>
-    </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
