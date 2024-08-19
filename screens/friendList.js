@@ -1,8 +1,7 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Text, Image, ScrollView, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { supabase } from '../supabaseClient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getCurrentUser } from '../services/userService';
 
 export default function ShowContacts() {
@@ -11,26 +10,55 @@ export default function ShowContacts() {
   const [filteredProfiles, setFilteredProfiles] = useState([]);
   const navigation = useNavigation();
 
-  useEffect(() => {
-    
-    fetchAcceptedFriends();
-    // Real-time subscription to changes in the 'friendships' table
-    const subscription = supabase
-      .channel('public:friendships')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'friendships' }, // Listen to all changes (insert, update, delete)
-        (payload) => {
-          console.log('Real-time change:', payload);
-          fetchAcceptedFriends(); // Re-fetch friends when a change is detected
-        }
-      )
-      .subscribe();
+  useFocusEffect(
+    useCallback(() => {
+      // Fetch the latest data every time the screen comes into focus
+      fetchAcceptedFriends();
+    }, [])
+  );
 
-    // Clean up the subscription when the component unmounts
-    return () => {
-      supabase.removeChannel(subscription);
+  useEffect(() => {
+    // Real-time subscription to changes in the 'friendships' table
+    const setupRealTimeSubscription = async () => {
+      const user = await getCurrentUser();
+
+      const subscription = supabase
+        .channel('public:friendships')
+        .on(
+          'postgres_changes',
+          { event: 'insert', schema: 'public', table: 'friendships', filter: `friend_id=eq.${user.id},user_id=eq.${user.id}` },
+          (payload) => {
+            console.log('Insert event detected:', payload);
+            fetchAcceptedFriends();
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: 'update', schema: 'public', table: 'friendships', filter: `friend_id=eq.${user.id},user_id=eq.${user.id}` },
+          (payload) => {
+            console.log('Update event detected:', payload);
+            fetchAcceptedFriends();
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: 'delete', schema: 'public', table: 'friendships', filter: `friend_id=eq.${user.id},user_id=eq.${user.id}` },
+          (payload) => {
+            console.log('Delete event detected:', payload);
+            fetchAcceptedFriends();
+          }
+        )
+        .subscribe((status) => {
+          console.log('Subscription status:', status);
+        });
+
+      // Clean up the subscription when the component unmounts
+      return () => {
+        supabase.removeChannel(subscription);
+      };
     };
+
+    setupRealTimeSubscription();
   }, []);
 
   const fetchAcceptedFriends = async () => {
@@ -61,12 +89,14 @@ export default function ShowContacts() {
       console.error('Error fetching accepted friends:', error);
     } else {
       // Flatten the profiles and filter out the authenticated user's profile by user_id
-      const allProfiles = friendships.flatMap(friendship => [
+      const allProfiles = friendships.flatMap((friendship) => [
         friendship.user_profile,
-        friendship.friend_profile
+        friendship.friend_profile,
       ]);
 
-      const filteredFriends = allProfiles.filter(profile => profile.user_id !== user.id);
+      const filteredFriends = allProfiles.filter(
+        (profile) => profile.user_id !== user.id
+      );
 
       setAcceptedFriends(filteredFriends);
       setFilteredProfiles(filteredFriends);
@@ -76,7 +106,7 @@ export default function ShowContacts() {
   const handleSearch = (text) => {
     setSearchText(text);
     if (text) {
-      const filtered = acceptedFriends.filter(profile =>
+      const filtered = acceptedFriends.filter((profile) =>
         profile.first_name.toLowerCase().includes(text.toLowerCase()) ||
         profile.last_name.toLowerCase().includes(text.toLowerCase()) ||
         profile.username.toLowerCase().includes(text.toLowerCase())
@@ -111,11 +141,15 @@ export default function ShowContacts() {
             filteredProfiles.map((profile, index) => (
               <View key={index} style={styles.profileContainer}>
                 <Image
-                  source={{ uri: profile.profile_image_url || 'https://via.placeholder.com/50' }}
+                  source={{
+                    uri: profile.profile_image_url || 'https://via.placeholder.com/50',
+                  }}
                   style={styles.profilePicture}
                 />
                 <View style={styles.profileInfo}>
-                  <Text style={styles.profileName}>{profile.first_name} {profile.last_name}</Text>
+                  <Text style={styles.profileName}>
+                    {profile.first_name} {profile.last_name}
+                  </Text>
                   <Text style={styles.profileUsername}>{profile.username}</Text>
                 </View>
               </View>
@@ -167,7 +201,6 @@ const styles = StyleSheet.create({
     color: '#3D4353',
     fontSize: 24,
     fontWeight: '700',
-    fontFamily: 'poppins',
   },
   profileListContainer: {
     flexGrow: 1,
@@ -207,3 +240,6 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
 });
+
+
+

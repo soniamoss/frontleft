@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { supabase } from '../supabaseClient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getCurrentUser } from '../services/userService';
 
 export default function ShowContacts() {
@@ -14,59 +14,65 @@ export default function ShowContacts() {
   const [currentTab, setCurrentTab] = useState('received'); // State for tab selection
   const navigation = useNavigation();
 
+  const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    const user = await getCurrentUser();
+    if (!user) {
+      console.error('Could not retrieve current user data.');
+      return;
+    }
+
+    // Fetch received friend requests
+    const { data: receivedData, error: receivedError } = await supabase
+      .from('friendships')
+      .select(`
+        *,
+        profiles!fk_user_id (
+          first_name,
+          last_name,
+          username
+        )
+      `)
+      .eq('friend_id', user.id)
+      .eq('status', 'pending');
+
+    if (receivedError) {
+      console.error('Error fetching received friend requests:', receivedError);
+    } else {
+      setFriendRequests(receivedData);
+    }
+
+    // Fetch sent friend requests
+    const { data: sentData, error: sentError } = await supabase
+      .from('friendships')
+      .select(`
+        *,
+        profiles!fk_friend_id (
+          first_name,
+          last_name,
+          username
+        )
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'pending');
+
+    if (sentError) {
+      console.error('Error fetching sent friend requests:', sentError);
+    } else {
+      setSentRequests(sentData);
+    }
+
+    setLoading(false);
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      // Fetch the latest data every time the screen comes into focus
+      fetchRequests();
+    }, [fetchRequests])
+  );
+
   useEffect(() => {
-    const fetchRequests = async () => {
-      const user = await getCurrentUser();
-      if (!user) {
-        console.error('Could not retrieve current user data.');
-        return;
-      }
-
-      // Fetch received friend requests
-      const { data: receivedData, error: receivedError } = await supabase
-        .from('friendships')
-        .select(`
-          *,
-          profiles!fk_user_id (
-            first_name,
-            last_name,
-            username
-          )
-        `)
-        .eq('friend_id', user.id)
-        .eq('status', 'pending');
-
-      if (receivedError) {
-        console.error('Error fetching received friend requests:', receivedError);
-      } else {
-        setFriendRequests(receivedData);
-      }
-
-      // Fetch sent friend requests
-      const { data: sentData, error: sentError } = await supabase
-        .from('friendships')
-        .select(`
-          *,
-          profiles!fk_friend_id (
-            first_name,
-            last_name,
-            username
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'pending');
-
-      if (sentError) {
-        console.error('Error fetching sent friend requests:', sentError);
-      } else {
-        setSentRequests(sentData);
-      }
-
-      setLoading(false);
-    };
-
-    fetchRequests();
-
     // Real-time subscription to changes in the 'friendships' table
     const subscription = supabase
       .channel('public:friendships')
@@ -84,7 +90,7 @@ export default function ShowContacts() {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, []);
+  }, [fetchRequests]);
 
   const handleSearch = (text) => {
     setSearchText(text);
@@ -110,23 +116,7 @@ export default function ShowContacts() {
       console.error('Error updating friendship status:', error);
     } else {
       // Refresh the friend requests list after the update
-      const user = await getCurrentUser();
-      if (user) {
-        const { data: updatedReceivedData } = await supabase
-          .from('friendships')
-          .select(`
-            *,
-            profiles!fk_user_id (
-              first_name,
-              last_name,
-              username
-            )
-          `)
-          .eq('friend_id', user.id)
-          .eq('status', 'pending');
-
-        setFriendRequests(updatedReceivedData);
-      }
+      fetchRequests();
     }
   };
 
