@@ -443,6 +443,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderRadius: 30,
     alignItems: 'center',
+    textDecorationLine: 'underline',
   },
   button: {
     position: 'absolute',

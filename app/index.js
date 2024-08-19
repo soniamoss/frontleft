@@ -8,8 +8,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import IntroScreen from '../screens/intro';
-import Home from '../screens/Home';
-import HomeTab from '../screens/BottomTabs/ExploreTab';
+import ExploreTab from '../screens/BottomTabs/ExploreTab';
 import FriendsTab from '../screens/BottomTabs/FriendsTab';
 import ProfileTab from '../screens/BottomTabs/ProfileTab';
 
@@ -55,9 +54,9 @@ export default function AppNavigation(){
       <Stack.Screen name="Notifications" component={Notifications} options={{ headerShown: false}} />
       
       <Stack.Screen name="Tabs" component={MyTabs} options={{ headerShown: false}}/>
-      <Stack.Screen name="ExplorePage" component={HomeTab} options={{ headerShown: false }}/>
-      <Stack.Screen name="SearchPage" component={SearchPage} />
-      <Stack.Screen name="EventDetails" component={EventDetails} />
+      <Stack.Screen name="ExplorePage" component={ExploreTab} options={{ headerShown: false }}/>
+      <Stack.Screen name="SearchPage" component={SearchPage} options={{ headerShown: false }}/>
+      <Stack.Screen name="EventDetails" component={EventDetails} options={{ headerShown: false }}/>
 
       <Stack.Screen name="Profile" component={ProfileTab} options={{ headerShown: false }} />
       <Stack.Screen name="settings" component={settings} options={{ headerShown: false }}/>
@@ -69,7 +68,7 @@ export default function AppNavigation(){
   function MyTabs() {
     return (
       <Tab.Navigator>
-        <Tab.Screen name="Explore" component={HomeTab} options={{ headerShown: false}}/>
+        <Tab.Screen name="Explore" component={ExploreTab} options={{ headerShown: false}}/>
         <Tab.Screen name="Friends" component={FriendsTab}options={{ headerShown: false}} />
         <Tab.Screen name="Profile" component={ProfileTab} options={{ headerShown: false}}/>
       </Tab.Navigator>

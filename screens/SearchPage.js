@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, TextInput, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, TextInput, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Dimensions, Keyboard } from 'react-native';
 import { supabase } from '../supabaseClient';
 import moment from 'moment';
 
@@ -8,6 +8,7 @@ const SearchPage = ({ navigation }) => {
   const [allEvents, setAllEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isFocused, setIsFocused] = useState(false);
 
   useEffect(() => {
     fetchAllEvents();
@@ -67,62 +68,88 @@ const SearchPage = ({ navigation }) => {
     );
   };
 
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+  };
+
+  const handleCancel = () => {
+    setSearchQuery('');
+    setIsFocused(false); // Reset to default size when cancel is pressed
+    Keyboard.dismiss(); // Dismiss the keyboard
+  };
+
+  const handleEventPress = (event) => {
+    navigation.navigate('EventDetails', { event });
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
+      <View>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>{'< Back'}</Text>
         </TouchableOpacity>
-        <View style={styles.searchInputContainer}>
-          <Image source={require('@/assets/images/search.png')} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search events"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Image source={require('@/assets/images/clear.png')} style={styles.iconSmall} />
-            </TouchableOpacity>
-          )}
+        {/* New White Box Below Search Bar */}
+        <View style={styles.whiteBox}>
+          <View style={styles.searchBoxContainer}>
+            <View style={[styles.searchBox, { width: isFocused || searchQuery.length > 0 ? '80%' : '100%' }]}>
+              <Image source={require('@/assets/images/search.png')} style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search events"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearButton}>
+                  <Image source={require('@/assets/images/clear.png')} style={styles.iconSmall} />
+                </TouchableOpacity>
+              )}
+            </View>
+            {(isFocused || searchQuery.length > 0) && (
+              <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
-        <TouchableOpacity onPress={() => setSearchQuery('')}>
-          <Text style={styles.cancelText}>Cancel</Text>
-        </TouchableOpacity>
       </View>
 
       {loading ? (
         <Text style={styles.loadingText}>Loading events...</Text>
       ) : (
-        <ScrollView style={styles.scrollView}>
-          {filteredEvents.map((event, index) => (
-            <View key={index} style={styles.eventCard}>
-              <View style={styles.eventInfo}>
-                <Text style={styles.eventTitle}>
-                  {highlightText(event.artist, searchQuery)}
-                </Text>
-                <View style={styles.eventDetailsContainer}>
-                  <Image source={require('@/assets/images/calender.png')} style={styles.iconSmall} />
-                  <Text style={styles.eventDetails}>
-                    {moment(`${event.date} ${event.time}`).format('MMM DD @ hh:mm A')}
-                  </Text>
+        <View style={styles.eventsContainer}>
+          <Text style={styles.recentSearches}>Recent Searches</Text>
+          <ScrollView style={styles.scrollView}>
+            {filteredEvents.map((event, index) => (
+              <TouchableOpacity key={index} onPress={() => handleEventPress(event)}>
+                <View style={styles.eventCard}>
+                  <View style={styles.eventInfo}>
+                    <Text style={styles.eventTitle}>
+                      {highlightText(event.artist, searchQuery)}
+                    </Text>
+                    <View style={styles.eventDetailsContainer}>
+                      <Image source={require('@/assets/images/calender.png')} style={styles.iconSmall} />
+                      <Text style={styles.eventDetails}>
+                        {moment(`${event.date} ${event.time}`).format('MMM DD @ hh:mm A')}
+                      </Text>
+                      <Image source={require('@/assets/images/pin.png')} style={styles.iconSmall} />
+                      <Text style={styles.eventDetails}>
+                        {highlightText(event.venue, searchQuery)}
+                      </Text>
+                    </View>
+                  </View>
                 </View>
-                <View style={styles.eventDetailsContainer}>
-                  <Image source={require('@/assets/images/pin.png')} style={styles.iconSmall} />
-                  <Text style={styles.eventDetails}>
-                    {highlightText(event.venue, searchQuery)}
-                  </Text>
-                </View>
-                <View style={styles.additionalIconsContainer}>
-                  <Image source={require('@/assets/images/checkmark.png')} style={styles.iconSmall} />
-                  <Image source={require('@/assets/images/star.png')} style={styles.icon} />
-                </View>
-              </View>
-            </View>
-          ))}
-          {filteredEvents.length === 0 && <Text style={styles.noResultsText}>No events found</Text>}
-        </ScrollView>
+              </TouchableOpacity>
+            ))}
+            {filteredEvents.length === 0 && <Text style={styles.noResultsText}>No events found</Text>}
+          </ScrollView>
+        </View>
       )}
     </View>
   );
@@ -133,57 +160,80 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9F9F9',
   },
-  headerContainer: {
+  backText: {
+    color: '#6A74FB',
+    fontSize: 15,
+    left: 14,
+  },
+  searchBoxContainer: {
+    padding: 20,
+    position: 'relative',
+  },
+  searchBox: {
+    backgroundColor: '#fff',
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#CEDBEA',
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
   },
-  backText: {
-    color: '#3B429F',
+  searchInput: {
+    flex: 1,
+    height: 26,
     fontSize: 16,
     marginRight: 10,
-  },
-  searchInputContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F0F0F0',
-    borderRadius: 8,
-    paddingHorizontal: 10,
+    color:'#3D4353',
   },
   searchIcon: {
     width: 20,
     height: 20,
     marginRight: 10,
   },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    fontSize: 16,
+  clearButton: {
+    padding: 5,
+  },
+  cancelButton: {
+    position: 'absolute',
+    right: 18,
+    top: 35,
   },
   iconSmall: {
-    width: 20,
-    height: 20,
-  },
-  icon: {
     width: 20,
     height: 20,
   },
   cancelText: {
     color: '#3B429F',
     fontSize: 16,
-    marginLeft: 10,
+  },
+  whiteBox: {
+    backgroundColor: '#fff',
+    borderRadius: 4,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    borderColor: '#CEDBEA',
+    marginTop: 20,
+    width: '90%',
+    alignSelf: 'center',
   },
   loadingText: {
     textAlign: 'center',
     marginTop: 20,
     fontSize: 16,
   },
+  eventsContainer: {
+    marginTop: 20, // Ensures space between the search box and "Recent Searches" text
+  },
+  recentSearches: {
+    fontSize: 15,
+    fontWeight: '700', // Bold text
+    color: '#000000',
+    marginHorizontal: 20,
+    marginBottom: 10, // Space below the "Recent Searches" text
+    fontFamily: 'poppins',
+  },
   scrollView: {
-    padding: 20,
+    paddingHorizontal: 20,
   },
   eventCard: {
     backgroundColor: '#fff',
@@ -202,7 +252,7 @@ const styles = StyleSheet.create({
   eventTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#3B429F',
+    color: '#3D4353',
     marginBottom: 8,
   },
   eventDetailsContainer: {
@@ -211,18 +261,16 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   eventDetails: {
-    marginLeft: 10,
-    fontSize: 16,
+    marginLeft: 5,
+    fontSize: 11,
     color: '#3D4353',
     fontWeight: '500',
+    flexShrink: 1,
+    flexWrap: 'wrap',
+    width: Dimensions.get('window').width * 0.6,
   },
   highlight: {
-    backgroundColor: '#FFD700', // Highlight color
-  },
-  additionalIconsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 10,
+    backgroundColor: '#8E9BFD',
   },
   noResultsText: {
     fontSize: 16,

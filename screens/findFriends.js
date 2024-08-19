@@ -149,9 +149,6 @@ export default function ShowContacts() {
     if (result === 'sent') {
       console.log('Invite sent to:', contact.first_name, contact.phone_number);
       Alert.alert('Invite Sent', `An invite has been sent to ${contact.first_name}`);
-    } else {
-      console.error('Failed to send invite');
-      Alert.alert('Error', 'Failed to send invite.');
     }
   };
 

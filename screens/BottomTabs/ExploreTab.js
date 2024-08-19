@@ -5,7 +5,7 @@ import { supabase } from '../../supabaseClient';
 import { useNavigation } from '@react-navigation/native';
 import moment from 'moment';
 
-const ExplorePage = () => {
+const ExploreTab = () => {
   const [open, setOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState('Los Angeles');
   const [items, setItems] = useState([
@@ -117,27 +117,27 @@ const ExplorePage = () => {
                 <ImageBackground
                   source={{ uri: event.image_url || 'https://via.placeholder.com/344x257' }}
                   style={styles.imageBackground}
-                  imageStyle={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
-                >
-                  <View style={styles.artistInfo}>
+                  imageStyle={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
+                </ImageBackground>
+                <View style={styles.artistInfo}>
                     <Text style={styles.artistName}>{event.artist || 'Unknown Artist'}</Text>
                   </View>
-                </ImageBackground>
                 <View style={styles.boxContent}>
                   <View style={styles.eventDetailsContainer}>
                     <Image source={require('@/assets/images/calender.png')} style={styles.iconSmall} />
                     <Text style={styles.eventDetails}>
-                      {moment(`${event.date} ${event.time}`).format('MMM DD @ hh:mm A')}
+                      {moment(`${event.date} ${event.time}`).format('MMM DD @ hh:mmA ')}
                     </Text>
-                  </View>
-
-                  <View style={styles.eventDetailsContainer}>
                     <Image source={require('@/assets/images/pin.png')} style={styles.iconSmall} />
                     <TouchableOpacity onPress={() => openLocationInMaps(event.venue, event.city)}>
                       <Text style={styles.eventDetailsLink}>
                         {event.venue || 'Venue not available'}
                       </Text>
                     </TouchableOpacity>
+                  </View>
+                  <View style={styles.eventDetailsContainer}>
+                    <Image source={require('@/assets/images/checkmark.png')} style={styles.iconSmall} />
+                    <Image source={require('@/assets/images/star.png')} style={styles.iconSmall} />
                   </View>
                 </View>
               </View>
@@ -179,27 +179,33 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center', // Center the tabs
     marginBottom: 15,
   },
   tabWrapper: {
     flexDirection: 'row',
+    alignItems: 'center', // Align items vertically in the center
   },
   tabButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    paddingHorizontal: 15, // Increased padding for larger tabs
+    paddingVertical: 12,   // Increased padding for larger tabs
+    borderRadius: 5,       // Optional: add border radius for rounded tabs
   },
   tabTextActive: {
-    color: '#3B429F',
+    color: '#6A74FB',
     fontWeight: 'bold',
+    fontSize: 16, // Increased font size for larger text
   },
   tabTextInactive: {
     color: '#9E9E9E',
+    fontWeight: 'bold',
+    fontSize: 16, // Increased font size for larger text
   },
   searchIcon: {
-    width: 24,
-    height: 24,
-    marginRight: 10,
+    // width: 24,
+    // height: 24,
+    left: 20,
+    top:13,
   },
   eventsContainer: {
     paddingVertical: 20,
@@ -220,7 +226,7 @@ const styles = StyleSheet.create({
   imageBackground: {
     height: 180,
     justifyContent: 'flex-end',
-    paddingHorizontal: 15,
+    paddingHorizontal: 1,
     paddingBottom: 10,
   },
   artistInfo: {
@@ -234,7 +240,7 @@ const styles = StyleSheet.create({
     fontFamily: 'poppins',
     fontWeight: '700',
     fontSize: 19,
-    color: '#000',
+    color: '#3D4353',
   },
   boxContent: {
     padding: 15,
@@ -245,21 +251,25 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
   eventDetails: {
-    marginLeft: 10,
-    fontSize: 16,
+    marginLeft: 5,
+    fontSize: 11,
     color: '#3D4353',
     fontWeight: '500',
+    fontFamily:'poppins',
   },
   eventDetailsLink: {
-    marginLeft: 10,
-    fontSize: 16,
-    color: '#3B429F',
+    marginLeft: 5,
+    fontSize: 11,
+    color: '#3D4353',
     fontWeight: '500',
-    textDecorationLine: 'underline',
+    flexShrink: 1, 
+    flexWrap: 'wrap', 
+    width: width * 0.4, 
   },
   iconSmall: {
-    width: 20,
-    height: 20,
+    justifyContent: 'space-between',
+    width: 24,
+    height: 24,
   },
   icon: {
     width: 20,
@@ -267,4 +277,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ExplorePage;
+export default ExploreTab;
