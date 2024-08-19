@@ -27,6 +27,7 @@ import settings from '../screens/settings';
 import getContacts from '../screens/getContacts';
 import Notifications from '../screens/Notifications';
 import ShowContacts from '../screens/contacts';
+import SearchPage from '../screens/SearchPage';
 
 
 
@@ -54,6 +55,8 @@ export default function AppNavigation(){
       <Stack.Screen name="Notifications" component={Notifications} options={{ headerShown: false}} />
       
       <Stack.Screen name="Tabs" component={MyTabs} options={{ headerShown: false}}/>
+      <Stack.Screen name="ExplorePage" component={HomeTab} options={{ headerShown: false }}/>
+      <Stack.Screen name="SearchPage" component={SearchPage} />
 
       <Stack.Screen name="Profile" component={ProfileTab} options={{ headerShown: false }} />
       <Stack.Screen name="settings" component={settings} options={{ headerShown: false }}/>

@@ -1,148 +1,63 @@
-
-// import React, { useState } from 'react';
-// import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
-// import DropDownPicker from 'react-native-dropdown-picker';
-
-// const ExplorePage = () => {
-//   const [open, setOpen] = useState(false);
-//   const [selectedLocation, setSelectedLocation] = useState('All');
-//   const [items, setItems] = useState([
-//     { label: 'All', value: 'All' },
-//     { label: 'New York', value: 'New York' },
-//     { label: 'Los Angeles', value: 'Los Angeles' },
-//   ]);
-//   const [currentTab, setCurrentTab] = useState('Friends of Friends'); // State for current tab
-
-//   const handleTabChange = (tab) => {
-//     setCurrentTab(tab);
-//   };
-
-//   return (
-//     <View style={styles.container}>
-//       <View style={styles.pickerWrapper}>
-//         <DropDownPicker
-//           open={open}
-//           value={selectedLocation}
-//           items={items}
-//           setOpen={setOpen}
-//           setValue={setSelectedLocation}
-//           setItems={setItems}
-//           containerStyle={styles.pickerContainer}
-//           style={styles.picker}
-//           dropDownStyle={styles.dropDownStyle}
-//           placeholder="Select a location"
-//           zIndex={1000} // Adjust the zIndex to ensure it appears above other components
-//         />
-//       </View>
-//       <View style={styles.buttonContainer}>
-//         <TouchableOpacity 
-//           style={styles.button} 
-//           onPress={() => handleTabChange('Friends of Friends')}
-//         >
-//           <Text style={currentTab === 'Friends of Friends' ? styles.eventTabActive : styles.eventsTabInactive}>
-//             Friends of Friends
-//           </Text>
-//         </TouchableOpacity>
-//         <TouchableOpacity 
-//           style={styles.button} 
-//           onPress={() => handleTabChange('My Friends')}
-//         >
-//           <Text style={currentTab === 'My Friends' ? styles.eventTabActive : styles.eventsTabInactive}>
-//             My Friends
-//           </Text>
-//         </TouchableOpacity>
-//       </View>
-//       {currentTab === 'Friends of Friends' && (
-//         <View style={styles.box} />
-//       )}
-//     </View>
-//   );
-// };
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//     padding: 20,
-//     margin: 10,
-//     alignItems: 'center',
-//     overflow: 'visible', // Ensure the dropdown is not clipped
-//   },
-//   pickerWrapper: {
-//     width: '50%',
-//     zIndex: 1000, // Ensure it appears above other components
-//   },
-//   pickerContainer: {
-//     height: 50,
-//   },
-//   picker: {
-//     backgroundColor: '#fff',
-//     borderRadius: 10,
-//     borderWidth: 1,
-//     borderColor: '#ddd',
-//   },
-//   dropDownStyle: {
-//     backgroundColor: '#fafafa',
-//   },
-//   buttonContainer: {
-//     flexDirection: 'row',
-//     justifyContent: 'space-around',
-//     width: '100%',
-//     marginTop: 10,
-//   },
-//   button: {
-//     backgroundColor: 'transparent',
-//     borderRadius: 10,
-//     paddingVertical: 10,
-//     paddingHorizontal: 20,
-//     marginHorizontal: 5,
-//   },
-//   buttonText: {
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//     textAlign: 'center',
-//   },
-//   eventTabActive: {
-//     color: '#3B429F', // Active button color
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//     textAlign: 'center',
-//   },
-//   eventsTabInactive: {
-//     color: '#9E9E9E', // Inactive button color
-//     fontSize: 16,
-//     fontWeight: 'bold',
-//     textAlign: 'center',
-//   },
-//   box: {
-//     height: 257,
-//     width: 336,
-//     backgroundColor: '#ffff',
-//     borderRadius: 20,
-//     marginTop: 20,
-//   },
-// });
-
-// export default ExplorePage;
-
-
-
-import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ImageBackground, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, Text, ImageBackground, ScrollView, TouchableOpacity, Image, Linking } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
+import { supabase } from '../../supabaseClient';
+import { useNavigation } from '@react-navigation/native';
+import moment from 'moment';
 
 const ExplorePage = () => {
   const [open, setOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState('All');
+  const [selectedLocation, setSelectedLocation] = useState('Los Angeles');
   const [items, setItems] = useState([
-    { label: 'All', value: 'All' },
-    { label: 'New York', value: 'New York' },
     { label: 'Los Angeles', value: 'Los Angeles' },
+    { label: 'New York', value: 'New York' },
+    { label: 'San Francisco', value: 'San Francisco' },
   ]);
-  const [currentTab, setCurrentTab] = useState('Friends of Friends'); // State for current tab
+  const [currentTab, setCurrentTab] = useState('Friends of Friends');
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    fetchEvents();
+  }, [selectedLocation]);
+
+  const fetchEvents = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('city', selectedLocation);
+
+      if (error) {
+        console.error('Error fetching events:', error);
+      } else {
+        // Filter and sort events in chronological order
+        const upcomingEvents = data
+          .filter(event => moment(`${event.date} ${event.time}`).isAfter(moment()))
+          .sort((a, b) => moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`)));
+        setEvents(upcomingEvents);
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error);
+    }
+    setLoading(false);
+  };
 
   const handleTabChange = (tab) => {
     setCurrentTab(tab);
   };
+
+  const openSearchPage = () => {
+    navigation.navigate('SearchPage');
+  };
+
+  const openLocationInMaps = (venue, city) => {
+    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${venue}, ${city}`)}`;
+    Linking.openURL(url).catch(err => console.error("Couldn't open Google Maps", err));
+  };
+
 
   return (
     <View style={styles.container}>
@@ -156,56 +71,75 @@ const ExplorePage = () => {
           setItems={setItems}
           containerStyle={styles.pickerContainer}
           style={styles.picker}
-          dropDownStyle={styles.dropDownStyle}
           placeholder="Select a location"
-          zIndex={1000} // Adjust the zIndex to ensure it appears above other components
-          textStyle={styles.dropdownText} // Text style for selected item
-          itemStyle={styles.dropdownItem} // Style for each item
-          dropDownContainerStyle={styles.dropDownContainer} // Container style for dropdown
+          zIndex={1000}
+          textStyle={styles.dropdownText}
         />
       </View>
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity 
-          style={styles.button} 
-          onPress={() => handleTabChange('Friends of Friends')}
-        >
-          <Text style={currentTab === 'Friends of Friends' ? styles.eventTabActive : styles.eventsTabInactive}>
-            Friends of Friends
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.button} 
-          onPress={() => handleTabChange('My Friends')}
-        >
-          <Text style={currentTab === 'My Friends' ? styles.eventTabActive : styles.eventsTabInactive}>
-            My Friends
-          </Text>
+
+      <View style={styles.tabContainer}>
+        <View style={styles.tabWrapper}>
+          <TouchableOpacity
+            style={styles.tabButton}
+            onPress={() => handleTabChange('Friends of Friends')}
+          >
+            <Text style={currentTab === 'Friends of Friends' ? styles.tabTextActive : styles.tabTextInactive}>
+              Friends of Friends
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.tabButton}
+            onPress={() => handleTabChange('My Friends')}
+          >
+            <Text style={currentTab === 'My Friends' ? styles.tabTextActive : styles.tabTextInactive}>
+              My Friends
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <TouchableOpacity onPress={openSearchPage}>
+          <Image source={require('@/assets/images/search.png')} style={styles.searchIcon} />
         </TouchableOpacity>
       </View>
-      {currentTab === 'Friends of Friends' && (
-        <View style={styles.box}>
-          <ImageBackground 
-            source={{ uri: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTdYSGqSTXVr-8PKrbmtf-WZ57C_PLE30e9bA&s' }} 
-            style={styles.imageBackground}
-            imageStyle={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
-          />
-          <View style={styles.artistInfo}>
-            <Text style={styles.artistName}>Le Youth (+ Guest DJs)</Text>
-            <Image source={require('@/assets/images/star.png')} style={styles.imagestar2} />
 
-          </View>
-          <View style={styles.boxContent}>
-            {/* Content for the bottom half of the box */}
-            <Image source={require('@/assets/images/calender.png')} style={styles.imagecalender} />
-            <Image source={require('@/assets/images/pin.png')} style={styles.imagepin} />
-            <Image source={require('@/assets/images/checkmark.png')} style={styles.imagecheckmark} />
-            <Image source={require('@/assets/images/star.png')} style={styles.imagestar} />
+      {loading ? (
+        <Text>Loading events...</Text>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.eventsContainer}
+          horizontal={false}
+        >
+          {events.map((event, index) => (
+            <View key={index} style={styles.box}>
+              <ImageBackground
+                source={{ uri: event.image_url || 'https://via.placeholder.com/344x257' }}
+                style={styles.imageBackground}
+                imageStyle={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
+              >
+                <View style={styles.artistInfo}>
+                  <Text style={styles.artistName}>{event.artist || 'Unknown Artist'}</Text>
+                  <Image source={require('@/assets/images/star.png')} style={styles.icon} />
+                </View>
+              </ImageBackground>
+              <View style={styles.boxContent}>
+                <View style={styles.eventDetailsContainer}>
+                  <Image source={require('@/assets/images/calender.png')} style={styles.iconSmall} />
+                  <Text style={styles.eventDetails}>
+                    {moment(`${event.date} ${event.time}`).format('MMM DD @ hh:mm A')}
+                  </Text>
+                </View>
 
-
-
-
-          </View>
-        </View>
+                <View style={styles.eventDetailsContainer}>
+                  <Image source={require('@/assets/images/pin.png')} style={styles.iconSmall} />
+                  <TouchableOpacity onPress={() => openLocationInMaps(event.venue, event.city)}>
+                    <Text style={styles.eventDetailsLink}>
+                      {event.venue || 'Venue not available'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       )}
     </View>
   );
@@ -215,13 +149,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    margin: 10,
-    alignItems: 'center',
-    overflow: 'visible', // Ensure the dropdown is not clipped
+    backgroundColor: '#f5f5f5',
   },
   pickerWrapper: {
     width: '50%',
-    zIndex: 1000, // Ensure it appears above other components
+    alignSelf: 'center',
+    marginBottom: 10,
+    zIndex: 1000,
   },
   pickerContainer: {
     height: 50,
@@ -232,112 +166,99 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
   },
-  // dropDownStyle: {
-  //   backgroundColor: '#ffff',
-  // },
-  // dropDownContainer: {
-  //   borderColor: '#ddd',
-  //   borderRadius: 10,
-  // },
   dropdownText: {
-    color: '#3F407C', 
+    color: '#3F407C',
     fontWeight: '700',
-    fontSize:15, 
-    fontFamily:'poppins',
+    fontSize: 15,
   },
-  dropdownItem: {
-    backgroundColor: '#fafafa',
-  },
-  buttonContainer: {
+  tabContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: '100%',
-    marginTop: 10,
+    justifyContent: 'space-between',
+    marginBottom: 15,
   },
-  button: {
-    backgroundColor: 'transparent',
-    borderRadius: 10,
+  tabWrapper: {
+    flexDirection: 'row',
+  },
+  tabButton: {
+    paddingHorizontal: 10,
     paddingVertical: 10,
-    paddingHorizontal: 20,
-    marginHorizontal: 5,
   },
-  buttonText: {
-    fontSize: 16,
+  tabTextActive: {
+    color: '#3B429F',
     fontWeight: 'bold',
-    textAlign: 'center',
   },
-  eventTabActive: {
-    color: '#3B429F', // Active button color
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  tabTextInactive: {
+    color: '#9E9E9E',
   },
-  eventsTabInactive: {
-    color: '#9E9E9E', // Inactive button color
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
+  searchIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 10,
+  },
+  eventsContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
   box: {
-    height: 257,
-    width: 344,
-    backgroundColor: '#ffff',
+    backgroundColor: '#fff',
     borderRadius: 10,
-    marginTop: 20,
+    marginBottom: 20,
+    width: '100%',
     overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
   },
   imageBackground: {
-    height: '74%', // Adjust height as needed
-    width: '100%',
+    height: 180,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 15,
+    paddingBottom: 10,
   },
   artistInfo: {
-    alignItems: 'left',
-    bottom: 36,
-    left:14,
     flexDirection: 'row',
-
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingTop: 8,
   },
   artistName: {
     fontFamily: 'poppins',
     fontWeight: '700',
     fontSize: 19,
-    textAlign: 'center',
+    color: '#000',
   },
   boxContent: {
-    backgroundColor: '#fff',
+    padding: 15,
+  },
+  eventDetailsContainer: {
     flexDirection: 'row',
-    //justifyContent: 'space-between', // Adjust spacing between images
-    alignItems: 'left',
-    paddingHorizontal: 10,
-    //paddingVertical: 10,
-    
+    alignItems: 'center',
+    marginBottom: 5,
   },
-  imagecalender: {
-    bottom:28,
-    left:4,
-    //marginLeft: 8,
+  eventDetails: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#3D4353',
+    fontWeight: '500',
   },
-  imagepin: {
-    bottom:28,
-    left:130,
-    //marginLeft: 8,
+  eventDetailsLink: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#3B429F',
+    fontWeight: '500',
+    textDecorationLine: 'underline',
   },
-  imagecheckmark: {
-    right:40,
-    top:10,
-    //marginLeft: 8,
+  iconSmall: {
+    width: 20,
+    height: 20,
   },
-  imagestar: {
-    left:88,
-    top:10,
-    //marginLeft: 8,
-  },
-  imagestar2: {
-    left:80,
-    top:2,
-    //marginLeft: 8,
+  icon: {
+    width: 20,
+    height: 20,
   },
 });
 
 export default ExplorePage;
-
