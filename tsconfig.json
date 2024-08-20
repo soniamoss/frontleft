@@ -18,7 +18,7 @@
     "index.tsx",
     "screens/settings.js",
     "screens/username.js",
-    "screens/profile.js",
+    "screens/profileedit.js",
     "screens/PhoneLoginScreen.js",
     "screens/lastname.js",
     "screens/intro.js",

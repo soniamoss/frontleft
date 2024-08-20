@@ -1,17 +1,65 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { supabase } from '../../supabaseClient';
 
 const ProfilePage = () => {
   const [currentTab, setCurrentTab] = useState('going'); // State for tab selection
+  const [loading, setLoading] = useState(true);
+  const [profileData, setProfileData] = useState({});
+  const [eventsGoing, setEventsGoing] = useState([]);
+  const [eventsInterested, setEventsInterested] = useState([]);
   const navigation = useNavigation();
 
-  const profileData = {
-    profilePicture: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAPFBMVEXk5ueutLepsLPo6uursbXJzc/p6+zj5ea2u76orrKvtbi0ubzZ3N3O0dPAxcfg4uPMz9HU19i8wcPDx8qKXtGiAAAFTElEQVR4nO2d3XqzIAyAhUD916L3f6+f1m7tVvtNINFg8x5tZ32fQAIoMcsEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQRAEQTghAJD1jWtnXJPP/54IgNzZQulSmxvTH6oYXX4WS+ivhTbqBa1r26cvCdCu6i0YXbdZ0o4A1rzV+5IcE3YE+z58T45lqo7g1Aa/JY5tgoqQF3qb382x7lNzBLcxft+O17QUYfQI4IIeklKsPSN4i6LKj/7Zm8n99RbHJpEw9gEBXNBpKIYLJqKYRwjOikf//r+J8ZsVuacbqCMNleI9TqGLGqMzhnVdBOdd6F/RlrFijiCoVMk320CBIahUxTWI0KKEcJqKbMdpdJb5QvdHq6wCI5qhKlgGMS/RBHkubWDAE+QZxB4xhCyDiDkLZxgGEVdQldzSKbTIhmZkFkSEPcVvmBn2SMuZB9od7fQDsMiDdKJjFUSCQarM5WirZ3C2TT/htYnyPcPfgrFHWz0BI74gr6J/IZiGUxAZGQLqmvQLTrtE/Go4YxhVRIpEw+sww1IIcqr5NKmUUzLF3d4/qPkYIp2T/obPuemlojFUR4t9Q2Vojhb7BmgElWHzLPH8hucfpefPNFTVgs9h1AdU/Pin96vwWbWdf+X9Absn3OdO34aMdsDnP8WgKYisTqI6CkNGqZQo1XA6Ef6AU32SJzOcBukHPF07/xNSgmHKa5BOhtezv6mA/rYJpwXNAnbRZ1XuF3BzDcO3vpA3+ny2909gbqE4hhD3LIPhLLyBNhPZvbZ3B+3tPYa18A7auSlXQayKwTPNLKDcuOB0xPYKDPFTkWsevQPRZ1J8Hji9I1KQ34r7hZhrwNwOZ97QxNx0drwn4QI0wQk1DcEsfKCWKdxVvxPSNUIp/knmAXT+nT+Ko3+0H96rcNb3m1fx7MBTJdeBJ7uFcWsc0wvgAsC4pROW0l2inbAmIBv/7GZmuhQH6API2rr8T0e6yuZJ+80A9LZeG62T3tik31XwxtwZcizKuTHkMjB1WdZde4Kmic/A5ZI3rr1ae21d08PlVHYfAaxw9G9CYRbJ+8ZdbTcMRV1XM3VdF0M32vtoTdZ0+u29s0OttJ5bz64UwinjaFMVY9vkqc3KKSxN21Xl+0L4Q3Vuv1tYl0pqnX6ms4XetFz7gdZVAgUEoJntfOUe4ZwsHd9FzqQ3Vv6xe41l0XJcqcKl6TZvlv7ClAW3BsqQW4X7ypApB8dmTgK4IX5wvqIVj33HtD2qSG4BqznxdIefL27Y4sahi0MdIdvUsDva8agGGbCtITmCY31MHD2O0uIdh/0rJDQ1VX5Zdxz3rR2QDbv6qXl9vudzqQtGm1Jv9LDXOsfvvB7VcZ8PDKD0mQ1VHPYQ9O+Yj4hR1IUD8rBnn3ho2m8oQMxbCFiKlL2ioSW5heeJqegED52CzxCtcGD3Kv8Wms9EYLyUhwaFIhSMBClevWEmiK/Iaogu4H7sg6ppQhQG8RUqivuTGOAJOg6FfgW0q0M0PQMRMEgXaeNf3SYDZ8PIMI0+wHgr/MgN7wYwpiLjCCqM6ydUDZLQiB6nDdNC8SDyig3jPPpFXGcC9O8BUBDVmgBY59E7Md/35Loe/UVEECEJwYggJjELZ4J71SaQSBeC02n4Da29CayJNA28SAhd2CQyC1Xw6pSmGSINQVuMhAZp4DClan9MgmkDDNmezqwS8sgtlXK/EPBhoaSmYVC/F7IO1jQEdHOlabpKh3+jzLQSTUiq4X2I+Ip/zU8rlaqAvkS21ElR+gqu3zbjjL+hIAiCIAiCIAiCIAiCsCf/AKrfVhSbvA+DAAAAAElFTkSuQmCC',
-    name: 'Faryar Jon',
-    username: '@Faryar',
-    numOfFriends: 123,
+  useEffect(() => {
+    fetchProfileData();
+  }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      const user = await supabase.auth.getUser();
+
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.data.user.id)
+        .single();
+
+      const { data: friendsData, error: friendsError } = await supabase
+        .from('friendships')
+        .select('*')
+        .or(`user_id.eq.${user.data.user.id},friend_id.eq.${user.data.user.id}`)
+        .eq('status', 'accepted');
+      
+
+      const { data: eventsGoingData, error: eventsGoingError } = await supabase
+        .from('event_attendees')
+        .select('event_id, events!event_attendees_event_id_fkey(*), status')
+        .eq('user_id', user.data.user.id)
+        .eq('status', 'going');
+
+      const { data: eventsInterestedData, error: eventsInterestedError } = await supabase
+        .from('event_attendees')
+        .select('event_id, events!event_attendees_event_id_fkey(*), status')
+        .eq('user_id', user.data.user.id)
+        .eq('status', 'interested');
+
+      if (profileError || friendsError || eventsGoingError || eventsInterestedError) {
+        console.error(profileError || friendsError || eventsGoingError || eventsInterestedError);
+      } else {
+        setProfileData({
+          profilePicture: profile.profile_image_url,
+          name: `${profile.first_name} ${profile.last_name}`,
+          username: `@${profile.username}`,
+          numOfFriends: friendsData.length,
+        });
+        setEventsGoing(eventsGoingData.map(event => event.events));
+        setEventsInterested(eventsInterestedData.map(event => event.events));
+      }
+    } catch (error) {
+      console.error('Error fetching profile data:', error);
+    }
+    setLoading(false);
   };
 
   const handleSettings = () => {
@@ -47,28 +95,40 @@ const ProfilePage = () => {
         <TouchableOpacity style={styles.eventTab} onPress={() => handleTabChange('interested')}>
           <Text style={currentTab === 'interested' ? styles.eventTabActive : styles.eventsTabInactive}>Interested</Text>
         </TouchableOpacity>
-        {/* <TouchableOpacity style={styles.eventTab} onPress={() => handleTabChange('extraTickets')}>
-          <Text style={currentTab === 'extraTickets' ? styles.eventTabActive : styles.eventsTabInactive}>Extra Tickets</Text>
-        </TouchableOpacity> */}
       </View>
 
       {/* Events Section */}
       <ScrollView style={styles.eventsContainer}>
-        {currentTab === 'going' ? (
-          // Render "Going" content here
-          <Text style={styles.noEventsText}>No events you're going to at this time.</Text>
+        {loading ? (
+          <ActivityIndicator size="large" color="#0000ff" />
+        ) : currentTab === 'going' ? (
+          eventsGoing.length > 0 ? (
+            eventsGoing.map(event => (
+              <View key={event.id} style={styles.eventBox}>
+                <Text style={styles.eventName}>{event.name}</Text>
+                <Text style={styles.eventDetails}>{`${event.date} @ ${event.time}`}</Text>
+                <Text style={styles.eventVenue}>{event.venue}</Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noEventsText}>No events you're going to at this time.</Text>
+          )
         ) : currentTab === 'interested' ? (
-          // Render "Interested" content here
-          <Text style={styles.noEventsText}>No events you're interested in at this time.</Text>
-        ) : currentTab === 'extraTickets' ? (
-          // Render "Extra Tickets" content here
-          <Text style={styles.noEventsText}>No events with extra tickets at this time.</Text>
+          eventsInterested.length > 0 ? (
+            eventsInterested.map(event => (
+              <View key={event.id} style={styles.eventBox}>
+                <Text style={styles.eventName}>{event.name}</Text>
+                <Text style={styles.eventDetails}>{`${event.date} @ ${event.time}`}</Text>
+                <Text style={styles.eventVenue}>{event.venue}</Text>
+              </View>
+            ))
+          ) : (
+            <Text style={styles.noEventsText}>No events you're interested in at this time.</Text>
+          )
         ) : (
           <ActivityIndicator size="large" color="#0000ff" />
         )}
       </ScrollView>
-
-      
     </View>
   );
 };
@@ -86,14 +146,14 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 50,
     marginBottom: 10,
-    right:110,
-    top:94,
+    right: 110,
+    top: 94,
   },
   profileDetails: {
     position: 'absolute',
     top: 44,
     alignItems: 'left',
-    right:140,
+    right: 140,
   },
   name: {
     fontSize: 24,
@@ -121,18 +181,17 @@ const styles = StyleSheet.create({
   },
   eventTab: {
     paddingHorizontal: 40,
-    paddingVertical:40,
+    paddingVertical: 40,
   },
   eventTabActive: {
     color: '#3B429F',
     fontWeight: '700',
-    fontSize:14,
+    fontSize: 14,
   },
   eventsTabInactive: {
     color: '#9E9E9E',
     fontWeight: '700',
-    fontSize:14,
-
+    fontSize: 14,
   },
   eventsContainer: {
     flexGrow: 1,
@@ -144,6 +203,29 @@ const styles = StyleSheet.create({
     marginTop: 20,
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  eventBox: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 1.41,
+    elevation: 2,
+  },
+  eventName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  eventDetails: {
+    fontSize: 14,
+    color: '#666',
+  },
+  eventVenue: {
+    fontSize: 14,
+    color: '#999',
   },
   statusButton: {
     backgroundColor: '#3B429F',
@@ -169,4 +251,3 @@ const styles = StyleSheet.create({
 });
 
 export default ProfilePage;
-

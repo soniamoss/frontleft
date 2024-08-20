@@ -25,8 +25,10 @@ import settings from '../screens/settings';
 import getContacts from '../screens/getContacts';
 import Notifications from '../screens/Notifications';
 import ShowContacts from '../screens/contacts';
+import ProfileEdit from '../screens/profileedit';
 import SearchPage from '../screens/SearchPage';
 import EventDetails from '../screens/EventDetails';
+import PrivacySettings from '../screens/privacysettings';
 
 
 
@@ -60,6 +62,8 @@ export default function AppNavigation(){
 
       <Stack.Screen name="Profile" component={ProfileTab} options={{ headerShown: false }} />
       <Stack.Screen name="settings" component={settings} options={{ headerShown: false }}/>
+      <Stack.Screen name="ProfileEdit" component={ProfileEdit} options={{ headerShown: false }}/>
+      <Stack.Screen name="PrivacySettings" component={PrivacySettings} options={{ headerShown: false }}/>
       </Stack.Navigator>
     );
   }
