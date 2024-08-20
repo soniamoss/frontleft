@@ -4,6 +4,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { supabase } from '../supabaseClient';
 import moment from 'moment';
+import { getCurrentUser } from '../services/userService';
 
 const EventDetails = () => {
   const navigation = useNavigation();
@@ -22,17 +23,50 @@ const EventDetails = () => {
 
   const handleGoing = async () => {
     try {
-      const user = supabase.auth.user();
+      const user = await getCurrentUser();
+      console.log("LOOKHERE", event.id); 
       const { data, error } = await supabase
         .from('event_attendees')
         .insert([{ event_id: event.id, user_id: user.id, status: 'going' }]);
 
+        console.log('LOOKAGAIN', data); 
+
       if (error) {
-        Alert.alert('Error', 'There was an issue adding you to the event.');
-        console.error(error);
+        if (error.code == "23505") {
+            Alert.alert('Hey!', "You're already going to the event!");
+        } else { 
+            Alert.alert('Error', 'There was an issue adding you to the event.');
+            console.error(error);
+        }
       } else {
         setGoingStatus(true);
         Alert.alert('Success', 'You are now going to this event!');
+      }
+    } catch (err) {
+      console.error('Error going to event:', err);
+    }
+  };
+
+  const handleInterested = async () => {
+    try {
+      const user = await getCurrentUser();
+      console.log("LOOKHERE", event.id); 
+      const { data, error } = await supabase
+        .from('event_attendees')
+        .insert([{ event_id: event.id, user_id: user.id, status: 'interested' }]);
+
+        console.log('LOOKAGAIN', data); 
+
+      if (error) {
+        if (error.code == "23505") {
+            Alert.alert('Hey!', "You're already interested in the event!");
+        } else { 
+            Alert.alert('Error', 'There was an issue adding you to the event.');
+            console.error(error);
+        }
+      } else {
+        setGoingStatus(true);
+        Alert.alert('Success', 'You are INTERESTED in going to this event!');
       }
     } catch (err) {
       console.error('Error going to event:', err);
@@ -137,7 +171,7 @@ const EventDetails = () => {
           <Text style={styles.goingButtonText}>{goingStatus ? 'You are Going' : 'Going?'}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.starButton}>
+        <TouchableOpacity style={styles.starButton} onPress={handleInterested}>
           <Image source={require('@/assets/images/star.png')} style={styles.icon} />
         </TouchableOpacity>
       </TouchableOpacity>

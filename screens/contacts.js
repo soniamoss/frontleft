@@ -5,6 +5,7 @@ import * as Contacts from 'expo-contacts';
 import { supabase } from '../supabaseClient';
 import { useNavigation } from '@react-navigation/native';
 import { addFriend } from '../services/friendshipService';
+import { getCurrentUser } from '../services/userService';
 
 
 

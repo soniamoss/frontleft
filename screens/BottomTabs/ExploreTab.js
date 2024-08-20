@@ -25,19 +25,53 @@ const ExploreTab = () => {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // Fetch events in the selected city
+      const { data: eventsData, error: eventsError } = await supabase
         .from('events')
         .select('*')
         .eq('city', selectedLocation);
 
-      if (error) {
-        console.error('Error fetching events:', error);
+      if (eventsError) {
+        console.error('Error fetching events:', eventsError);
       } else {
-        // Filter and sort events in chronological order
-        const upcomingEvents = data
+        const upcomingEvents = eventsData
           .filter(event => moment(`${event.date} ${event.time}`).isAfter(moment()))
           .sort((a, b) => moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`)));
-        setEvents(upcomingEvents);
+
+        // Fetch event attendees with their profile images and statuses
+        const eventIds = upcomingEvents.map(event => event.id);
+        const { data: attendeesData, error: attendeesError } = await supabase
+        .from('event_attendees')
+        .select('event_id, status, profiles!event_attendees_user_id_fkey(profile_image_url)')
+        .in('event_id', eventIds)
+        .or('status.eq.going,status.eq.interested'); // Correct usage of the 'or' function
+      
+
+          console.log('HEREHERE', attendeesData); 
+
+        if (attendeesError) {
+          console.error('Error fetching attendees:', attendeesError);
+        } else {
+          // Add attendees' profile images to events and group by status
+          const eventsWithAttendees = upcomingEvents.map(event => {
+            const attendingFriends = attendeesData.filter(att => att.event_id === event.id && att.status === 'going').map(att => att.profiles.profile_image_url);
+            const interestedFriends = attendeesData.filter(att => att.event_id === event.id && att.status === 'interested').map(att => att.profiles.profile_image_url);
+            return { ...event, attendingFriends, interestedFriends };
+          });
+
+          // Sort events by those with friends attending/interested first, then by date
+          const eventsWithFriends = eventsWithAttendees.filter(event => event.attendingFriends.length > 0 || event.interestedFriends.length > 0);
+          const eventsWithoutFriends = eventsWithAttendees.filter(event => event.attendingFriends.length === 0 && event.interestedFriends.length === 0);
+
+          const finalSortedEvents = [
+            ...eventsWithFriends.sort((a, b) => moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`))),
+            ...eventsWithoutFriends.sort((a, b) => moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`))),
+          ];
+
+        
+
+          setEvents(finalSortedEvents);
+        }
       }
     } catch (error) {
       console.error('Error fetching events:', error);
@@ -120,8 +154,8 @@ const ExploreTab = () => {
                   imageStyle={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
                 </ImageBackground>
                 <View style={styles.artistInfo}>
-                    <Text style={styles.artistName}>{event.artist || 'Unknown Artist'}</Text>
-                  </View>
+                  <Text style={styles.artistName}>{event.artist || 'Unknown Artist'}</Text>
+                </View>
                 <View style={styles.boxContent}>
                   <View style={styles.eventDetailsContainer}>
                     <Image source={require('@/assets/images/calender.png')} style={styles.iconSmall} />
@@ -137,7 +171,34 @@ const ExploreTab = () => {
                   </View>
                   <View style={styles.eventDetailsContainer}>
                     <Image source={require('@/assets/images/checkmark.png')} style={styles.iconSmall} />
+                    <View style={styles.attendingFriendsContainer}>
+                      {event.attendingFriends && event.attendingFriends.map((imageUrl, idx) => (
+                        <Image
+                          key={idx}
+                          source={{ uri: imageUrl }}
+                          style={styles.friendProfileImage}
+                        />
+                      ))}
+                    </View>
+                    <View style={styles.interestedFriendsContainer}>
+                      {event.interestedFriends && event.interestedFriends.map((imageUrl, idx) => (
+                        <Image
+                          key={idx}
+                          source={{ uri: imageUrl }}
+                          style={styles.friendProfileImage}
+                        />
+                      ))}
+                    </View>
                     <Image source={require('@/assets/images/star.png')} style={styles.iconSmall} />
+                    <View style={styles.interestedFriendsContainer}>
+                      {event.interestedFriends && event.interestedFriends.map((imageUrl, idx) => (
+                        <Image
+                          key={idx}
+                          source={{ uri: imageUrl }}
+                          style={styles.friendProfileImage}
+                        />
+                      ))}
+                    </View>
                   </View>
                 </View>
               </View>
@@ -149,7 +210,7 @@ const ExploreTab = () => {
   );
 };
 
-const { width } = Dimensions.get('window'); // Get the width of the screen
+const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
   container: {
@@ -179,33 +240,31 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    justifyContent: 'center', // Center the tabs
+    justifyContent: 'center',
     marginBottom: 15,
   },
   tabWrapper: {
     flexDirection: 'row',
-    alignItems: 'center', // Align items vertically in the center
+    alignItems: 'center',
   },
   tabButton: {
-    paddingHorizontal: 15, // Increased padding for larger tabs
-    paddingVertical: 12,   // Increased padding for larger tabs
-    borderRadius: 5,       // Optional: add border radius for rounded tabs
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderRadius: 5,
   },
   tabTextActive: {
     color: '#6A74FB',
     fontWeight: 'bold',
-    fontSize: 16, // Increased font size for larger text
+    fontSize: 16,
   },
   tabTextInactive: {
     color: '#9E9E9E',
     fontWeight: 'bold',
-    fontSize: 16, // Increased font size for larger text
+    fontSize: 16,
   },
   searchIcon: {
-    // width: 24,
-    // height: 24,
     left: 20,
-    top:13,
+    top: 13,
   },
   eventsContainer: {
     paddingVertical: 20,
@@ -215,7 +274,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 10,
     marginBottom: 20,
-    width: width - 40, // Ensure the box takes up full width with padding
+    width: width - 40,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -255,25 +314,35 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#3D4353',
     fontWeight: '500',
-    fontFamily:'poppins',
+    fontFamily: 'poppins',
   },
   eventDetailsLink: {
     marginLeft: 5,
     fontSize: 11,
     color: '#3D4353',
     fontWeight: '500',
-    flexShrink: 1, 
-    flexWrap: 'wrap', 
-    width: width * 0.4, 
+    flexShrink: 1,
+    flexWrap: 'wrap',
+    width: width * 0.4,
   },
   iconSmall: {
-    justifyContent: 'space-between',
     width: 24,
     height: 24,
   },
-  icon: {
-    width: 20,
-    height: 20,
+  attendingFriendsContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+    marginRight: 10,
+  },
+  interestedFriendsContainer: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
+  friendProfileImage: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 5,
   },
 });
 
