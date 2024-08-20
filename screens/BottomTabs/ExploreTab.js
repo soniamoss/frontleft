@@ -88,7 +88,12 @@ const ExploreTab = () => {
   };
 
   const openEventDetailsPage = (event) => {
-    navigation.navigate('EventDetails', { event });
+    const eventAttendees = {
+      attendingFriends: event.attendingFriends,
+      interestedFriends: event.interestedFriends,
+    };
+  
+    navigation.navigate('EventDetails', { event, eventAttendees });
   };
 
   const openLocationInMaps = (venue, city) => {
@@ -173,15 +178,6 @@ const ExploreTab = () => {
                     <Image source={require('@/assets/images/checkmark.png')} style={styles.iconSmall} />
                     <View style={styles.attendingFriendsContainer}>
                       {event.attendingFriends && event.attendingFriends.map((imageUrl, idx) => (
-                        <Image
-                          key={idx}
-                          source={{ uri: imageUrl }}
-                          style={styles.friendProfileImage}
-                        />
-                      ))}
-                    </View>
-                    <View style={styles.interestedFriendsContainer}>
-                      {event.interestedFriends && event.interestedFriends.map((imageUrl, idx) => (
                         <Image
                           key={idx}
                           source={{ uri: imageUrl }}
