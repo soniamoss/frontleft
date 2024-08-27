@@ -1,71 +1,48 @@
+import { DoostButton } from "@/screens/Intro/components/DoostButton";
 import { HeaderText } from "@/screens/Intro/components/HeaderText";
+import { PaddedView } from "@/screens/Intro/components/PaddedView";
+import { PrivacyAgreement } from "@/screens/Intro/components/PrivacyAgreement";
+import { ScreenContainer } from "@/screens/Intro/components/ScreenContainer";
+import { Spacer } from "@/screens/Intro/components/Spacer";
 import { router } from "expo-router";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 
 const IntroScreen = () => {
-  const handleCreateAccount = () => {
+  const onPress = () => {
     router.push("/PhoneLoginScreen"); // Navigate to the phone login screen
   };
 
   return (
-    <View style={styles.container}>
+    <ScreenContainer>
       <HeaderText>Doost</HeaderText>
-      <Text style={styles.textsmaller}>Where events and friends meet</Text>
-      <Text style={styles.textPrivacy}>
-        By tapping ‘Sign in’ / ‘Create account’, you agree to {"\n"} our Terms
-        of Service. Learn how we process your {"\n"}data in our Privacy Policy.{" "}
-      </Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/PhoneLoginScreen")}
-      >
-        <Text style={styles.buttonText}>Create Account/Sign In</Text>
-      </TouchableOpacity>
-    </View>
+      <PaddedView>
+        <Text style={styles.textsmaller}>Where events and friends meet</Text>
+        <Spacer />
+        <Spacer />
+        <Spacer />
+        <Spacer />
+        <Spacer />
+        <Spacer />
+        <Spacer />
+        <Spacer />
+        <Spacer />
+        <Spacer />
+        <PrivacyAgreement />
+        <Spacer />
+        <Spacer />
+        <DoostButton onPress={onPress} />
+      </PaddedView>
+    </ScreenContainer>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#28397E33",
-  },
-  text: {
-    fontSize: 80,
-    fontWeight: "bold",
-    fontFamily: "Chicle",
-    color: "#3F407C",
-  },
   textsmaller: {
     fontSize: 16,
     fontWeight: "bold",
     fontFamily: "Chicle",
     color: "#3F407C",
-  },
-  textPrivacy: {
-    fontSize: 11, // Adjust font size
-    top: 170,
-    fontWeight: 400, // Make text bold
-    fontFamily: "poppins",
-    textAlign: "left",
-    color: "#3D4353",
-  },
-  button: {
-    position: "absolute",
-    bottom: 60,
-    width: "66%",
-    paddingVertical: 15,
-    backgroundColor: "#3F407C",
-    borderRadius: 30,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 18,
-    fontWeight: 400,
   },
 });
 
