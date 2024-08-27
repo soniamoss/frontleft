@@ -22,7 +22,8 @@ const EventDetails = () => {
 
   const params = useLocalSearchParams();
 
-  const { event, eventAttendees }: any = params;
+  const event = params?.event || {};
+  const eventAttendees = params?.eventAttendees || null;
 
   const [goingStatus, setGoingStatus] = useState(false);
   const [open, setOpen] = useState(false);
