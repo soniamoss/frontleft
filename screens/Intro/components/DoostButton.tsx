@@ -1,18 +1,16 @@
 import { Colors } from "@/constants/Colors";
 import { scaleWidth } from "@/constants/layout";
-import { router } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
-interface DoostButtonProps {}
+interface DoostButtonProps {
+  onPress: () => void;
+}
 
 // TODO: I recommend doing restyle instead =>https://shopify.github.io/restyle/
-const DoostButton = ({}: DoostButtonProps) => {
+const DoostButton = ({ onPress }: DoostButtonProps) => {
   return (
-    <TouchableOpacity
-      style={styles.button}
-      onPress={() => router.push("/PhoneLoginScreen")}
-    >
+    <TouchableOpacity style={styles.button} onPress={onPress}>
       <Text style={styles.buttonText}>Create Account/Sign In</Text>
     </TouchableOpacity>
   );

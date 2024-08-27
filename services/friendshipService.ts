@@ -1,6 +1,6 @@
 import { supabase } from "../supabaseClient"; // Import your Supabase client
 
-export async function addFriend(userId, friendId) {
+export async function addFriend(userId: any, friendId: any) {
   try {
     const { data, error }: any = await supabase
       .from("friendships")
@@ -12,13 +12,13 @@ export async function addFriend(userId, friendId) {
     }
 
     return { success: true, data };
-  } catch (err) {
+  } catch (err: any) {
     console.error("Unexpected error:", err);
     return { success: false, message: err.message };
   }
 }
 
-export async function acceptFriendship(friendshipId) {
+export async function acceptFriendship(friendshipId: any) {
   try {
     const { data, error }: any = await supabase
       .from("friendships")
@@ -31,13 +31,13 @@ export async function acceptFriendship(friendshipId) {
     }
 
     return { success: true, data };
-  } catch (err) {
+  } catch (err: any) {
     console.error("Unexpected error:", err);
     return { success: false, message: err.message };
   }
 }
 
-export async function rejectFriendship(friendshipId) {
+export async function rejectFriendship(friendshipId: any) {
   try {
     const { data, error }: any = await supabase
       .from("friendships")
@@ -50,13 +50,13 @@ export async function rejectFriendship(friendshipId) {
     }
 
     return { success: true, data };
-  } catch (err) {
+  } catch (err: any) {
     console.error("Unexpected error:", err);
     return { success: false, message: err.message };
   }
 }
 
-export async function blockFriendship(friendshipId) {
+export async function blockFriendship(friendshipId: any) {
   try {
     const { data, error }: any = await supabase
       .from("friendships")
