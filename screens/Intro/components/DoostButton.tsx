@@ -1,3 +1,4 @@
+import { Colors } from "@/constants/Colors";
 import { scaleWidth } from "@/constants/layout";
 import { router } from "expo-router";
 import React from "react";
@@ -23,7 +24,7 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: scaleWidth(15),
     paddingHorizontal: scaleWidth(30),
-    backgroundColor: "#3F407C",
+    backgroundColor: Colors.light.subtext,
     borderRadius: scaleWidth(30),
     padding: scaleWidth(15),
     alignItems: "center",

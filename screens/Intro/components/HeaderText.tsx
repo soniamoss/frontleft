@@ -1,3 +1,4 @@
+import { Colors } from "@/constants/Colors";
 import { Text } from "react-native";
 
 interface HeaderTextProps {}
@@ -10,10 +11,8 @@ const HeaderText = (props: HeaderTextProps) => {
         fontSize: 80,
         // fontWeight: "bold", //TODO: avoid using fontWeight, it is easy to cause crashes on Android when doing so,
         // use fontFamily instead
-        //  Note: the fontFamily is not available, so Chicle is not applied.
-        // fontFamily: "Chicle-Bold",
         fontFamily: "Chicle",
-        color: "#3F407C",
+        color: Colors.dark.subtext,
       }}
       // allow overwrites
       {...props}
