@@ -11,21 +11,6 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    ".expo/types/**/*.js",
-    "expo-env.d.js",
-    "src/navigation/index.js",
-    "app/index.js",
-    "index.tsx",
-    "screens/settings.js",
-    "screens/username.js",
-    "screens/profileedit.js",
-    "screens/PhoneLoginScreen.js",
-    "screens/lastname.js",
-    "screens/intro.js",
-    "screens/HomeScreen.js",
-    "screens/findFriends.js",
-    "screens/firstname.js",
-    "screens/email.js",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
   ]
