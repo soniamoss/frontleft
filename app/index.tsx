@@ -1,3 +1,3 @@
-import IntroScreen from "@/screens/intro";
+import IntroScreen from "@/screens/Intro/Intro";
 
 export default IntroScreen;

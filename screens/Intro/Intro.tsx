@@ -1,4 +1,6 @@
+import { HeaderText } from "@/screens/Intro/components/HeaderText";
 import { router } from "expo-router";
+import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const IntroScreen = () => {
@@ -8,7 +10,7 @@ const IntroScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Doost</Text>
+      <HeaderText>Doost</HeaderText>
       <Text style={styles.textsmaller}>Where events and friends meet</Text>
       <Text style={styles.textPrivacy}>
         By tapping ‘Sign in’ / ‘Create account’, you agree to {"\n"} our Terms
