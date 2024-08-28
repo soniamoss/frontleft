@@ -290,7 +290,7 @@ const EventDetails = () => {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.goingButton} onPress={handleGoing}>
+        {/* <TouchableOpacity style={styles.goingButton} onPress={handleGoing}>
           <Text style={styles.goingButtonText}>
             {goingStatus ? "You are Going" : "Going?"}
           </Text>
@@ -301,7 +301,7 @@ const EventDetails = () => {
             source={require("@/assets/images/star.png")}
             style={styles.icon}
           />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
     </View>
   );

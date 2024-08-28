@@ -10,7 +10,7 @@ import { StyleSheet, Text } from "react-native";
 
 const IntroScreen = () => {
   const onPress = () => {
-    router.push("/PhoneLoginScreen"); // Navigate to the phone login screen
+    router.push("/(tabs)"); // Navigate to the phone login screen
   };
 
   return (
