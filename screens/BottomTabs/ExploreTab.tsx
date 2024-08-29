@@ -133,7 +133,10 @@ const ExploreTab = () => {
       // @ts-ignore
       pathname: "/EventDetailsScreen",
       // @ts-ignore
-      params: { event, eventAttendees },
+      params: {
+        event: JSON.stringify(event),
+        eventAttendees: JSON.stringify(eventAttendees),
+      },
     });
   };
 

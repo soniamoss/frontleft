@@ -21,9 +21,15 @@ const EventDetails = () => {
   // get params from expo-router
 
   const params = useLocalSearchParams();
+  console.log("params: ", typeof params.event);
 
-  const event = params?.event || {};
-  const eventAttendees = params?.eventAttendees || null;
+  const eventString = params?.event || "";
+  const eventAttendeesString = params?.eventAttendees || "";
+
+  const event = eventString ? JSON.parse(eventString) : {};
+  const eventAttendees = eventAttendeesString
+    ? JSON.parse(eventAttendeesString)
+    : {};
 
   const [goingStatus, setGoingStatus] = useState(false);
   const [open, setOpen] = useState(false);
@@ -290,7 +296,7 @@ const EventDetails = () => {
           </View>
         </View>
 
-        {/* <TouchableOpacity style={styles.goingButton} onPress={handleGoing}>
+        <TouchableOpacity style={styles.goingButton} onPress={handleGoing}>
           <Text style={styles.goingButtonText}>
             {goingStatus ? "You are Going" : "Going?"}
           </Text>
@@ -301,7 +307,7 @@ const EventDetails = () => {
             source={require("@/assets/images/star.png")}
             style={styles.icon}
           />
-        </TouchableOpacity> */}
+        </TouchableOpacity>
       </View>
     </View>
   );

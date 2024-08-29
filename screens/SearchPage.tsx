@@ -100,7 +100,10 @@ const SearchPage = ({ navigation }: any) => {
   };
 
   const handleEventPress = (event: any) => {
-    router.push({ pathname: "/EventDetailsScreen", params: { event } });
+    router.push({
+      pathname: "/EventDetailsScreen",
+      params: { event: JSON.stringify(event) },
+    });
   };
 
   return (
