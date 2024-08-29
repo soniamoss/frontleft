@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Text, ImageBackground, ScrollView, TouchableOpacity, Image, Linking, Dimensions } from 'react-native';
+import { View, StyleSheet, Text, ImageBackground, ScrollView, TouchableOpacity, Image, Linking, ActivityIndicator, Dimensions } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { supabase } from '../../supabaseClient';
 import { useNavigation } from '@react-navigation/native';
@@ -16,16 +16,60 @@ const ExploreTab = () => {
   const [currentTab, setCurrentTab] = useState('Friends of Friends');
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [friends, setFriends] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigation = useNavigation();
 
   useEffect(() => {
-    fetchEvents();
-  }, [selectedLocation]);
+    const loadUserData = async () => {
+      try {
+        // Fetch the authenticated user's data
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError || !userData.user) {
+          console.error('Error fetching user data:', userError);
+          return;
+        }
 
-  const fetchEvents = async () => {
+        setCurrentUser(userData.user);
+
+        // Fetch friends and events after the user is set
+        await fetchFriends(userData.user.id);
+        await fetchEvents(userData.user);
+      } catch (error) {
+        console.error('Error during initial data load:', error);
+      }
+    };
+
+    loadUserData();
+  }, [selectedLocation, currentTab]);
+
+  const fetchFriends = async (userId) => {
+    try {
+      const { data: friendsData, error } = await supabase
+        .from('friendships')
+        .select('friend_id, user_id')
+        .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
+        .eq('status', 'accepted');
+  
+      if (error) {
+        console.error('Error fetching friends:', error);
+      } else {
+        // Extracting the friend's ID based on which field doesn't match the userId
+        const friendIds = friendsData.map(friend => 
+          friend.user_id === userId ? friend.friend_id : friend.user_id
+        );
+        console.log('Friends Data:', friendIds);
+        setFriends(friendIds);
+      }
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+    }
+  };
+  
+
+  const fetchEvents = async (user) => {
     setLoading(true);
     try {
-      // Fetch events in the selected city
       const { data: eventsData, error: eventsError } = await supabase
         .from('events')
         .select('*')
@@ -38,28 +82,42 @@ const ExploreTab = () => {
           .filter(event => moment(`${event.date} ${event.time}`).isAfter(moment()))
           .sort((a, b) => moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`)));
 
-        // Fetch event attendees with their profile images and statuses
         const eventIds = upcomingEvents.map(event => event.id);
         const { data: attendeesData, error: attendeesError } = await supabase
-        .from('event_attendees')
-        .select('event_id, status, profiles!event_attendees_user_id_fkey(profile_image_url)')
-        .in('event_id', eventIds)
-        .or('status.eq.going,status.eq.interested'); // Correct usage of the 'or' function
-      
-
-          console.log('HEREHERE', attendeesData); 
+          .from('event_attendees')
+          .select('event_id, status, user_id, profiles!event_attendees_user_id_fkey(profile_image_url, first_name)')
+          .in('event_id', eventIds)
+          .or('status.eq.going,status.eq.interested');
 
         if (attendeesError) {
           console.error('Error fetching attendees:', attendeesError);
         } else {
-          // Add attendees' profile images to events and group by status
           const eventsWithAttendees = upcomingEvents.map(event => {
-            const attendingFriends = attendeesData.filter(att => att.event_id === event.id && att.status === 'going').map(att => att.profiles.profile_image_url);
-            const interestedFriends = attendeesData.filter(att => att.event_id === event.id && att.status === 'interested').map(att => att.profiles.profile_image_url);
+            const attendingFriends = attendeesData
+              .filter(att => att.event_id === event.id && att.status === 'going' && (friends.includes(att.user_id) || att.user_id === user.id))
+              .map(att => ({ profileImage: att.profiles.profile_image_url, firstName: att.profiles.first_name }));
+
+            const interestedFriends = attendeesData
+              .filter(att => att.event_id === event.id && att.status === 'interested' && (friends.includes(att.user_id) || att.user_id === user.id))
+              .map(att => ({ profileImage: att.profiles.profile_image_url, firstName: att.profiles.first_name }));
+
+            // Check if the current user is attending
+            const isCurrentUserGoing = attendeesData.some(att => att.event_id === event.id && att.user_id === user.id && att.status === 'going');
+
+            // Add the current user at the beginning of the attendingFriends array
+            // if (isCurrentUserGoing) {
+            //   attendingFriends.unshift({
+            //     profileImage: user.user_metadata?.profile_image_url || '', // Assuming profile image URL is stored in user metadata
+            //     firstName: user.user_metadata?.first_name || 'You',
+            //   });
+            // }
+            
+            console.log('current User', user); 
+            console.log('attendeesDataXXc', attendeesData); 
+
             return { ...event, attendingFriends, interestedFriends };
           });
 
-          // Sort events by those with friends attending/interested first, then by date
           const eventsWithFriends = eventsWithAttendees.filter(event => event.attendingFriends.length > 0 || event.interestedFriends.length > 0);
           const eventsWithoutFriends = eventsWithAttendees.filter(event => event.attendingFriends.length === 0 && event.interestedFriends.length === 0);
 
@@ -67,8 +125,6 @@ const ExploreTab = () => {
             ...eventsWithFriends.sort((a, b) => moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`))),
             ...eventsWithoutFriends.sort((a, b) => moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`))),
           ];
-
-        
 
           setEvents(finalSortedEvents);
         }
@@ -92,7 +148,7 @@ const ExploreTab = () => {
       attendingFriends: event.attendingFriends,
       interestedFriends: event.interestedFriends,
     };
-  
+
     navigation.navigate('EventDetails', { event, eventAttendees });
   };
 
@@ -144,7 +200,7 @@ const ExploreTab = () => {
       </View>
 
       {loading ? (
-        <Text>Loading events...</Text>
+        <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <ScrollView
           contentContainerStyle={styles.eventsContainer}
@@ -177,22 +233,26 @@ const ExploreTab = () => {
                   <View style={styles.eventDetailsContainer}>
                     <Image source={require('@/assets/images/checkmark.png')} style={styles.iconSmall} />
                     <View style={styles.attendingFriendsContainer}>
-                      {event.attendingFriends && event.attendingFriends.map((imageUrl, idx) => (
-                        <Image
-                          key={idx}
-                          source={{ uri: imageUrl }}
-                          style={styles.friendProfileImage}
-                        />
+                      {event.attendingFriends && event.attendingFriends.map((friend, idx) => (
+                        <View key={idx} style={styles.friendInfo}>
+                          <Image
+                            source={{ uri: friend.profileImage }}
+                            style={styles.friendProfileImage}
+                          />
+                          <Text style={styles.friendName}>{friend.firstName}</Text>
+                        </View>
                       ))}
                     </View>
                     <Image source={require('@/assets/images/star.png')} style={styles.iconSmall} />
                     <View style={styles.interestedFriendsContainer}>
-                      {event.interestedFriends && event.interestedFriends.map((imageUrl, idx) => (
-                        <Image
-                          key={idx}
-                          source={{ uri: imageUrl }}
-                          style={styles.friendProfileImage}
-                        />
+                      {event.interestedFriends && event.interestedFriends.map((friend, idx) => (
+                        <View key={idx} style={styles.friendInfo}>
+                          <Image
+                            source={{ uri: friend.profileImage }}
+                            style={styles.friendProfileImage}
+                          />
+                          <Text style={styles.friendName}>{friend.firstName}</Text>
+                        </View>
                       ))}
                     </View>
                   </View>
@@ -334,12 +394,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 10,
   },
+  friendInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 10,
+  },
   friendProfileImage: {
     width: 30,
     height: 30,
     borderRadius: 15,
     marginRight: 5,
   },
+  friendName: {
+    fontSize: 12,
+    color: '#3D4353',
+  },
 });
 
 export default ExploreTab;
+
+

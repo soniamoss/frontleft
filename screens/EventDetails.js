@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Text, ImageBackground, TouchableOpacity, Image, Alert, Dimensions, Linking, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import DropDownPicker from 'react-native-dropdown-picker';
 import { supabase } from '../supabaseClient';
 import moment from 'moment';
 import { getCurrentUser } from '../services/userService';
@@ -12,18 +11,11 @@ const EventDetails = () => {
   const { event, eventAttendees } = route.params || {}; // Use optional chaining to safely access route params
 
   const [goingStatus, setGoingStatus] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState('Los Angeles');
-  const [items, setItems] = useState([
-    { label: 'Los Angeles', value: 'Los Angeles' },
-    { label: 'New York', value: 'New York' },
-    { label: 'San Francisco', value: 'San Francisco' },
-  ]);
   const [currentTab, setCurrentTab] = useState('Friends of Friends');
   const [attendeesData, setAttendeesData] = useState(eventAttendees); // Initialize with eventAttendees if provided
   const [loading, setLoading] = useState(!eventAttendees); // If eventAttendees is passed, skip loading
 
-  useEffect(() => {
+  useEffect(() => { 
     // If eventAttendees is not passed, query the database
     if (!attendeesData) {
       fetchEventAttendees();
@@ -35,7 +27,7 @@ const EventDetails = () => {
     try {
       const { data: fetchedAttendees, error } = await supabase
         .from('event_attendees')
-        .select('event_id, status, profiles!event_attendees_user_id_fkey(profile_image_url)')
+        .select('event_id, status, profiles!event_attendees_user_id_fkey(profile_image_url, first_name)')
         .eq('event_id', event.id)
         .or('status.eq.going,status.eq.interested'); // Get both 'going' and 'interested' statuses
 
@@ -44,11 +36,11 @@ const EventDetails = () => {
       } else {
         const attendingFriends = fetchedAttendees
           .filter(att => att.status === 'going')
-          .map(att => att.profiles.profile_image_url);
+          .map(att => ({ firstName: att.profiles.first_name, profileImage: att.profiles.profile_image_url }));
 
         const interestedFriends = fetchedAttendees
           .filter(att => att.status === 'interested')
-          .map(att => att.profiles.profile_image_url);
+          .map(att => ({ firstName: att.profiles.first_name, profileImage: att.profiles.profile_image_url }));
 
         setAttendeesData({ attendingFriends, interestedFriends });
       }
@@ -119,27 +111,11 @@ const EventDetails = () => {
 
   return (
     <View style={styles.container}>
-      {/* Top Section with Back Button and Dropdown Picker */}
+      {/* Top Section with Back Button */}
       <View style={styles.topSection}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>{'< Back'}</Text>
         </TouchableOpacity>
-
-        <View style={styles.pickerWrapper}>
-          <DropDownPicker
-            open={open}
-            value={selectedLocation}
-            items={items}
-            setOpen={setOpen}
-            setValue={setSelectedLocation}
-            setItems={setItems}
-            containerStyle={styles.pickerContainer}
-            style={styles.picker}
-            placeholder="Select a location"
-            zIndex={1000}
-            textStyle={styles.dropdownText}
-          />
-        </View>
 
         <View style={styles.tabContainer}>
           <View style={styles.tabWrapper}>
@@ -195,23 +171,27 @@ const EventDetails = () => {
               <Image source={require('@/assets/images/checkmark.png')} style={styles.iconSmall2} />
               <Text style={styles.iconLabel}>Going</Text>
               <View style={styles.attendingFriendsContainer}>
-                {attendeesData?.attendingFriends?.length > 0 && attendeesData.attendingFriends.map((imageUrl, idx) => (
-                  <Image
-                    key={idx}
-                    source={{ uri: imageUrl }}
-                    style={styles.friendProfileImage}
-                  />
+                {attendeesData?.attendingFriends?.length > 0 && attendeesData.attendingFriends.map((friend, idx) => (
+                  <View key={idx} style={styles.friendInfo}>
+                    <Image
+                      source={{ uri: friend.profileImage }}
+                      style={styles.friendProfileImage}
+                    />
+                    <Text style={styles.profileUrlText}>{friend.firstName}</Text>
+                  </View>
                 ))}
               </View>
               <Image source={require('@/assets/images/star.png')} style={styles.iconSmall2} />
               <Text style={styles.iconLabel}>Interested</Text>
               <View style={styles.interestedFriendsContainer}>
-                {attendeesData?.interestedFriends?.length > 0 && attendeesData.interestedFriends.map((imageUrl, idx) => (
-                  <Image
-                    key={idx}
-                    source={{ uri: imageUrl }}
-                    style={styles.friendProfileImage}
-                  />
+                {attendeesData?.interestedFriends?.length > 0 && attendeesData.interestedFriends.map((friend, idx) => (
+                  <View key={idx} style={styles.friendInfo}>
+                    <Image
+                      source={{ uri: friend.profileImage }}
+                      style={styles.friendProfileImage}
+                    />
+                    <Text style={styles.profileUrlText}>{friend.firstName}</Text>
+                  </View>
                 ))}
               </View>
             </View>
@@ -252,30 +232,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6A74FB',
   },
-  pickerWrapper: {
-    width: '50%',
-    alignSelf: 'center',
-    marginBottom: 10,
-    zIndex: 1000,
-  },
-  pickerContainer: {
-    height: 50,
-  },
-  picker: {
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  dropdownText: {
-    color: '#3F407C',
-    fontWeight: '700',
-    fontSize: 15,
-  },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: 15,
+    marginTop: 40,
   },
   tabWrapper: {
     flexDirection: 'row',
@@ -306,7 +267,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: 20,
     width: width - 40,
-    height: 478,
+    height: 520,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
@@ -405,6 +366,16 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     marginRight: 5,
+    marginBottom: 5,
+  },
+  friendInfo: {
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  profileUrlText: {
+    fontSize: 10,
+    color: '#3D4353',
+    textAlign: 'center',
   },
   goingButton: {
     marginTop: 10,
