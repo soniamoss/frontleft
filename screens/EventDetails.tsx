@@ -26,6 +26,9 @@ const EventDetails = () => {
   const eventString = params?.event || "";
   const eventAttendeesString = params?.eventAttendees || "";
 
+  // TODO: it's recommended to not do this, instead,
+  // we should pass only the id of the event and grab the event details, ideally from react-query
+  // https://reactnavigation.org/docs/params/#what-should-be-in-params
   const event = eventString ? JSON.parse(eventString) : {};
   const eventAttendees = eventAttendeesString
     ? JSON.parse(eventAttendeesString)
