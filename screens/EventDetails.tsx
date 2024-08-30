@@ -18,21 +18,19 @@ import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
 
 const EventDetails = () => {
-  // get params from expo-router
-
+  // Get params from expo-router
   const params = useLocalSearchParams();
-  console.log("params: ", typeof params.event);
-
   const eventString = params?.event || "";
   const eventAttendeesString = params?.eventAttendees || "";
+
 
   // TODO: it's recommended to not do this, instead,
   // we should pass only the id of the event and grab the event details, ideally from react-query
   // https://reactnavigation.org/docs/params/#what-should-be-in-params
+
+  // Parse the event and attendees data passed through params
   const event = eventString ? JSON.parse(eventString) : {};
-  const eventAttendees = eventAttendeesString
-    ? JSON.parse(eventAttendeesString)
-    : {};
+  const eventAttendees = eventAttendeesString ? JSON.parse(eventAttendeesString) : {};
 
   const [goingStatus, setGoingStatus] = useState(false);
   const [open, setOpen] = useState(false);
@@ -58,22 +56,20 @@ const EventDetails = () => {
     try {
       const { data: fetchedAttendees, error }: any = await supabase
         .from("event_attendees")
-        .select(
-          "event_id, status, profiles!event_attendees_user_id_fkey(profile_image_url)"
-        )
+        .select("event_id, status, profiles!event_attendees_user_id_fkey(profile_image_url, first_name)")
         .eq("event_id", event.id)
-        .or("status.eq.going,status.eq.interested"); // Get both 'going' and 'interested' statuses
+        .or("status.eq.going,status.eq.interested");
 
       if (error) {
         console.error("Error fetching event attendees:", error);
       } else {
         const attendingFriends = fetchedAttendees
           .filter((att: any) => att.status === "going")
-          .map((att: any) => att.profiles.profile_image_url);
+          .map((att: any) => ({ firstName: att.profiles.first_name, profileImage: att.profiles.profile_image_url }));
 
         const interestedFriends = fetchedAttendees
           .filter((att: any) => att.status === "interested")
-          .map((att: any) => att.profiles.profile_image_url);
+          .map((att: any) => ({ firstName: att.profiles.first_name, profileImage: att.profiles.profile_image_url }));
 
         setAttendeesData({ attendingFriends, interestedFriends });
       }
@@ -100,6 +96,7 @@ const EventDetails = () => {
       } else {
         setGoingStatus(true);
         Alert.alert("Success", "You are now going to this event!");
+        fetchEventAttendees(); // Refresh the attendees list
       }
     } catch (err) {
       console.error("Error going to event:", err);
@@ -123,11 +120,11 @@ const EventDetails = () => {
           console.error(error);
         }
       } else {
-        setGoingStatus(true);
-        Alert.alert("Success", "You are INTERESTED in going to this event!");
+        Alert.alert("Success", "You are now interested in this event!");
+        fetchEventAttendees(); // Refresh the attendees list
       }
     } catch (err) {
-      console.error("Error going to event:", err);
+      console.error("Error marking interest in event:", err);
     }
   };
 
@@ -267,15 +264,15 @@ const EventDetails = () => {
               />
               <Text style={styles.iconLabel}>Going</Text>
               <View style={styles.attendingFriendsContainer}>
-                {/* @ts-ignore */}
                 {attendeesData?.attendingFriends?.length > 0 &&
-                  //@ts-ignore
-                  attendeesData.attendingFriends.map((imageUrl, idx) => (
-                    <Image
-                      key={idx}
-                      source={{ uri: imageUrl }}
-                      style={styles.friendProfileImage}
-                    />
+                  attendeesData.attendingFriends.map((friend, idx) => (
+                    <View key={idx} style={styles.friendInfo}>
+                      <Image
+                        source={{ uri: friend.profileImage }}
+                        style={styles.friendProfileImage}
+                      />
+                      <Text style={styles.profileUrlText}>{friend.firstName}</Text>
+                    </View>
                   ))}
               </View>
               <Image
@@ -284,15 +281,15 @@ const EventDetails = () => {
               />
               <Text style={styles.iconLabel}>Interested</Text>
               <View style={styles.interestedFriendsContainer}>
-                {/* @ts-ignore */}
                 {attendeesData?.interestedFriends?.length > 0 &&
-                  // @ts-ignore
-                  attendeesData.interestedFriends.map((imageUrl, idx) => (
-                    <Image
-                      key={idx}
-                      source={{ uri: imageUrl }}
-                      style={styles.friendProfileImage}
-                    />
+                  attendeesData.interestedFriends.map((friend, idx) => (
+                    <View key={idx} style={styles.friendInfo}>
+                      <Image
+                        source={{ uri: friend.profileImage }}
+                        style={styles.friendProfileImage}
+                      />
+                      <Text style={styles.profileUrlText}>{friend.firstName}</Text>
+                    </View>
                   ))}
               </View>
             </View>
@@ -392,7 +389,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     marginBottom: 20,
     width: width - 40,
-    height: 478,
+    height: 520,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
@@ -404,12 +401,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   imageBackgroundStyle: {
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.3)",
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
   },
@@ -491,6 +482,15 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
     marginRight: 5,
+  },
+  friendInfo: {
+    alignItems: "center",
+    marginRight: 10,
+  },
+  profileUrlText: {
+    fontSize: 10,
+    color: "#3D4353",
+    textAlign: "center",
   },
   goingButton: {
     marginTop: 10,

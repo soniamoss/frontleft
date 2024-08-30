@@ -11,6 +11,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { supabase } from "../../supabaseClient";
@@ -26,16 +27,59 @@ const ExploreTab = () => {
   const [currentTab, setCurrentTab] = useState("Friends of Friends");
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [friends, setFriends] = useState<string[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
-    fetchEvents();
-  }, [selectedLocation]);
+    const loadUserData = async () => {
+      try {
+        // Fetch the authenticated user's data
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        if (userError || !userData.user) {
+          console.error('Error fetching user data:', userError);
+          return;
+        }
 
-  const fetchEvents = async () => {
+        setCurrentUser(userData.user);
+
+        // Fetch friends and events after the user is set
+        await fetchFriends(userData.user.id);
+        await fetchEvents(userData.user);
+      } catch (error) {
+        console.error('Error during initial data load:', error);
+      }
+    };
+
+    loadUserData();
+  }, [selectedLocation, currentTab]);
+
+  const fetchFriends = async (userId: string) => {
+    try {
+      const { data: friendsData, error } = await supabase
+        .from('friendships')
+        .select('friend_id, user_id')
+        .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
+        .eq('status', 'accepted');
+  
+      if (error) {
+        console.error('Error fetching friends:', error);
+      } else {
+        // Extracting the friend's ID based on which field doesn't match the userId
+        const friendIds = friendsData.map((friend: any) => 
+          friend.user_id === userId ? friend.friend_id : friend.user_id
+        );
+        console.log('Friends Data:', friendIds);
+        setFriends(friendIds);
+      }
+    } catch (error) {
+      console.error('Error fetching friends:', error);
+    }
+  };
+
+  const fetchEvents = async (user: any) => {
     setLoading(true);
     try {
-      // Fetch events in the selected city
-      const { data: eventsData, error: eventsError }: any = await supabase
+      const { data: eventsData, error: eventsError } = await supabase
         .from("events")
         .select("*")
         .eq("city", selectedLocation);
@@ -51,40 +95,46 @@ const ExploreTab = () => {
             moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`))
           );
 
-        // Fetch event attendees with their profile images and statuses
         const eventIds = upcomingEvents.map((event: any) => event.id);
-        const { data: attendeesData, error: attendeesError }: any =
-          await supabase
-            .from("event_attendees")
-            .select(
-              "event_id, status, profiles!event_attendees_user_id_fkey(profile_image_url)"
-            )
-            .in("event_id", eventIds)
-            .or("status.eq.going,status.eq.interested"); // Correct usage of the 'or' function
-
-        console.log("HEREHERE", attendeesData);
+        const { data: attendeesData, error: attendeesError } = await supabase
+          .from("event_attendees")
+          .select(
+            "event_id, status, user_id, profiles!event_attendees_user_id_fkey(profile_image_url, first_name)"
+          )
+          .in("event_id", eventIds)
+          .or("status.eq.going,status.eq.interested");
 
         if (attendeesError) {
           console.error("Error fetching attendees:", attendeesError);
         } else {
-          // Add attendees' profile images to events and group by status
           const eventsWithAttendees = upcomingEvents.map((event: any) => {
             const attendingFriends = attendeesData
               .filter(
                 (att: any) =>
-                  att.event_id === event.id && att.status === "going"
+                  att.event_id === event.id &&
+                  att.status === "going" &&
+                  (friends.includes(att.user_id) || att.user_id === user.id)
               )
-              .map((att: any) => att.profiles.profile_image_url);
+              .map((att: any) => ({
+                profileImage: att.profiles.profile_image_url,
+                firstName: att.profiles.first_name,
+              }));
+
             const interestedFriends = attendeesData
               .filter(
                 (att: any) =>
-                  att.event_id === event.id && att.status === "interested"
+                  att.event_id === event.id &&
+                  att.status === "interested" &&
+                  (friends.includes(att.user_id) || att.user_id === user.id)
               )
-              .map((att: any) => att.profiles.profile_image_url);
+              .map((att: any) => ({
+                profileImage: att.profiles.profile_image_url,
+                firstName: att.profiles.first_name,
+              }));
+
             return { ...event, attendingFriends, interestedFriends };
           });
 
-          // Sort events by those with friends attending/interested first, then by date
           const eventsWithFriends = eventsWithAttendees.filter(
             (event: any) =>
               event.attendingFriends.length > 0 ||
@@ -105,7 +155,6 @@ const ExploreTab = () => {
             ),
           ];
 
-          // @ts-ignore
           setEvents(finalSortedEvents);
         }
       }
@@ -115,7 +164,7 @@ const ExploreTab = () => {
     setLoading(false);
   };
 
-  const handleTabChange = (tab: any) => {
+  const handleTabChange = (tab: string) => {
     setCurrentTab(tab);
   };
 
@@ -130,9 +179,7 @@ const ExploreTab = () => {
     };
 
     router.push({
-      // @ts-ignore
       pathname: "/EventDetailsScreen",
-      // @ts-ignore
       params: {
         event: JSON.stringify(event),
         eventAttendees: JSON.stringify(eventAttendees),
@@ -140,7 +187,7 @@ const ExploreTab = () => {
     });
   };
 
-  const openLocationInMaps = (venue: any, city: any) => {
+  const openLocationInMaps = (venue: string, city: string) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
       `${venue}, ${city}`
     )}`;
@@ -207,7 +254,7 @@ const ExploreTab = () => {
       </View>
 
       {loading ? (
-        <Text>Loading events...</Text>
+        <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <ScrollView
           contentContainerStyle={styles.eventsContainer}
@@ -268,12 +315,16 @@ const ExploreTab = () => {
                     <View style={styles.attendingFriendsContainer}>
                       {event.attendingFriends &&
                         event.attendingFriends.map(
-                          (imageUrl: any, idx: number) => (
-                            <Image
-                              key={String(idx)}
-                              source={{ uri: imageUrl }}
-                              style={styles.friendProfileImage}
-                            />
+                          (friend: any, idx: number) => (
+                            <View key={idx} style={styles.friendInfo}>
+                              <Image
+                                source={{ uri: friend.profileImage }}
+                                style={styles.friendProfileImage}
+                              />
+                              <Text style={styles.friendName}>
+                                {friend.firstName}
+                              </Text>
+                            </View>
                           )
                         )}
                     </View>
@@ -284,12 +335,16 @@ const ExploreTab = () => {
                     <View style={styles.interestedFriendsContainer}>
                       {event.interestedFriends &&
                         event.interestedFriends.map(
-                          (imageUrl: any, idx: any) => (
-                            <Image
-                              key={idx}
-                              source={{ uri: imageUrl }}
-                              style={styles.friendProfileImage}
-                            />
+                          (friend: any, idx: number) => (
+                            <View key={idx} style={styles.friendInfo}>
+                              <Image
+                                source={{ uri: friend.profileImage }}
+                                style={styles.friendProfileImage}
+                              />
+                              <Text style={styles.friendName}>
+                                {friend.firstName}
+                              </Text>
+                            </View>
                           )
                         )}
                     </View>
@@ -432,14 +487,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginTop: 10,
   },
+  friendInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginRight: 10,
+  },
   friendProfileImage: {
     width: 30,
     height: 30,
     borderRadius: 15,
     marginRight: 5,
   },
+  friendName: {
+    fontSize: 12,
+    color: "#3D4353",
+  },
 });
 
 export default ExploreTab;
-
-
