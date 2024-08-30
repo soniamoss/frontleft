@@ -1,0 +1,21 @@
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=827846 to learn about workspace recommendations.
+  // Extension identifier format: ${publisher}.${name}. Example: vscode.csharp
+  // List of extensions which should be recommended for users of this workspace.
+  // info: for whatever reason, eslint was acting up terribly. I believe it's fixed now.
+  // https://github.com/microsoft/vscode-eslint/issues/1670
+  // re-enabled eslint and it's working properly for me.
+  "recommendations": [
+    "formulahendry.auto-rename-tag",
+    "dbaeumer.vscode-eslint",
+    "expo.vscode-expo-tools",
+    "esbenp.prettier-vscode",
+    "rvest.vs-code-prettier-eslint",
+    "msjsdiag.vscode-react-native",
+    "sapien.react-native-move-styles",
+    "jasonnutter.search-node-modules",
+    "iulian-radu-at.find-unused-exports",
+  ],
+  // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
+  "unwantedRecommendations": []
+}
