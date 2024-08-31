@@ -252,6 +252,7 @@ export default function ShowContacts() {
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     <AntDesign name="user" size={15} color="black" />
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     flex: 1,
-    marginLeft: 5,
+    marginLeft: 10,
   },
   profileName: {
     fontSize: 18,

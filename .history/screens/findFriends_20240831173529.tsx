@@ -1,5 +1,4 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import Toast from "react-native-toast-message";
 
 import * as Contacts from "expo-contacts";
@@ -146,9 +145,7 @@ export default function ShowContacts() {
       id: contact.id,
       first_name: contact.name,
       phone_number: contact.phoneNumbers ? contact.phoneNumbers[0].number : "",
-      username: contact.phoneNumbers
-        ? "+1" + " " + contact.phoneNumbers[0].number
-        : "",
+      username: contact.phoneNumbers ? contact.phoneNumbers[0].number : "",
       invite: true,
     }));
 
@@ -248,15 +245,7 @@ export default function ShowContacts() {
                   <Text style={styles.profileName}>
                     {item.first_name} {item.last_name}
                   </Text>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                    }}
-                  >
-                    <AntDesign name="user" size={15} color="black" />
-                    <Text style={styles.profileUsername}>{item.username}</Text>
-                  </View>
+                  <Text style={styles.profileUsername}>{item.username}</Text>
                 </View>
                 {item.invite ? (
                   <TouchableOpacity
@@ -364,7 +353,7 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     flex: 1,
-    marginLeft: 5,
+    marginLeft: 10,
   },
   profileName: {
     fontSize: 18,

@@ -113,7 +113,6 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
       <Toast config={toastConfig} />
-      <StatusBar style="dark" />
     </ThemeProvider>
   );
 }

@@ -18,7 +18,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ value, setValue }) => {
   const [isFocused, setIsFocused] = React.useState(false);
   return (
     <View style={[styles.container, isFocused && styles.shadow]}>
-      <AntDesign name="search1" size={20} color="#66788A" />
+      <AntDesign name="search1" size={20} color="black" />
       <TextInput
         placeholder="Search or add new friends"
         style={styles.input}

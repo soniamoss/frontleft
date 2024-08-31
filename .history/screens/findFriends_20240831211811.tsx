@@ -248,13 +248,8 @@ export default function ShowContacts() {
                   <Text style={styles.profileName}>
                     {item.first_name} {item.last_name}
                   </Text>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                    }}
-                  >
-                    <AntDesign name="user" size={15} color="black" />
+                  <View>
+                    <AntDesign name="user" size={24} color="black" />
                     <Text style={styles.profileUsername}>{item.username}</Text>
                   </View>
                 </View>
@@ -364,7 +359,7 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     flex: 1,
-    marginLeft: 5,
+    marginLeft: 10,
   },
   profileName: {
     fontSize: 18,

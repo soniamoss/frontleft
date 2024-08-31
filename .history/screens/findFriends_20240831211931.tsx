@@ -252,6 +252,7 @@ export default function ShowContacts() {
                     style={{
                       flexDirection: "row",
                       alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     <AntDesign name="user" size={15} color="black" />
