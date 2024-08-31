@@ -6,6 +6,7 @@ import * as Contacts from "expo-contacts";
 import * as SMS from "expo-sms";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Image,
@@ -45,9 +46,9 @@ interface Friendship {
 
 export default function ShowContacts() {
   const [appContacts, setAppContacts] = useState<Profile[]>([]);
-  const [nonAppContacts, setNonAppContacts] = useState<Contact[]>([]);
   const [searchText, setSearchText] = useState<string>("");
   const [requests, setRequests] = useState<Friendship[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const navigation = useNavigation();
 
   useFocusEffect(
@@ -77,12 +78,14 @@ export default function ShowContacts() {
   const fetchContacts = async () => {
     const user = await getCurrentUser();
 
+    setLoading(true);
     const { status } = await Contacts.requestPermissionsAsync();
     if (status !== "granted") {
       Alert.alert(
         "Permissions Denied",
         "Access to contacts is required to find friends."
       );
+      setLoading(false);
       return;
     }
 
@@ -92,6 +95,7 @@ export default function ShowContacts() {
 
     if (!deviceContacts?.length) {
       Alert.alert("No Contacts Found", "No contacts found on your device.");
+      setLoading(false);
       return;
     }
 
@@ -115,6 +119,7 @@ export default function ShowContacts() {
     );
 
     if (profilesError) {
+      setLoading(false);
       console.error(profilesError);
     }
 
@@ -124,6 +129,7 @@ export default function ShowContacts() {
       .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
 
     if (friendshipError) {
+      setLoading(false);
       console.error("Error fetching friendship IDs:", friendshipError);
     } else {
       console.log("friendshipIds:", friendshipIds);
@@ -154,6 +160,7 @@ export default function ShowContacts() {
 
     setRequests(friendshipIds || []);
     setAppContacts(filteredProfiles.concat(nonAppContactsSample));
+    setLoading(false);
   };
 
   const handleSearch = (text: string) => {
@@ -290,6 +297,17 @@ export default function ShowContacts() {
           ListHeaderComponent={
             <View style={styles.headerContainer}>
               <Text style={styles.text}>Find Friends</Text>
+            </View>
+          }
+          ListFooterComponent={
+            <View>
+              {loading ? (
+                <ActivityIndicator color={"#6A74FB"} size="large" />
+              ) : (
+                <Text style={styles.noProfilesText}>
+                  No matching profiles found
+                </Text>
+              )}
             </View>
           }
           showsVerticalScrollIndicator={false}
