@@ -1,47 +1,134 @@
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import React from "react";
-import { StyleSheet } from "react-native";
+import {
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import FriendsTabScreen from "../findFriends";
 import FriendsListTabScreen from "../friendList";
 import RequestTabScreen from "../requests";
+import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
 
-const FriendsTopTab = createMaterialTopTabNavigator();
+type FriendsTopTabParamList = {
+  "Find Friends": undefined;
+  "Friends List": undefined;
+  Requests: undefined;
+};
 
-const FriendsTab = () => (
-  <FriendsTopTab.Navigator
-    screenOptions={{
-      swipeEnabled: true, // Enable swipe gestures
-      tabBarStyle: styles.tabBar, // Apply tabBar styles
-      tabBarIndicatorStyle: styles.tabBarIndicator, // Apply tabBarIndicator styles
-      tabBarLabelStyle: styles.tabBarLabel,
+const FriendsTopTab = createMaterialTopTabNavigator<FriendsTopTabParamList>();
+
+const FriendsTab: React.FC = () => (
+  <ImageBackground
+    style={{
+      flex: 1,
+      paddingTop: 50,
     }}
+    source={require("../../assets/images/friends-back.png")}
   >
-    <FriendsTopTab.Screen name="Find Friends" component={FriendsTabScreen} />
-    <FriendsTopTab.Screen
-      name="Friends List"
-      component={FriendsListTabScreen}
-    />
-    <FriendsTopTab.Screen name="Requests" component={RequestTabScreen} />
-  </FriendsTopTab.Navigator>
+    <FriendsTopTab.Navigator tabBar={(props) => <CustomTabBar {...props} />}>
+      <FriendsTopTab.Screen
+        name="Find Friends"
+        component={FriendsTabScreen}
+        options={{
+          tabBarLabel: "Find Friends",
+        }}
+      />
+      <FriendsTopTab.Screen
+        name="Friends List"
+        component={FriendsListTabScreen}
+        options={{
+          tabBarLabel: "Friends List",
+        }}
+      />
+      <FriendsTopTab.Screen
+        name="Requests"
+        component={RequestTabScreen}
+        options={{
+          tabBarLabel: "Requests",
+        }}
+      />
+    </FriendsTopTab.Navigator>
+  </ImageBackground>
 );
 
+const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
+  state,
+  descriptors,
+  navigation,
+}) => {
+  return (
+    <View
+      style={{
+        padding: 20,
+        paddingBottom: 0,
+      }}
+    >
+      <View style={styles.container}>
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const label = options.tabBarLabel as string;
+
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              style={[
+                styles.tabButton,
+                {
+                  width: "33%",
+                },
+              ]}
+              onPress={onPress}
+            >
+              <Text
+                style={[
+                  styles.tabText,
+                  { color: isFocused ? "#6A74FB" : "#9CA9B7" },
+                ]}
+              >
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
-  tabBar: {
-    backgroundColor: "transparent", // Transparent background
-    elevation: 0, // Remove shadow for Android
-    shadowOpacity: 0, // Remove shadow for iOS
-    borderBottomWidth: 0, // Remove border
-    paddingTop: 38, // Adjust this value to move the tab bar lower or higher
+  container: {
+    flexDirection: "row",
+    borderRadius: 10,
+    marginTop: 10,
+    paddingHorizontal: 5,
+    paddingVertical: 5,
   },
-  tabBarIndicator: {
-    backgroundColor: "#000", // Adjust indicator color if needed
+  tabButton: {
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 5,
   },
-  tabBarLabel: {
-    color: "#9CA9B7", // Set the color of the tab names
-    fontSize: 13, // Set the font size
-    fontWeight: "700", // Set the font weight
-    fontFamily: "poppins",
-    textTransform: "none",
+  tabText: {
+    fontSize: 13,
+    fontWeight: "bold",
   },
 });
 

@@ -1,28 +1,52 @@
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
+
 import * as Contacts from "expo-contacts";
 import * as SMS from "expo-sms";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Alert,
+  FlatList,
   Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  ImageBackground,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import { addFriend } from "../services/friendshipService";
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
+import SearchBar from "@/components/SearchBar";
+
+interface Contact {
+  id: string;
+  first_name: string;
+  last_name?: string;
+  phone_number: string;
+  invite?: boolean;
+}
+
+interface Profile {
+  user_id: string;
+  first_name: string;
+  last_name?: string;
+  username: string;
+  profile_image_url?: string;
+  invite?: boolean;
+}
+
+interface Friendship {
+  friend_id: string;
+  user_id: string;
+  status: string;
+}
 
 export default function ShowContacts() {
-  const [appContacts, setAppContacts] = useState([]);
-  const [nonAppContacts, setNonAppContacts] = useState([]);
-  const [searchText, setSearchText] = useState("");
-  const [filteredProfiles, setFilteredProfiles] = useState([]);
+  const [appContacts, setAppContacts] = useState<Profile[]>([]);
+  const [nonAppContacts, setNonAppContacts] = useState<Contact[]>([]);
+  const [searchText, setSearchText] = useState<string>("");
+  const [requests, setRequests] = useState<Friendship[]>([]);
   const navigation = useNavigation();
 
   useFocusEffect(
@@ -65,7 +89,7 @@ export default function ShowContacts() {
       fields: [Contacts.Fields.PhoneNumbers],
     });
 
-    if (!deviceContacts.length) {
+    if (!deviceContacts?.length) {
       Alert.alert("No Contacts Found", "No contacts found on your device.");
       return;
     }
@@ -73,8 +97,8 @@ export default function ShowContacts() {
     const phoneNumbers = deviceContacts
       .flatMap((contact) =>
         contact.phoneNumbers
-          ? contact.phoneNumbers.map((phoneNumber: any) =>
-              phoneNumber.number
+          ? contact.phoneNumbers.map((phoneNumber) =>
+              phoneNumber?.number
                 .replace(/[+() -]/g, "")
                 .replace(/^\d{10}$/, "1$&")
             )
@@ -82,7 +106,7 @@ export default function ShowContacts() {
       )
       .filter(Boolean);
 
-    const { data: profiles, error: profilesError }: any = await supabase.rpc(
+    const { data: profiles, error: profilesError } = await supabase.rpc(
       "get_profiles_by_phonenumbers",
       {
         phone_numbers: phoneNumbers,
@@ -91,13 +115,11 @@ export default function ShowContacts() {
 
     if (profilesError) {
       console.error(profilesError);
-    } else {
-      console.log("profiles", profiles);
     }
 
-    const { data: friendshipIds, error: friendshipError }: any = await supabase
+    const { data: friendshipIds, error: friendshipError } = await supabase
       .from("friendships")
-      .select("friend_id, user_id")
+      .select("friend_id, user_id, status")
       .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
 
     if (friendshipError) {
@@ -106,56 +128,57 @@ export default function ShowContacts() {
       console.log("friendshipIds:", friendshipIds);
     }
 
-    const idsToExclude = friendshipIds.flatMap((friendship: any) => [
-      friendship.friend_id,
-      friendship.user_id,
-    ]);
+    let idsToExclude: string[] = [];
 
-    const filteredProfiles = profiles.filter(
-      (profile: any) =>
+    for (const friendship of friendshipIds || []) {
+      if (friendship.status === "accepted") {
+        idsToExclude.push(friendship.friend_id);
+      }
+    }
+
+    const filteredProfiles = (profiles || []).filter(
+      (profile: Profile) =>
         !idsToExclude.includes(profile.user_id) && profile.user_id !== user.id
     );
-
-    setAppContacts(filteredProfiles);
-    setFilteredProfiles(filteredProfiles);
 
     const nonAppContactsSample = deviceContacts.slice(0, 10).map((contact) => ({
       id: contact.id,
       first_name: contact.name,
       phone_number: contact.phoneNumbers ? contact.phoneNumbers[0].number : "",
+      username: contact.phoneNumbers ? contact.phoneNumbers[0].number : "",
+      invite: true,
     }));
 
-    // @ts-ignore
-    setNonAppContacts(nonAppContactsSample);
+    setRequests(friendshipIds || []);
+    setAppContacts(filteredProfiles.concat(nonAppContactsSample));
   };
 
   const handleSearch = (text: string) => {
     setSearchText(text);
-    if (text) {
-      const filtered = appContacts.filter(
-        (profile: any) =>
-          profile.first_name.toLowerCase().includes(text.toLowerCase()) ||
-          profile.last_name.toLowerCase().includes(text.toLowerCase()) ||
-          profile.username.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredProfiles(filtered);
-    } else {
-      setFilteredProfiles(appContacts);
-    }
   };
 
   const handleAddFriend = async (friendID: string) => {
     const user = await getCurrentUser();
+
     const result = await addFriend(user.id, friendID);
     if (result.success) {
-      Alert.alert("Success", "Friend request sent successfully!");
+      Toast.show({
+        type: "successToast",
+        text1: "Friend request sent!",
+        position: "bottom",
+      });
+
       fetchContacts();
     } else {
-      Alert.alert("Error", result.message || "Failed to send friend request.");
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
     }
   };
 
-  const handleInvite = async (contact: any) => {
+  const handleInvite = async (contact: Contact) => {
     const message = `Hi ${contact.first_name}, I invite you to join our app! Click the link to download: [Your App Link]`;
     console.log("set up the app link");
 
@@ -170,81 +193,98 @@ export default function ShowContacts() {
     }
   };
 
+  const filteredProfiles = useMemo(() => {
+    let filData = appContacts;
+
+    if (searchText) {
+      filData = filData.filter(
+        (profile: Profile) =>
+          profile.first_name.toLowerCase().includes(searchText.toLowerCase()) ||
+          (profile.last_name &&
+            profile.last_name
+              .toLowerCase()
+              .includes(searchText.toLowerCase())) ||
+          profile.username.toLowerCase().includes(searchText.toLowerCase())
+      );
+    }
+
+    return filData;
+  }, [appContacts, searchText]);
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <ImageBackground
+      style={{
+        flex: 1,
+        paddingTop: 50,
+        marginTop: -100,
+      }}
+      source={require("../assets/images/friends-back.png")}
     >
       <View style={styles.box}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Add or search friends"
-            value={searchText}
-            onChangeText={handleSearch}
-          />
-        </View>
+        <SearchBar value={searchText} setValue={handleSearch} />
 
-        <View style={styles.headerContainer}>
-          <Text style={styles.text}>Find Friends</Text>
-        </View>
+        <FlatList
+          data={filteredProfiles}
+          keyExtractor={(item) => item.username}
+          renderItem={({ item, index }) => {
+            const isAdded = item?.invite
+              ? false
+              : requests.findIndex((r) => r?.friend_id === item.user_id) >= 0;
 
-        <ScrollView style={styles.scrollView}>
-          {/* App Contacts Section */}
-          {filteredProfiles.length > 0 ? (
-            filteredProfiles.map((profile: any, index) => (
+            return (
               <View key={index} style={styles.profileContainer}>
                 <Image
                   source={{
                     uri:
-                      profile.profile_image_url ||
+                      item.profile_image_url ||
                       "https://via.placeholder.com/50",
                   }}
                   style={styles.profilePicture}
                 />
                 <View style={styles.profileInfo}>
                   <Text style={styles.profileName}>
-                    {profile.first_name} {profile.last_name}
+                    {item.first_name} {item.last_name}
                   </Text>
-                  <Text style={styles.profileUsername}>{profile.username}</Text>
+                  <Text style={styles.profileUsername}>{item.username}</Text>
                 </View>
-                <TouchableOpacity
-                  style={styles.buttonAdd}
-                  onPress={() => handleAddFriend(profile.user_id)}
-                >
-                  <Text style={styles.buttonTextAdd}>Add</Text>
-                </TouchableOpacity>
+                {item.invite ? (
+                  <TouchableOpacity
+                    style={styles.inviteButton}
+                    onPress={() => handleInvite(item as Contact)}
+                  >
+                    <Text style={styles.inviteButtonText}>Invite</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    style={[
+                      styles.buttonAdd,
+                      isAdded && { backgroundColor: "#F5F5F5" },
+                    ]}
+                    onPress={() => handleAddFriend(item.user_id)}
+                    disabled={isAdded}
+                  >
+                    <Text
+                      style={[
+                        styles.buttonTextAdd,
+                        isAdded && { color: "#3F407C" },
+                      ]}
+                    >
+                      {isAdded ? "Pending" : "Add"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
-            ))
-          ) : (
-            <Text style={styles.noProfilesText}>
-              No matching profiles found
-            </Text>
-          )}
-
-          {/* Non-App Contacts Section */}
-          <View style={styles.nonAppContactsContainer}>
-            <Text style={styles.sectionTitle}>Invite Contacts</Text>
-            {nonAppContacts.map((contact: any, index) => (
-              <View key={index} style={styles.profileContainer}>
-                <View style={styles.profileInfo}>
-                  <Text style={styles.profileName}>{contact.first_name}</Text>
-                  <Text style={styles.profileUsername}>
-                    {contact.phone_number}
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  style={styles.inviteButton}
-                  onPress={() => handleInvite(contact)}
-                >
-                  <Text style={styles.inviteButtonText}>Invite</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
+            );
+          }}
+          ListHeaderComponent={
+            <View style={styles.headerContainer}>
+              <Text style={styles.text}>Find Friends</Text>
+            </View>
+          }
+          showsVerticalScrollIndicator={false}
+        />
       </View>
-    </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }
 
@@ -263,6 +303,15 @@ const styles = StyleSheet.create({
     marginTop: 70, // Space from top of the screen
     alignSelf: "center",
     justifyContent: "flex-start",
+
+    shadowColor: "#00000012",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.07,
+    shadowRadius: 13,
+    elevation: 2,
   },
   searchContainer: {
     marginBottom: 10,
@@ -274,7 +323,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 20,
-    placeholderTextColor: "#3D4353",
   },
   headerContainer: {
     flexDirection: "row",
@@ -292,24 +340,20 @@ const styles = StyleSheet.create({
   },
   profileContainer: {
     marginVertical: 5,
-    padding: 20,
+    paddingVertical: 20,
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    position: "relative",
   },
   profilePicture: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    position: "absolute",
-    left: 0,
   },
   profileInfo: {
     flex: 1,
-    marginLeft: 60,
-    justifyContent: "center",
+    marginLeft: 10,
   },
   profileName: {
     fontSize: 18,
@@ -326,7 +370,6 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     alignItems: "center",
     marginTop: 8,
-    left: 20,
   },
   buttonTextAdd: {
     color: "#FFFF",
@@ -334,16 +377,18 @@ const styles = StyleSheet.create({
     fontWeight: "400",
   },
   inviteButton: {
+    width: "34%",
+    paddingVertical: 12,
     backgroundColor: "#fff",
-    borderColor: "#3F407C",
+    borderRadius: 26,
+    alignItems: "center",
+    marginTop: 8,
     borderWidth: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 20,
+    borderColor: "#3F407C",
   },
   inviteButtonText: {
     color: "#3F407C",
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
   },
   nonAppContactsContainer: {
