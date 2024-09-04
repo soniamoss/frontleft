@@ -3,8 +3,10 @@ import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
+import { Text, View } from "react-native";
 import "react-native-reanimated";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StatusBar } from "expo-status-bar";
+import Toast from "react-native-toast-message";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -15,6 +17,53 @@ export const unstable_settings = {
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+const toastConfig = {
+  tomatoToast: ({ text1 }) => (
+    <View
+      style={{
+        height: 60,
+        width: "90%",
+        backgroundColor: "#DF5A76",
+        borderRadius: 10,
+        paddingHorizontal: 20,
+        justifyContent: "center",
+      }}
+    >
+      <Text
+        style={{
+          color: "white",
+          fontSize: 15,
+          fontWeight: "700",
+        }}
+      >
+        {text1}
+      </Text>
+    </View>
+  ),
+  successToast: ({ text1 }) => (
+    <View
+      style={{
+        height: 60,
+        width: "90%",
+        backgroundColor: "#6A74FB",
+        borderRadius: 10,
+        paddingHorizontal: 20,
+        justifyContent: "center",
+      }}
+    >
+      <Text
+        style={{
+          color: "white",
+          fontSize: 15,
+          fontWeight: "700",
+        }}
+      >
+        {text1}
+      </Text>
+    </View>
+  ),
+};
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -59,12 +108,12 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ThemeProvider value={DefaultTheme}>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-      </ThemeProvider>
-    </SafeAreaView>
+    <ThemeProvider value={DefaultTheme}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+      <Toast config={toastConfig} />
+      <StatusBar style="dark" />
+    </ThemeProvider>
   );
 }
