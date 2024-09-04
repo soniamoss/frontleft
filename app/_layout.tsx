@@ -5,7 +5,8 @@ import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { Text, View } from "react-native";
 import "react-native-reanimated";
-import Toast, { BaseToast, ErrorToast } from "react-native-toast-message";
+import { StatusBar } from "expo-status-bar";
+import Toast from "react-native-toast-message";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -112,6 +113,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
       <Toast config={toastConfig} />
+      <StatusBar style="dark" />
     </ThemeProvider>
   );
 }
