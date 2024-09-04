@@ -299,7 +299,7 @@ export default function ShowContacts() {
               <Text style={styles.text}>Find Friends</Text>
             </View>
           }
-          ListFooterComponent={
+          ListEmptyComponent={
             <View>
               {loading ? (
                 <ActivityIndicator color={"#6A74FB"} size="large" />
