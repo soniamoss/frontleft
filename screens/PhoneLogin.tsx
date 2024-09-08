@@ -208,12 +208,17 @@
 // // export default PhoneLoginScreen;
 
 import { Ionicons } from "@expo/vector-icons";
+import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
+import PhoneInput from "react-native-phone-number-input";
+import OTPInputView from "@twotalltotems/react-native-otp-input";
+
 import React, { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Image,
   Keyboard,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -221,17 +226,37 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+
 import { supabase } from "../supabaseClient";
+import { Colors } from "@/constants/Colors";
+
+// interface PhoneLoginScreenProps {
+//   navigation: any;
+// }
+
+interface Data {
+  phone: string;
+  countryCode: string;
+  phNumWithCode: string;
+}
 
 const PhoneLoginScreen = () => {
-  const [phone, setPhone] = useState("+1");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [phone, setPhone] = useState("");
+  const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
-
-  // Create refs for the OTP TextInputs
-  const otpRefs = Array.from({ length: 6 }, () => useRef(null));
+  const [data, setData] = useState<Data>({
+    phone: "",
+    countryCode: "",
+    phNumWithCode: "",
+  });
 
   const handleSendOtp = async () => {
+    let phone = data.phNumWithCode;
+
+    if (phone.includes("+")) {
+      phone = phone.slice(1);
+    }
+
     const { error }: any = await supabase.auth.signInWithOtp({ phone });
     if (error) {
       Alert.alert("Error", error.message);
@@ -241,6 +266,12 @@ const PhoneLoginScreen = () => {
   };
 
   const handleResendOtp = async () => {
+    let phone = data.phNumWithCode;
+
+    if (phone.includes("+")) {
+      phone = phone.slice(1);
+    }
+
     const { error }: any = await supabase.auth.signInWithOtp({ phone });
     if (error) {
       Alert.alert("Error", error.message);
@@ -263,6 +294,8 @@ const PhoneLoginScreen = () => {
         .eq("phonenumber", user.phone)
         .select();
 
+      console.log(user.phone);
+
       if (profile.length === 0) {
         const { data, error }: any = await supabase
           .from("profiles")
@@ -284,10 +317,15 @@ const PhoneLoginScreen = () => {
   };
 
   const handleVerifyOtp = async () => {
-    const otpCode = otp.join("");
+    let phone = data.phNumWithCode;
+
+    if (phone.includes("+")) {
+      phone = phone.slice(1);
+    }
+
     const { error }: any = await supabase.auth.verifyOtp({
       phone,
-      token: otpCode,
+      token: otp,
       type: "sms",
     });
     if (error) {
@@ -306,32 +344,12 @@ const PhoneLoginScreen = () => {
     router.push("/"); //go to intro screen.
   };
 
-  const handleOtpChange = (index: number, value: any) => {
-    if (/^\d$/.test(value)) {
-      const newOtp = [...otp];
-      newOtp[index] = value;
-      setOtp(newOtp);
-
-      // Move to the next input field if the current one is filled
-      if (index < otp.length - 1 && value) {
-        // @ts-ignore
-        otpRefs[index + 1].current.focus();
-      }
-    } else if (value === "") {
-      // Move to the previous input field if the input is cleared
-      if (index > 0) {
-        // @ts-ignore
-        otpRefs[index - 1].current.focus();
-      }
-    }
-  };
-
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+    <TouchableWithoutFeedback style={{ flex: 1 }} onPress={dismissKeyboard}>
       <View style={styles.container}>
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Ionicons name="arrow-back" size={24} color="black" />
@@ -340,18 +358,39 @@ const PhoneLoginScreen = () => {
           <Ionicons name="close" size={24} color="black" />
         </TouchableOpacity>
         {!isOtpSent ? (
-          <>
-            <Text style={styles.text}>What's your phone {"\n"} number?</Text>
-            <Image
-              source={require("../assets/images/phone.png")}
-              style={styles.image}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Phone Number"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
+          <View
+            style={{
+              alignItems: "center",
+              padding: 20,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 20,
+                marginBottom: 50,
+              }}
+            >
+              <Feather name="phone" size={40} color={"#3F407C"} />
+              <Text style={styles.text}>What's your phone {"\n"} number?</Text>
+            </View>
+
+            <PhoneInput
+              containerStyle={styles.phoneNumber}
+              defaultValue={data.phone}
+              onChangeText={(text) => {
+                // without country code
+                setPhone(text);
+              }}
+              defaultCode={"US"}
+              onChangeFormattedText={(text) => {
+                // with countryCode
+                setData({ ...data, phNumWithCode: text });
+              }}
+              onChangeCountry={(text) => {
+                setData({ ...data, countryCode: text.cca2 });
+              }}
             />
             <Text style={styles.textsmaller}>
               By continuing, you agree to our Privacy {"\n"}Policy and Terms of
@@ -360,27 +399,39 @@ const PhoneLoginScreen = () => {
             <TouchableOpacity style={styles.button} onPress={handleSendOtp}>
               <Text style={styles.buttonText}>Send Verification Text</Text>
             </TouchableOpacity>
-          </>
+          </View>
         ) : (
-          <>
-            <Text style={styles.text2}>Verify your number</Text>
-            <Image
-              source={require("../assets/images/shield.png")}
-              style={styles.image}
-            />
-            <View style={styles.otpContainer}>
-              {otp.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  ref={otpRefs[index]}
-                  style={styles.otpBox}
-                  value={digit}
-                  onChangeText={(value) => handleOtpChange(index, value)}
-                  keyboardType="number-pad"
-                  maxLength={1}
-                />
-              ))}
+          <View
+            style={{
+              alignItems: "center",
+              padding: 20,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 20,
+                marginBottom: 50,
+              }}
+            >
+              <Ionicons name="shield-outline" size={40} color="#3F407C" />
+              <Text style={styles.text2}>Verify your number</Text>
             </View>
+
+            <OTPInputView
+              style={{ width: "80%", height: 200 }}
+              pinCount={6}
+              autoFocusOnLoad
+              codeInputFieldStyle={styles.borderStyleBase}
+              codeInputHighlightStyle={styles.borderStyleHighLighted}
+              onCodeFilled={(code) => {
+                // console.log(`Code is ${code}, you are good to go!`);
+                setOtp(code);
+                Keyboard.dismiss();
+              }}
+            />
+
             <TouchableOpacity
               style={styles.buttonresend}
               onPress={handleResendOtp}
@@ -390,7 +441,7 @@ const PhoneLoginScreen = () => {
             <TouchableOpacity style={styles.button} onPress={handleVerifyOtp}>
               <Text style={styles.buttonText}>Confirm</Text>
             </TouchableOpacity>
-          </>
+          </View>
         )}
       </View>
     </TouchableWithoutFeedback>
@@ -405,22 +456,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   text: {
-    marginBottom: 15, // Reduced marginBottom
     fontSize: 20,
     fontWeight: "bold",
     fontFamily: "poppins",
     color: "#3F407C",
     textAlign: "left",
-    bottom: 80,
   },
   text2: {
-    marginBottom: 15, // Reduced marginBottom
     fontSize: 20,
     fontWeight: "bold",
     fontFamily: "poppins",
     color: "#3F407C",
     textAlign: "left",
-    bottom: 40,
   },
   textsmaller: {
     fontSize: 11,
@@ -432,14 +479,14 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   textresend: {
-    fontSize: 11,
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: "600",
     fontFamily: "poppins",
     textAlign: "center",
     color: "#3B429F",
-    marginBottom: 10,
-    //zIndex: 1,
-    //textDecorationLine: 'underline', // Add this line
+    marginBottom: 60,
+    textDecorationLine: "underline",
+    letterSpacing: 0.5,
   },
   backButton: {
     position: "absolute",
@@ -454,20 +501,16 @@ const styles = StyleSheet.create({
     bottom: 44,
   },
   buttonresend: {
-    position: "absolute",
-    bottom: 360, // Adjusted bottom position
     width: "26%",
     paddingVertical: 2,
     backgroundColor: "transparent",
     borderRadius: 30,
     alignItems: "center",
-    textDecorationLine: "underline",
   },
   button: {
-    position: "absolute",
-    bottom: 280, // Adjusted bottom position
-    width: "60%",
+    // width: "60%",
     paddingVertical: 15,
+    paddingHorizontal: 30,
     backgroundColor: "#F5F5F5",
     borderRadius: 30,
     alignItems: "center",
@@ -483,11 +526,8 @@ const styles = StyleSheet.create({
     right: 20,
   },
   image: {
-    position: "absolute",
     width: 40,
     height: 40,
-    top: 220,
-    left: 60,
   },
   otpContainer: {
     flexDirection: "row",
@@ -504,6 +544,26 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 20,
     fontWeight: "bold",
+  },
+  phoneNumber: {
+    borderWidth: 1,
+    borderColor: "#CEDBEA",
+    borderRadius: 2,
+    marginTop: 10,
+    backgroundColor: "#fff",
+    width: "100%",
+    marginBottom: 44,
+  },
+
+  borderStyleBase: {
+    width: 50,
+    height: 50,
+    marginHorizontal: 2,
+    color: "#3D4353",
+  },
+
+  borderStyleHighLighted: {
+    borderColor: "#3F407C",
   },
 });
 

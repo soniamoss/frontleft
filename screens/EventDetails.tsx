@@ -23,14 +23,15 @@ const EventDetails = () => {
   const eventString = params?.event || "";
   const eventAttendeesString = params?.eventAttendees || "";
 
-
   // TODO: it's recommended to not do this, instead,
   // we should pass only the id of the event and grab the event details, ideally from react-query
   // https://reactnavigation.org/docs/params/#what-should-be-in-params
 
   // Parse the event and attendees data passed through params
   const event = eventString ? JSON.parse(eventString) : {};
-  const eventAttendees = eventAttendeesString ? JSON.parse(eventAttendeesString) : {};
+  const eventAttendees = eventAttendeesString
+    ? JSON.parse(eventAttendeesString)
+    : {};
 
   const [goingStatus, setGoingStatus] = useState(false);
   const [open, setOpen] = useState(false);
@@ -56,7 +57,9 @@ const EventDetails = () => {
     try {
       const { data: fetchedAttendees, error }: any = await supabase
         .from("event_attendees")
-        .select("event_id, status, profiles!event_attendees_user_id_fkey(profile_image_url, first_name)")
+        .select(
+          "event_id, status, profiles!event_attendees_user_id_fkey(profile_image_url, first_name)"
+        )
         .eq("event_id", event.id)
         .or("status.eq.going,status.eq.interested");
 
@@ -65,11 +68,17 @@ const EventDetails = () => {
       } else {
         const attendingFriends = fetchedAttendees
           .filter((att: any) => att.status === "going")
-          .map((att: any) => ({ firstName: att.profiles.first_name, profileImage: att.profiles.profile_image_url }));
+          .map((att: any) => ({
+            firstName: att.profiles.first_name,
+            profileImage: att.profiles.profile_image_url,
+          }));
 
         const interestedFriends = fetchedAttendees
           .filter((att: any) => att.status === "interested")
-          .map((att: any) => ({ firstName: att.profiles.first_name, profileImage: att.profiles.profile_image_url }));
+          .map((att: any) => ({
+            firstName: att.profiles.first_name,
+            profileImage: att.profiles.profile_image_url,
+          }));
 
         setAttendeesData({ attendingFriends, interestedFriends });
       }
@@ -271,7 +280,9 @@ const EventDetails = () => {
                         source={{ uri: friend.profileImage }}
                         style={styles.friendProfileImage}
                       />
-                      <Text style={styles.profileUrlText}>{friend.firstName}</Text>
+                      <Text style={styles.profileUrlText}>
+                        {friend.firstName}
+                      </Text>
                     </View>
                   ))}
               </View>
@@ -288,7 +299,9 @@ const EventDetails = () => {
                         source={{ uri: friend.profileImage }}
                         style={styles.friendProfileImage}
                       />
-                      <Text style={styles.profileUrlText}>{friend.firstName}</Text>
+                      <Text style={styles.profileUrlText}>
+                        {friend.firstName}
+                      </Text>
                     </View>
                   ))}
               </View>
