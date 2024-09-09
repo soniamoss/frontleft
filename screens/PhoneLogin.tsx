@@ -242,12 +242,12 @@ interface Data {
 
 const PhoneLoginScreen = () => {
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("789012");
+  const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [data, setData] = useState<Data>({
     phone: "",
     countryCode: "",
-    phNumWithCode: "+923022321605",
+    phNumWithCode: "",
   });
 
   const handleSendOtp = async () => {
