@@ -242,12 +242,12 @@ interface Data {
 
 const PhoneLoginScreen = () => {
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState("789012");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [data, setData] = useState<Data>({
     phone: "",
     countryCode: "",
-    phNumWithCode: "",
+    phNumWithCode: "+923022321605",
   });
 
   const handleSendOtp = async () => {
@@ -375,7 +375,6 @@ const PhoneLoginScreen = () => {
               <Feather name="phone" size={40} color={"#3F407C"} />
               <Text style={styles.text}>What's your phone {"\n"} number?</Text>
             </View>
-
             <PhoneInput
               containerStyle={styles.phoneNumber}
               defaultValue={data.phone}
@@ -392,10 +391,38 @@ const PhoneLoginScreen = () => {
                 setData({ ...data, countryCode: text.cca2 });
               }}
             />
-            <Text style={styles.textsmaller}>
-              By continuing, you agree to our Privacy {"\n"}Policy and Terms of
-              Service.
-            </Text>
+            <View
+              style={{
+                alignItems: "center",
+                flexDirection: "row",
+                marginHorizontal: 50,
+                flexWrap: "wrap",
+                justifyContent: "center",
+                marginBottom: 50,
+              }}
+            >
+              <Text style={styles.textsmaller}>
+                By continuing, you agree to our
+              </Text>
+              <TouchableOpacity>
+                <Text style={[styles.textsmaller, { color: "#6A74FB" }]}>
+                  {" "}
+                  Privacy
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Text style={[styles.textsmaller, { color: "#6A74FB" }]}>
+                  {" "}
+                  Policy
+                </Text>
+              </TouchableOpacity>
+              <Text style={styles.textsmaller}>and </Text>
+              <TouchableOpacity>
+                <Text style={[styles.textsmaller, { color: "#6A74FB" }]}>
+                  Terms of Service.
+                </Text>
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity style={styles.button} onPress={handleSendOtp}>
               <Text style={styles.buttonText}>Send Verification Text</Text>
             </TouchableOpacity>
@@ -475,7 +502,6 @@ const styles = StyleSheet.create({
     fontFamily: "poppins",
     textAlign: "center",
     color: "#3D4353",
-    marginBottom: 60,
     zIndex: 1,
   },
   textresend: {

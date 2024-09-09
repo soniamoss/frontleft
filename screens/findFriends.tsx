@@ -135,13 +135,10 @@ export default function ShowContacts() {
       console.log("friendshipIds:", friendshipIds);
     }
 
-    let idsToExclude: string[] = [];
-
-    for (const friendship of friendshipIds || []) {
-      if (friendship.status === "accepted") {
-        idsToExclude.push(friendship.friend_id);
-      }
-    }
+    const idsToExclude = friendshipIds.flatMap((friendship: any) => [
+      friendship.friend_id,
+      friendship.user_id,
+    ]);
 
     const filteredProfiles = (profiles || []).filter(
       (profile: Profile) =>
