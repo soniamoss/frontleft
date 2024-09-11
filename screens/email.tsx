@@ -1,5 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import Constants from "expo-constants";
+
 import React, { useState } from "react";
 import {
   Image,
@@ -53,11 +55,21 @@ const EmailScreen = () => {
         <TouchableOpacity style={styles.closeButton} onPress={handleExit}>
           <Ionicons name="close" size={24} color="black" />
         </TouchableOpacity>
-        <Image
-          source={require("../assets/images/postcard.png")}
-          style={styles.image}
-        />
-        <Text style={styles.text}>What's your email?</Text>
+        <View
+          style={{
+            marginBottom: 30,
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <Image
+            source={require("../assets/images/postcard.png")}
+            style={styles.image}
+          />
+          <Text style={styles.text}>What's your email?</Text>
+        </View>
         <TextInput
           style={styles.input}
           placeholder=""
@@ -76,19 +88,15 @@ const EmailScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
+    paddingTop: Constants.statusBarHeight + 120,
   },
   text: {
-    marginBottom: 30,
     fontSize: 20,
     fontWeight: "bold",
     fontFamily: "poppins",
     color: "#3F407C",
-    textAlign: "left", // Align text center
-    bottom: 22,
-    left: 20,
   },
   textsmaller: {
     fontSize: 11,
@@ -136,11 +144,8 @@ const styles = StyleSheet.create({
     zIndex: 1, // Ensure the button is above the image
   },
   image: {
-    position: "absolute",
     width: 40, // Adjust width as needed
     height: 40, // Adjust height as needed
-    top: 246, // Adjust top position as needed
-    left: 48,
   },
 });
 

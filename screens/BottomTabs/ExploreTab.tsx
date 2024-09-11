@@ -1,5 +1,7 @@
 import { router } from "expo-router";
 import moment from "moment";
+import Constants from "expo-constants";
+
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
@@ -369,6 +371,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#f5f5f5",
+    paddingTop: Constants.statusBarHeight,
   },
   pickerWrapper: {
     width: "50%",

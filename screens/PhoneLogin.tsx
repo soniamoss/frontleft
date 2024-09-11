@@ -212,6 +212,7 @@ import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
 import PhoneInput from "react-native-phone-number-input";
 import OTPInputView from "@twotalltotems/react-native-otp-input";
+import Constants from "expo-constants";
 
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -242,12 +243,12 @@ interface Data {
 
 const PhoneLoginScreen = () => {
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState("789012");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [data, setData] = useState<Data>({
     phone: "",
     countryCode: "",
-    phNumWithCode: "",
+    phNumWithCode: "+923022321605",
   });
 
   const handleSendOtp = async () => {
@@ -437,7 +438,7 @@ const PhoneLoginScreen = () => {
                 flexDirection: "row",
                 alignItems: "center",
                 gap: 20,
-                marginBottom: 50,
+                marginBottom: 20,
               }}
             >
               <Ionicons name="shield-outline" size={40} color="#3F407C" />
@@ -445,7 +446,7 @@ const PhoneLoginScreen = () => {
             </View>
 
             <OTPInputView
-              style={{ width: "80%", height: 200 }}
+              style={{ width: "80%", height: 150 }}
               pinCount={6}
               autoFocusOnLoad
               codeInputFieldStyle={styles.borderStyleBase}
@@ -476,9 +477,9 @@ const PhoneLoginScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
     backgroundColor: "#FFFFFF",
+    paddingTop: Constants.statusBarHeight + 120,
+    alignItems: "center",
   },
   text: {
     fontSize: 20,

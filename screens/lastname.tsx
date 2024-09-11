@@ -1,5 +1,7 @@
 import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import Constants from "expo-constants";
+
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -119,9 +121,9 @@ const LastNameScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
+    paddingTop: Constants.statusBarHeight + 120,
   },
   text: {
     fontSize: 20,

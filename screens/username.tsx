@@ -1,5 +1,7 @@
 import { AntDesign, Ionicons, SimpleLineIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import Constants from "expo-constants";
+
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -12,6 +14,7 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
+
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
 
@@ -79,8 +82,14 @@ const UsernameScreen = ({ navigation }: any) => {
   };
 
   const getUserName = async () => {
+    if (!username || username.length < 3 || username.trim() === "") {
+      setIsUsernameCheck(false);
+      setIsUsernameAvailable(false);
+      return;
+    }
     try {
       setUnChecking(true);
+
       const { data, error }: any = await supabase
         .from("profiles")
         .select("username")
@@ -193,9 +202,9 @@ const UsernameScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
+    paddingTop: Constants.statusBarHeight + 120,
   },
   text: {
     fontSize: 20,
