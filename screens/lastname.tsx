@@ -1,6 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
+import { AntDesign, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   Keyboard,
@@ -16,6 +16,28 @@ import { supabase } from "../supabaseClient";
 
 const LastNameScreen = ({ navigation }: any) => {
   const [lastName, setlastName] = useState("");
+  const [fontSize, setFontSize] = useState(36); // Default font size
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Adjust font size based on the length of the text
+    const calculateFontSize = () => {
+      const maxLength = 20; // Maximum length for which the font size is large
+      const minSize = 16; // Minimum font size
+      const sizeReductionFactor = 0.5; // Amount to reduce font size for each character above the max length
+      const length = lastName.length;
+
+      if (length > maxLength) {
+        setFontSize(
+          Math.max(minSize, 36 - (length - maxLength) * sizeReductionFactor)
+        );
+      } else {
+        setFontSize(36); // Reset to default size if length is within limit
+      }
+    };
+
+    calculateFontSize();
+  }, [lastName]);
 
   const setLastNameInDB = async () => {
     const user = await getCurrentUser();
@@ -33,6 +55,7 @@ const LastNameScreen = ({ navigation }: any) => {
   const handleNext = async () => {
     if (!lastName) {
       console.error("Last name is required.");
+      setError("Last name is required.");
       return;
     }
     await setLastNameInDB();
@@ -50,25 +73,41 @@ const LastNameScreen = ({ navigation }: any) => {
       <View style={styles.container}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => router.back()}
         >
           <Ionicons name="arrow-back" size={24} color="black" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.closeButton} onPress={handleExit}>
           <Ionicons name="close" size={24} color="black" />
         </TouchableOpacity>
-        <Image
-          source={require("@/assets/images/user.png")}
-          style={styles.image}
-        />
-        <Text style={styles.text}>What's your last name?</Text>
+
+        <View
+          style={{
+            marginBottom: 30,
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <AntDesign name="user" size={30} color="#3B429F" />
+          <Text style={styles.text}>What's your last name?</Text>
+        </View>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
           placeholder=""
           value={lastName}
-          onChangeText={setlastName}
+          onChangeText={(text) => {
+            if (text.length >= 3) {
+              setError("");
+            } else {
+              setError("Please enter at least 3 letters for your name.");
+            }
+            setlastName(text);
+          }}
         />
-        <Text style={styles.textsmaller}>Your family's claim to fame</Text>
+        {error && <Text style={styles.error}>{error}</Text>}
+        <Text style={styles.textSmaller}>Your family’s claim to fame</Text>
         <TouchableOpacity style={styles.button} onPress={handleNext}>
           <Text style={styles.buttonText}>Continue</Text>
         </TouchableOpacity>
@@ -85,29 +124,25 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   text: {
-    marginBottom: 30,
     fontSize: 20,
     fontWeight: "bold",
     fontFamily: "poppins",
     color: "#3F407C",
-    textAlign: "left", // Align text center
-    bottom: 22,
-    left: 20,
   },
-  textsmaller: {
-    fontSize: 11,
+  textSmaller: {
+    fontSize: 12,
     fontWeight: "bold",
     fontFamily: "poppins",
     textAlign: "center",
     color: "#3B429F",
     marginBottom: 16,
-    zIndex: 1, // Ensure the text is above the image
+    zIndex: 1,
   },
   backButton: {
     position: "absolute",
     top: 60,
     left: 20,
-    zIndex: 1, // Ensure the button is above the image
+    zIndex: 1,
   },
   input: {
     width: "74%",
@@ -115,9 +150,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderColor: "black",
-    marginBottom: 60,
-    fontSize: 36, // Increased font size for larger text
-    textAlign: "center", // Center text within the input
+    textAlign: "center",
   },
   button: {
     width: "60%",
@@ -125,8 +158,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
     borderRadius: 30,
     alignItems: "center",
-    top: 16,
-    zIndex: 1, // Ensure the button is above the image
+    zIndex: 1,
+    marginTop: 20,
   },
   buttonText: {
     color: "#3D4353",
@@ -137,14 +170,21 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 60,
     right: 20,
-    zIndex: 1, // Ensure the button is above the image
+    zIndex: 1,
   },
   image: {
     position: "absolute",
-    width: 40, // Adjust width as needed
-    height: 40, // Adjust height as needed
-    top: 246, // Adjust top position as needed
+    width: 40,
+    height: 40,
+    top: 246,
     left: 48,
+  },
+  error: {
+    color: "#DF5A76",
+    fontFamily: "poppins",
+    fontSize: 11,
+    fontWeight: "400",
+    marginBottom: 30,
   },
 });
 

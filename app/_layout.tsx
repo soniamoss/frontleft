@@ -22,7 +22,7 @@ export const unstable_settings = {
 SplashScreen.preventAutoHideAsync();
 
 const toastConfig = {
-  tomatoToast: ({ text1 }) => (
+  tomatoToast: ({ text1 = "" }) => (
     <View
       style={{
         height: 60,
@@ -47,7 +47,7 @@ const toastConfig = {
       <AntDesign name="closecircleo" size={24} color="#fff" />
     </View>
   ),
-  successToast: ({ text1 }) => (
+  successToast: ({ text1 = "" }) => (
     <View
       style={{
         height: 60,

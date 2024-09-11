@@ -1,5 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import AntDesign from "@expo/vector-icons/AntDesign";
+
 import React, { useEffect, useState } from "react";
 import {
   Image,
@@ -17,6 +19,7 @@ import { supabase } from "../supabaseClient";
 const FirstNameScreen = () => {
   const [firstName, setFirstName] = useState("");
   const [fontSize, setFontSize] = useState(36); // Default font size
+  const [error, setError] = useState("");
 
   useEffect(() => {
     // Adjust font size based on the length of the text
@@ -52,7 +55,7 @@ const FirstNameScreen = () => {
 
   const handleNext = async () => {
     if (!firstName) {
-      console.error("First name is required.");
+      setError("Please enter your first name");
       return;
     }
     await setFirstNameInDB();
@@ -80,18 +83,32 @@ const FirstNameScreen = () => {
           <Ionicons name="close" size={24} color="black" />
         </TouchableOpacity>
 
-        <Image
-          source={require("@/assets/images/user.png")}
-          style={styles.image}
-        />
-
-        <Text style={styles.text}>What's your first name?</Text>
+        <View
+          style={{
+            marginBottom: 30,
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <AntDesign name="user" size={30} color="#3B429F" />
+          <Text style={styles.text}>What's your first name?</Text>
+        </View>
         <TextInput
-          style={[styles.input, { fontSize }]} // Apply dynamic font size
+          style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
           placeholder=""
           value={firstName}
-          onChangeText={setFirstName}
+          onChangeText={(text) => {
+            if (text.length >= 3) {
+              setError("");
+            } else {
+              setError("Please enter at least 3 letters for your name.");
+            }
+            setFirstName(text);
+          }}
         />
+        {error && <Text style={styles.error}>{error}</Text>}
         <Text style={styles.textSmaller}>What your friends call you</Text>
         <TouchableOpacity style={styles.button} onPress={handleNext}>
           <Text style={styles.buttonText}>Continue</Text>
@@ -109,14 +126,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
   },
   text: {
-    marginBottom: 30,
     fontSize: 20,
     fontWeight: "bold",
     fontFamily: "poppins",
     color: "#3F407C",
-    textAlign: "left",
-    bottom: 22,
-    left: 20,
   },
   textSmaller: {
     fontSize: 12,
@@ -139,7 +152,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderColor: "black",
-    marginBottom: 60,
     textAlign: "center",
   },
   button: {
@@ -148,8 +160,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#F5F5F5",
     borderRadius: 30,
     alignItems: "center",
-    top: 16,
     zIndex: 1,
+    marginTop: 20,
   },
   buttonText: {
     color: "#3D4353",
@@ -168,6 +180,13 @@ const styles = StyleSheet.create({
     height: 40,
     top: 246,
     left: 48,
+  },
+  error: {
+    color: "#DF5A76",
+    fontFamily: "poppins",
+    fontSize: 11,
+    fontWeight: "400",
+    marginBottom: 30,
   },
 });
 

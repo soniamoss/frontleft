@@ -30,13 +30,16 @@ const ExploreTab = () => {
   const [friends, setFriends] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
+  console.log("friends", friends);
+
   useEffect(() => {
     const loadUserData = async () => {
       try {
         // Fetch the authenticated user's data
-        const { data: userData, error: userError } = await supabase.auth.getUser();
+        const { data: userData, error: userError } =
+          await supabase.auth.getUser();
         if (userError || !userData.user) {
-          console.error('Error fetching user data:', userError);
+          console.error("Error fetching user data 01:", userError);
           return;
         }
 
@@ -46,7 +49,7 @@ const ExploreTab = () => {
         await fetchFriends(userData.user.id);
         await fetchEvents(userData.user);
       } catch (error) {
-        console.error('Error during initial data load:', error);
+        console.error("Error during initial data load:", error);
       }
     };
 
@@ -56,23 +59,23 @@ const ExploreTab = () => {
   const fetchFriends = async (userId: string) => {
     try {
       const { data: friendsData, error } = await supabase
-        .from('friendships')
-        .select('friend_id, user_id')
+        .from("friendships")
+        .select("friend_id, user_id")
         .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
-        .eq('status', 'accepted');
-  
+        .eq("status", "accepted");
+
       if (error) {
-        console.error('Error fetching friends:', error);
+        console.error("Error fetching friends:", error);
       } else {
         // Extracting the friend's ID based on which field doesn't match the userId
-        const friendIds = friendsData.map((friend: any) => 
+        const friendIds = friendsData.map((friend: any) =>
           friend.user_id === userId ? friend.friend_id : friend.user_id
         );
-        console.log('Friends Data:', friendIds);
+        console.log("Friends Data:", friendIds);
         setFriends(friendIds);
       }
     } catch (error) {
-      console.error('Error fetching friends:', error);
+      console.error("Error fetching friends:", error);
     }
   };
 

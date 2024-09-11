@@ -1,8 +1,11 @@
 import { router } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
+  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -92,100 +95,111 @@ const ProfilePage = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.image} onPress={handleSettings}>
-        <Image source={require("@/assets/images/settings.png")} />
-      </TouchableOpacity>
-
-      {/* Box */}
-      <View style={styles.box} />
-
-      {/* Profile Details */}
-      <View style={styles.profileDetails}>
-        <Image
-          source={{ uri: profileData.profilePicture }}
-          style={styles.profilePicture}
-        />
-        <Text style={styles.name}>{profileData.name}</Text>
-        <Text style={styles.username}>{profileData.username}</Text>
-        <Text style={styles.numOfFriends}>
-          {profileData.numOfFriends} friends
-        </Text>
-      </View>
-
-      {/* Tabs */}
-      <View style={styles.eventsTabsContainer}>
-        <TouchableOpacity
-          style={styles.eventTab}
-          onPress={() => handleTabChange("going")}
-        >
-          <Text
-            style={
-              currentTab === "going"
-                ? styles.eventTabActive
-                : styles.eventsTabInactive
-            }
-          >
-            Going
-          </Text>
+    <ImageBackground
+      style={{
+        flex: 1,
+      }}
+      source={require("../../assets/images/friends-back.png")}
+    >
+      <View style={styles.container}>
+        <TouchableOpacity style={styles.image} onPress={handleSettings}>
+          <Ionicons name="settings-outline" size={24} color={"#3F407C"} />
         </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.eventTab}
-          onPress={() => handleTabChange("interested")}
-        >
-          <Text
-            style={
-              currentTab === "interested"
-                ? styles.eventTabActive
-                : styles.eventsTabInactive
-            }
-          >
-            Interested
-          </Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Events Section */}
-      <ScrollView style={styles.eventsContainer}>
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : currentTab === "going" ? (
-          eventsGoing.length > 0 ? (
-            eventsGoing.map((event: any) => (
-              <View key={event.id} style={styles.eventBox}>
-                <Text style={styles.eventName}>{event.name}</Text>
-                <Text
-                  style={styles.eventDetails}
-                >{`${event.date} @ ${event.time}`}</Text>
-                <Text style={styles.eventVenue}>{event.venue}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.noEventsText}>
-              No events you're going to at this time.
+        {/* Box */}
+        <View style={styles.box}>
+          <Image
+            source={{ uri: profileData.profilePicture }}
+            style={styles.profilePicture}
+          />
+          <View>
+            <Text style={styles.name}>{profileData.name}</Text>
+            <Text style={styles.username}>{profileData.username}</Text>
+            <Text style={styles.numOfFriends}>
+              {profileData.numOfFriends} friends
             </Text>
-          )
-        ) : currentTab === "interested" ? (
-          eventsInterested.length > 0 ? (
-            eventsInterested.map((event: any) => (
-              <View key={event.id} style={styles.eventBox}>
-                <Text style={styles.eventName}>{event.name}</Text>
-                <Text
-                  style={styles.eventDetails}
-                >{`${event.date} @ ${event.time}`}</Text>
-                <Text style={styles.eventVenue}>{event.venue}</Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.noEventsText}>
-              No events you're interested in at this time.
+          </View>
+        </View>
+        {/* Tabs */}
+        <View style={styles.eventsTabsContainer}>
+          <TouchableOpacity
+            style={styles.eventTab}
+            onPress={() => handleTabChange("going")}
+          >
+            <Text
+              style={
+                currentTab === "going"
+                  ? styles.eventTabActive
+                  : styles.eventsTabInactive
+              }
+            >
+              Going
             </Text>
-          )
-        ) : (
-          <ActivityIndicator size="large" color="#0000ff" />
-        )}
-      </ScrollView>
-    </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.eventTab}
+            onPress={() => handleTabChange("interested")}
+          >
+            <Text
+              style={
+                currentTab === "interested"
+                  ? styles.eventTabActive
+                  : styles.eventsTabInactive
+              }
+            >
+              Interested
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Events Section */}
+        <ScrollView style={styles.eventsContainer}>
+          {loading ? (
+            <ActivityIndicator size="large" color="#0000ff" />
+          ) : currentTab === "going" ? (
+            eventsGoing.length > 0 ? (
+              eventsGoing.map((event: any) => {
+                return (
+                  <View key={event.id} style={styles.eventBox}>
+                    <Image
+                      source={{ uri: event.image_url }}
+                      style={styles.eventImage}
+                    />
+                    <Text style={styles.eventName}>{event.name}</Text>
+                    <Text
+                      style={styles.eventDetails}
+                    >{`${event.date} @ ${event.time}`}</Text>
+                    <Text style={styles.eventVenue}>{event.venue}</Text>
+                  </View>
+                );
+              })
+            ) : (
+              <Text style={styles.noEventsText}>
+                No events you're going to at this time.
+              </Text>
+            )
+          ) : currentTab === "interested" ? (
+            eventsInterested.length > 0 ? (
+              eventsInterested.map((event: any) => (
+                <View key={event.id} style={styles.eventBox}>
+                  <Text style={styles.eventName}>{event.name}</Text>
+                  <Text
+                    style={styles.eventDetails}
+                  >{`${event.date} @ ${event.time}`}</Text>
+                  <Text style={styles.eventVenue}>{event.venue}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.noEventsText}>
+                No events you're interested in at this time.
+              </Text>
+            )
+          ) : (
+            <ActivityIndicator size="large" color="#0000ff" />
+          )}
+        </ScrollView>
+      </View>
+    </ImageBackground>
   );
 };
 
@@ -201,14 +215,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    marginBottom: 10,
-    right: 110,
-    top: 94,
-  },
-  profileDetails: {
-    position: "absolute",
-    top: 44,
-    right: 140,
   },
   name: {
     fontSize: 24,
@@ -221,14 +227,16 @@ const styles = StyleSheet.create({
   numOfFriends: {
     fontSize: 16,
     color: "#999",
-    marginTop: 10,
   },
   box: {
     width: "96%",
-    height: 140,
     backgroundColor: "#ffff",
     borderRadius: 20,
     marginTop: 80,
+    flexDirection: "row",
+    padding: 20,
+    alignItems: "center",
+    gap: 10,
   },
   eventsTabsContainer: {
     flexDirection: "row",
@@ -302,6 +310,11 @@ const styles = StyleSheet.create({
     top: 60,
     right: 20,
     zIndex: 1,
+  },
+  eventImage: {
+    width: "100%",
+    height: 100,
+    borderRadius: 10,
   },
 });
 

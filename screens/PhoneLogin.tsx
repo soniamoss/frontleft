@@ -296,6 +296,10 @@ const PhoneLoginScreen = () => {
 
       console.log(user.phone);
 
+      router.push("/AllowContactsScreen");
+
+      return;
+
       if (profile.length === 0) {
         const { data, error }: any = await supabase
           .from("profiles")
