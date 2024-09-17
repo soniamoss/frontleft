@@ -2,6 +2,10 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
+  FlatList,
+  Image,
+  ImageBackground,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,6 +17,10 @@ import {
 } from "react-native";
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
+import SearchBar from "@/components/SearchBar";
+import { AntDesign } from "@expo/vector-icons";
+import ButtonOutlined from "@/components/buttons/outlined";
+import Toast from "react-native-toast-message";
 
 export default function ShowContacts() {
   const [matchingProfiles, setMatchingProfiles] = useState([]);
@@ -22,10 +30,9 @@ export default function ShowContacts() {
   const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(true);
   const [currentTab, setCurrentTab] = useState("received"); // State for tab selection
-  const navigation = useNavigation();
 
-  const fetchRequests = useCallback(async () => {
-    setLoading(true);
+  const fetchRequests = useCallback(async (setLoading?: any) => {
+    if (setLoading) setLoading(true);
     const user = await getCurrentUser();
     if (!user) {
       console.error("Could not retrieve current user data.");
@@ -50,6 +57,8 @@ export default function ShowContacts() {
 
     if (receivedError) {
       console.error("Error fetching received friend requests:", receivedError);
+
+      if (setLoading) setLoading(false);
     } else {
       setFriendRequests(receivedData);
     }
@@ -76,13 +85,13 @@ export default function ShowContacts() {
       setSentRequests(sentData);
     }
 
-    setLoading(false);
+    if (setLoading) setLoading(false);
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       // Fetch the latest data every time the screen comes into focus
-      fetchRequests();
+      fetchRequests(setLoading);
     }, [fetchRequests])
   );
 
@@ -120,7 +129,7 @@ export default function ShowContacts() {
     }
   };
 
-  const handleAcceptRequest = async (requestId: any) => {
+  const handleAcceptRequest = async (requestId: any, name: any) => {
     // Update the friendship status to "accepted"
     const { error }: any = await supabase
       .from("friendships")
@@ -129,8 +138,20 @@ export default function ShowContacts() {
 
     if (error) {
       console.error("Error updating friendship status:", error);
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
     } else {
       // Refresh the friend requests list after the update
+
+      Toast.show({
+        type: "successToast",
+        text1: `You and ${name} are now friends!`,
+        position: "bottom",
+      });
+
       fetchRequests();
     }
   };
@@ -139,26 +160,57 @@ export default function ShowContacts() {
     setCurrentTab(tab);
   };
 
+  const handleDeclineRequest = async (requestId: any, name: any) => {
+    const { error }: any = await supabase
+      .from("friendships")
+      .update({ status: "declined" })
+      .eq("id", requestId);
+
+    if (error) {
+      console.error("Error updating friendship status:", error);
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
+    } else {
+      Toast.show({
+        type: "successToast",
+        text1: `You removed the request from ${name}`,
+        position: "bottom",
+      });
+
+      fetchRequests();
+    }
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <ImageBackground
+      style={{
+        flex: 1,
+        paddingTop: 50,
+        marginTop: -100,
+      }}
+      source={require("../assets/images/friends-back.png")}
     >
       <View style={styles.box}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search friends"
+        <SearchBar
           value={searchText}
-          onChangeText={handleSearch}
+          setValue={handleSearch}
+          placeholder="Search friends"
         />
 
-        <Text style={styles.requestsText}>
-          Requests ({friendRequests.length})
-        </Text>
+        <View style={styles.headerContainer}>
+          <Text style={styles.text}>
+            Requests{" "}
+            {(!loading || friendRequests.length > 0) &&
+              `(${friendRequests.length})`}
+          </Text>
+        </View>
 
         <View style={styles.requestsTabsContainer}>
           <TouchableOpacity
-            style={styles.requestTab}
+            style={[styles.requestTab, { paddingLeft: 0 }]}
             onPress={() => handleTabChange("received")}
           >
             <Text
@@ -187,8 +239,150 @@ export default function ShowContacts() {
           </TouchableOpacity>
         </View>
 
+        {currentTab === "received" && (
+          <FlatList
+            data={friendRequests}
+            keyExtractor={(item) => item.username}
+            renderItem={({ item, index }) => {
+              return (
+                <View key={index} style={styles.profileContainer}>
+                  <Image
+                    source={{
+                      uri:
+                        item.profile_image_url ||
+                        "https://via.placeholder.com/50",
+                    }}
+                    style={styles.profilePicture}
+                  />
+                  <View style={styles.profileInfo}>
+                    <Text style={styles.profileName}>
+                      {item?.profiles?.first_name} {item?.profiles?.last_name}
+                    </Text>
+                    <Text style={styles.profileUsername}>
+                      {item?.profiles?.username}
+                    </Text>
+                  </View>
+                  <ButtonOutlined
+                    title="Accept"
+                    onPress={() =>
+                      handleAcceptRequest(item.id, item?.profiles?.username)
+                    }
+                    cusStyle={{
+                      borderRadius: 50,
+                    }}
+                  />
+
+                  <TouchableOpacity
+                    onPress={() =>
+                      Alert.alert(
+                        `Are you sure you want to delete the request from ${item?.profiles?.username}?`,
+                        "You will no longer see this friend request.",
+                        [
+                          {
+                            text: "Cancel",
+                            style: "cancel",
+                          },
+                          {
+                            text: "Remove",
+                            onPress: () =>
+                              handleDeclineRequest(
+                                item.id,
+                                item?.profiles?.username
+                              ),
+                            style: "destructive",
+                          },
+                        ]
+                      )
+                    }
+                  >
+                    <AntDesign name="close" size={24} color="black" />
+                  </TouchableOpacity>
+                </View>
+              );
+            }}
+            ListEmptyComponent={
+              <View>
+                {loading ? (
+                  <ActivityIndicator color={"#6A74FB"} size="large" />
+                ) : (
+                  <Text style={styles.noProfilesText}>
+                    No matching profiles found
+                  </Text>
+                )}
+              </View>
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+        {currentTab === "sent" && (
+          <FlatList
+            data={sentRequests}
+            keyExtractor={(item) => item.username}
+            renderItem={({ item, index }) => {
+              return (
+                <View key={index} style={styles.profileContainer}>
+                  <Image
+                    source={{
+                      uri:
+                        item.profile_image_url ||
+                        "https://via.placeholder.com/50",
+                    }}
+                    style={styles.profilePicture}
+                  />
+                  <View style={styles.profileInfo}>
+                    <Text style={styles.profileName}>
+                      {item?.profiles?.first_name} {item?.profiles?.last_name}
+                    </Text>
+                    <Text style={styles.profileUsername}>
+                      {item?.profiles?.username}
+                    </Text>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={() =>
+                      Alert.alert(
+                        `Are you sure you want to delete the request sent  to ${item?.profiles?.username}?`,
+                        "You will no longer see this friend request.",
+                        [
+                          {
+                            text: "Cancel",
+                            style: "cancel",
+                          },
+                          {
+                            text: "Remove",
+                            onPress: () =>
+                              handleDeclineRequest(
+                                item.id,
+                                item?.profiles?.username
+                              ),
+                            style: "destructive",
+                          },
+                        ]
+                      )
+                    }
+                  >
+                    <AntDesign name="close" size={24} color="black" />
+                  </TouchableOpacity>
+                </View>
+              );
+            }}
+            ListEmptyComponent={
+              <View>
+                {loading ? (
+                  <ActivityIndicator color={"#6A74FB"} size="large" />
+                ) : (
+                  <Text style={styles.noProfilesText}>
+                    No matching profiles found
+                  </Text>
+                )}
+              </View>
+            }
+            showsVerticalScrollIndicator={false}
+          />
+        )}
+
         {/* Friend Requests Section */}
-        <ScrollView style={styles.requestsContainer}>
+        {/* <ScrollView style={styles.requestsContainer}>
           {loading ? (
             <ActivityIndicator size="large" color="#0000ff" />
           ) : currentTab === "received" ? (
@@ -228,27 +422,30 @@ export default function ShowContacts() {
               No requests sent at this time. Go add some friends!
             </Text>
           )}
-        </ScrollView>
+        </ScrollView> */}
       </View>
-    </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9F9F9",
+    backgroundColor: "transparent",
   },
   box: {
     flex: 1,
     width: "90%",
-    maxHeight: "80%", // Limit the height of the box
+    maxHeight: "80%",
     backgroundColor: "#fff",
     borderRadius: 20,
     padding: 16,
-    marginTop: 70, // Space from top of the screen
+    marginTop: 70,
     alignSelf: "center",
     justifyContent: "flex-start",
+  },
+  searchContainer: {
+    marginBottom: 10,
   },
   searchInput: {
     height: 50,
@@ -257,8 +454,55 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 20,
-    placeholderTextColor: "#3D4353",
   },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginVertical: 10,
+  },
+  text: {
+    color: "#3D4353",
+    fontSize: 24,
+    fontWeight: "700",
+  },
+  profileListContainer: {
+    flexGrow: 1,
+  },
+  profileContainer: {
+    marginVertical: 5,
+    paddingVertical: 20,
+    gap: 2,
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    position: "relative",
+  },
+  profilePicture: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
+  profileInfo: {
+    flex: 1,
+    marginLeft: 10,
+    justifyContent: "center",
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  profileUsername: {
+    fontSize: 15,
+    fontWeight: "400",
+  },
+  noProfilesText: {
+    color: "#888",
+    textAlign: "center",
+    marginVertical: 20,
+  },
+
   requestsTabsContainer: {
     flexDirection: "row",
     marginBottom: 5, // Adjust margin to bring tabs closer to the text
@@ -290,34 +534,5 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between", // Align items to the left and right
     alignItems: "center",
-  },
-  profileName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#3D4353",
-  },
-  noRequestsText: {
-    color: "#3B429F",
-    textAlign: "center",
-    marginTop: 50,
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  statusButton: {
-    backgroundColor: "#3B429F",
-    borderRadius: 20, // Oval shape
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: "auto", // Align button to the right
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 14,
   },
 });

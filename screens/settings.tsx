@@ -1,9 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { router } from "expo-router";
+import Constants from "expo-constants";
+
 import React, { useEffect, useState } from "react";
 import {
   Image,
+  ImageBackground,
   Linking,
   StyleSheet,
   Text,
@@ -12,6 +15,10 @@ import {
 } from "react-native";
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
+import PrivacyIcon from "@/svg/privacy";
+import ChevronIcon from "@/svg/chevron";
+import ContactIcon from "@/svg/contact";
+import BackButton from "@/components/backButton";
 
 const ProfilePage = () => {
   const navigation = useNavigation();
@@ -73,14 +80,17 @@ const ProfilePage = () => {
     Linking.openURL(mailtoUrl);
   };
 
+  const logout = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+  };
+
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Ionicons name="arrow-back" size={24} color="black" />
-      </TouchableOpacity>
+    <ImageBackground
+      style={styles.container}
+      source={require("../assets/images/friends-back.png")}
+    >
+      <BackButton />
 
       {/* Profile Details */}
       <TouchableOpacity
@@ -105,31 +115,46 @@ const ProfilePage = () => {
       {/* Buttons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.button} onPress={handlePrivacySettings}>
-          <Text style={styles.buttonText}>Privacy</Text>
-          <Ionicons
-            name="shield"
-            size={24}
-            color="#3F407C"
-            style={styles.icon}
-          />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
+            <PrivacyIcon />
+            <Text style={styles.buttonText}>Privacy</Text>
+          </View>
+          <ChevronIcon />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.button} onPress={handleContactUs}>
-          <Text style={styles.buttonText}>Contact Us</Text>
-          <Ionicons name="mail" size={24} color="#3F407C" style={styles.icon} />
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
+            <ContactIcon />
+            <Text style={styles.buttonText}>Contact Us</Text>
+          </View>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.text}>Name</Text>
-      <Text style={styles.textsmaller}>Where events and friends meet</Text>
-
-      <TouchableOpacity
-        style={styles.buttonLog}
-        onPress={() => supabase.auth.signOut()}
+      <View
+        style={{
+          position: "absolute",
+          bottom: 20,
+          left: 0,
+          right: 0,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
       >
-        <Text style={styles.buttonTextLog}>Log Out</Text>
-      </TouchableOpacity>
-    </View>
+        <Text style={styles.text}>Name</Text>
+        <Text style={styles.textsmaller}>Where events and friends meet</Text>
+
+        <TouchableOpacity
+          style={styles.buttonLog}
+          onPress={() => {
+            logout();
+          }}
+        >
+          <Text style={styles.buttonTextLog}>Log Out</Text>
+        </TouchableOpacity>
+
+        <Text style={styles.versionText}>Version 2.1.12</Text>
+      </View>
+    </ImageBackground>
   );
 };
 
@@ -139,7 +164,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingTop: Constants.statusBarHeight + 100,
   },
   profilePicture: {
     width: 100,
@@ -188,15 +213,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   buttonText: {
-    fontSize: 18,
-    color: "#3F407C",
+    fontSize: 19,
+    color: "#3D4353",
     fontWeight: "bold",
+    fontFamily: "Poppins",
   },
   icon: {
     marginRight: 10,
   },
   text: {
-    fontSize: 24,
+    fontSize: 80,
     fontWeight: "bold",
     fontFamily: "Chicle",
     color: "#3F407C",
@@ -207,22 +233,29 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Chicle",
     color: "#3F407C",
-    marginBottom: 10,
   },
   buttonLog: {
-    position: "absolute",
-    bottom: 20,
-    paddingVertical: 15,
+    paddingVertical: 10,
   },
   buttonTextLog: {
     color: "#DF5A76",
     fontSize: 16,
     fontWeight: "bold",
+    fontFamily: "poppins",
   },
   backButton: {
     position: "absolute",
     top: 60,
     left: 20,
+    zIndex: 1,
+  },
+  versionText: {
+    fontSize: 15,
+    fontWeight: "400",
+    fontFamily: "poppins",
+    textAlign: "center",
+    color: "#838383",
+    marginBottom: 16,
     zIndex: 1,
   },
 });

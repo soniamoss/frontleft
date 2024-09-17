@@ -202,7 +202,10 @@ const ExploreTab = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      style={styles.container}
+      source={require("../../assets/images/friends-back.png")}
+    >
       <View style={styles.pickerWrapper}>
         <DropDownPicker
           open={open}
@@ -360,7 +363,7 @@ const ExploreTab = () => {
           ))}
         </ScrollView>
       )}
-    </View>
+    </ImageBackground>
   );
 };
 

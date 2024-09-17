@@ -1,39 +1,56 @@
 import { useFocusEffect } from "@react-navigation/native";
 import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
   Image,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
+  ImageBackground,
   StyleSheet,
   Text,
-  TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
+import SearchBar from "@/components/SearchBar";
+import { AntDesign } from "@expo/vector-icons";
+import Toast from "react-native-toast-message";
+
+// Define the profile and friendship types
+interface Profile {
+  first_name: string;
+  last_name: string;
+  username: string;
+  profile_image_url: string | null;
+  user_id: string;
+}
+
+interface Friendship {
+  user_profile: Profile;
+  friend_profile: Profile;
+}
 
 export default function ShowContacts() {
-  const [acceptedFriends, setAcceptedFriends] = useState([]);
-  const [searchText, setSearchText] = useState("");
-  const [filteredProfiles, setFilteredProfiles] = useState([]);
+  const [acceptedFriends, setAcceptedFriends] = useState<Profile[]>([]);
+
+  const [searchText, setSearchText] = useState<string>("");
+  const [filteredProfiles, setFilteredProfiles] = useState<Profile[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
 
   useFocusEffect(
     useCallback(() => {
-      // Fetch the latest data every time the screen comes into focus
       fetchAcceptedFriends();
     }, [])
   );
 
   useEffect(() => {
-    // Real-time subscription to changes in the 'friendships' table
     const setupRealTimeSubscription = async () => {
       const user = await getCurrentUser();
 
       const subscription = supabase
         .channel("public:friendships")
         .on(
-          // @ts-ignore
           "postgres_changes",
           {
             event: "insert",
@@ -47,7 +64,6 @@ export default function ShowContacts() {
           }
         )
         .on(
-          // @ts-ignore
           "postgres_changes",
           {
             event: "update",
@@ -55,14 +71,12 @@ export default function ShowContacts() {
             table: "friendships",
             filter: `friend_id=eq.${user.id},user_id=eq.${user.id}`,
           },
-          // @ts-ignore
-          (payload) => {
+          (payload: any) => {
             console.log("Update event detected:", payload);
             fetchAcceptedFriends();
           }
         )
         .on(
-          // @ts-ignore
           "postgres_changes",
           {
             event: "delete",
@@ -75,11 +89,10 @@ export default function ShowContacts() {
             fetchAcceptedFriends();
           }
         )
-        .subscribe((status) => {
+        .subscribe((status: string) => {
           console.log("Subscription status:", status);
         });
 
-      // Clean up the subscription when the component unmounts
       return () => {
         supabase.removeChannel(subscription);
       };
@@ -89,12 +102,14 @@ export default function ShowContacts() {
   }, []);
 
   const fetchAcceptedFriends = async () => {
+    setLoading(true);
     const user = await getCurrentUser();
 
-    const { data: friendships, error }: any = await supabase
+    const { data: friendships, error } = await supabase
       .from("friendships")
       .select(
         `
+        id,
         user_profile:profiles!friendships_user_id_fkey (
           first_name,
           last_name,
@@ -114,17 +129,17 @@ export default function ShowContacts() {
       .eq("status", "accepted")
       .or(`friend_id.eq.${user.id},user_id.eq.${user.id}`);
 
+    setLoading(false);
+
     if (error) {
       console.error("Error fetching accepted friends:", error);
     } else {
-      // Flatten the profiles and filter out the authenticated user's profile by user_id
-      const allProfiles = friendships.flatMap((friendship: any) => [
-        friendship.user_profile,
-        friendship.friend_profile,
-      ]);
+      const allProfiles = (friendships as Friendship[]).flatMap(
+        (friendship) => [friendship.user_profile, friendship.friend_profile]
+      );
 
       const filteredFriends = allProfiles.filter(
-        (profile: any) => profile.user_id !== user.id
+        (profile) => profile.user_id !== user.id
       );
 
       setAcceptedFriends(filteredFriends);
@@ -132,11 +147,11 @@ export default function ShowContacts() {
     }
   };
 
-  const handleSearch = (text: any) => {
+  const handleSearch = (text: string) => {
     setSearchText(text);
     if (text) {
       const filtered = acceptedFriends.filter(
-        (profile: any) =>
+        (profile) =>
           profile.first_name.toLowerCase().includes(text.toLowerCase()) ||
           profile.last_name.toLowerCase().includes(text.toLowerCase()) ||
           profile.username.toLowerCase().includes(text.toLowerCase())
@@ -147,53 +162,120 @@ export default function ShowContacts() {
     }
   };
 
+  const deleteFriend = async (friendID: string, name: string) => {
+    const user = await getCurrentUser();
+
+    const { error } = await supabase
+      .from("friendships")
+      .delete()
+      .eq("user_id", user.id)
+      .eq("friend_id", friendID);
+
+    if (error) {
+      console.error("Error deleting friend:", error);
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
+    }
+
+    fetchAcceptedFriends();
+
+    Toast.show({
+      type: "successToast",
+      text1: `${name} has been removed as a friend!`,
+      position: "bottom",
+    });
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <ImageBackground
+      style={{
+        flex: 1,
+        paddingTop: 50,
+        marginTop: -100,
+      }}
+      source={require("../assets/images/friends-back.png")}
     >
       <View style={styles.box}>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search friends"
-            value={searchText}
-            onChangeText={handleSearch}
-          />
-        </View>
+        <SearchBar
+          value={searchText}
+          setValue={handleSearch}
+          placeholder="Search friends"
+        />
 
-        <View style={styles.headerContainer}>
-          <Text style={styles.text}>Friends</Text>
-        </View>
-
-        <ScrollView style={styles.profileListContainer}>
-          {filteredProfiles.length > 0 ? (
-            filteredProfiles.map((profile: any, index) => (
+        <FlatList
+          data={filteredProfiles}
+          keyExtractor={(item) => item.username}
+          renderItem={({ item, index }) => {
+            return (
               <View key={index} style={styles.profileContainer}>
                 <Image
                   source={{
                     uri:
-                      profile.profile_image_url ||
+                      item.profile_image_url ||
                       "https://via.placeholder.com/50",
                   }}
                   style={styles.profilePicture}
                 />
-                <View style={styles.profileInfo}>
+                <View style={[styles.profileInfo, { flex: 1 }]}>
                   <Text style={styles.profileName}>
-                    {profile.first_name} {profile.last_name}
+                    {item.first_name} {item.last_name}
                   </Text>
-                  <Text style={styles.profileUsername}>{profile.username}</Text>
+                  <Text style={styles.profileUsername}>{item.username}</Text>
+                </View>
+                <View>
+                  <TouchableOpacity
+                    onPress={() =>
+                      Alert.alert(
+                        `Are you sure you want to remove ${item.username} from your friends?`,
+                        "You will no longer be able to see the shows that each other is attending.",
+                        [
+                          {
+                            text: "Cancel",
+                            style: "cancel",
+                          },
+                          {
+                            text: "Remove",
+                            onPress: () =>
+                              deleteFriend(item.user_id, item.username),
+                            style: "destructive",
+                          },
+                        ]
+                      )
+                    }
+                  >
+                    <AntDesign name="close" size={24} color="black" />
+                  </TouchableOpacity>
                 </View>
               </View>
-            ))
-          ) : (
-            <Text style={styles.noProfilesText}>
-              No matching profiles found
-            </Text>
-          )}
-        </ScrollView>
+            );
+          }}
+          ListHeaderComponent={
+            <View style={styles.headerContainer}>
+              <Text style={styles.text}>
+                Friends{" "}
+                {(!loading || acceptedFriends.length > 0) &&
+                  `(${acceptedFriends.length})`}
+              </Text>
+            </View>
+          }
+          ListEmptyComponent={
+            <View>
+              {loading ? (
+                <ActivityIndicator color={"#6A74FB"} size="large" />
+              ) : (
+                <Text style={styles.noProfilesText}>
+                  No matching profiles found
+                </Text>
+              )}
+            </View>
+          }
+          showsVerticalScrollIndicator={false}
+        />
       </View>
-    </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }
 
@@ -223,7 +305,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 20,
-    placeholderTextColor: "#3D4353",
   },
   headerContainer: {
     flexDirection: "row",
@@ -241,23 +322,21 @@ const styles = StyleSheet.create({
   },
   profileContainer: {
     marginVertical: 5,
-    padding: 20,
+    paddingVertical: 20,
     width: "100%",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     position: "relative",
+    gap: 10,
   },
   profilePicture: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    position: "absolute",
-    left: 0,
   },
   profileInfo: {
     flex: 1,
-    marginLeft: 60,
     justifyContent: "center",
   },
   profileName: {

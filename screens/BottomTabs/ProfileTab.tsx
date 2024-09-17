@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 import { supabase } from "../../supabaseClient";
+import GroupUsersIcon from "@/svg/groupUsers";
 
 const ProfilePage = () => {
   const [currentTab, setCurrentTab] = useState("going"); // State for tab selection
@@ -115,9 +116,14 @@ const ProfilePage = () => {
           <View>
             <Text style={styles.name}>{profileData.name}</Text>
             <Text style={styles.username}>{profileData.username}</Text>
-            <Text style={styles.numOfFriends}>
-              {profileData.numOfFriends} friends
-            </Text>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+            >
+              <GroupUsersIcon />
+              <Text style={styles.numOfFriends}>
+                {profileData.numOfFriends} friends
+              </Text>
+            </View>
           </View>
         </View>
         {/* Tabs */}
@@ -212,21 +218,26 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   profilePicture: {
-    width: 100,
-    height: 100,
+    width: 80,
+    height: 80,
     borderRadius: 50,
   },
   name: {
     fontSize: 24,
     fontWeight: "bold",
+    color: "#3D4353",
+    fontFamily: "Poppins",
   },
   username: {
-    fontSize: 18,
-    color: "#666",
+    fontSize: 12,
+    color: "#3D4353",
+    fontFamily: "Poppins",
+    marginBottom: 5,
   },
   numOfFriends: {
-    fontSize: 16,
-    color: "#999",
+    fontSize: 12,
+    color: "#3D4353",
+    fontFamily: "Poppins",
   },
   box: {
     width: "96%",

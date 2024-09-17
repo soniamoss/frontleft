@@ -11,16 +11,21 @@ import React from "react";
 
 interface SearchBarProps {
   value: string;
+  placeholder?: string;
   setValue: (text: string) => void;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ value, setValue }) => {
+const SearchBar: React.FC<SearchBarProps> = ({
+  value,
+  setValue,
+  placeholder = "Search or add new friends",
+}) => {
   const [isFocused, setIsFocused] = React.useState(false);
   return (
     <View style={[styles.container, isFocused && styles.shadow]}>
       <AntDesign name="search1" size={20} color="#66788A" />
       <TextInput
-        placeholder="Search or add new friends"
+        placeholder={placeholder}
         style={styles.input}
         value={value}
         onChangeText={setValue}
