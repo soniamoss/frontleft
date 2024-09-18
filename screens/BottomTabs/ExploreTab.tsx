@@ -14,9 +14,11 @@ import {
   TouchableOpacity,
   View,
   ActivityIndicator,
+  FlatList,
 } from "react-native";
 import DropDownPicker from "react-native-dropdown-picker";
 import { supabase } from "../../supabaseClient";
+import PostCard from "@/components/card/post";
 
 const ExploreTab = () => {
   const [open, setOpen] = useState(false);
@@ -261,108 +263,20 @@ const ExploreTab = () => {
         </TouchableOpacity>
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
-      ) : (
-        <ScrollView
-          contentContainerStyle={styles.eventsContainer}
-          horizontal={false}
-        >
-          {events.map((event: any, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => openEventDetailsPage(event)}
-            >
-              <View style={styles.box}>
-                <ImageBackground
-                  source={{
-                    uri:
-                      event.image_url || "https://via.placeholder.com/344x257",
-                  }}
-                  style={styles.imageBackground}
-                  imageStyle={{
-                    borderTopLeftRadius: 10,
-                    borderTopRightRadius: 10,
-                  }}
-                ></ImageBackground>
-                <View style={styles.artistInfo}>
-                  <Text style={styles.artistName}>
-                    {event.artist || "Unknown Artist"}
-                  </Text>
-                </View>
-                <View style={styles.boxContent}>
-                  <View style={styles.eventDetailsContainer}>
-                    <Image
-                      source={require("@/assets/images/calender.png")}
-                      style={styles.iconSmall}
-                    />
-                    <Text style={styles.eventDetails}>
-                      {moment(`${event.date} ${event.time}`).format(
-                        "MMM DD @ hh:mmA "
-                      )}
-                    </Text>
-                    <Image
-                      source={require("@/assets/images/pin.png")}
-                      style={styles.iconSmall}
-                    />
-                    <TouchableOpacity
-                      onPress={() =>
-                        openLocationInMaps(event.venue, event.city)
-                      }
-                    >
-                      <Text style={styles.eventDetailsLink}>
-                        {event.venue || "Venue not available"}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.eventDetailsContainer}>
-                    <Image
-                      source={require("@/assets/images/checkmark.png")}
-                      style={styles.iconSmall}
-                    />
-                    <View style={styles.attendingFriendsContainer}>
-                      {event.attendingFriends &&
-                        event.attendingFriends.map(
-                          (friend: any, idx: number) => (
-                            <View key={idx} style={styles.friendInfo}>
-                              <Image
-                                source={{ uri: friend.profileImage }}
-                                style={styles.friendProfileImage}
-                              />
-                              <Text style={styles.friendName}>
-                                {friend.firstName}
-                              </Text>
-                            </View>
-                          )
-                        )}
-                    </View>
-                    <Image
-                      source={require("@/assets/images/star.png")}
-                      style={styles.iconSmall}
-                    />
-                    <View style={styles.interestedFriendsContainer}>
-                      {event.interestedFriends &&
-                        event.interestedFriends.map(
-                          (friend: any, idx: number) => (
-                            <View key={idx} style={styles.friendInfo}>
-                              <Image
-                                source={{ uri: friend.profileImage }}
-                                style={styles.friendProfileImage}
-                              />
-                              <Text style={styles.friendName}>
-                                {friend.firstName}
-                              </Text>
-                            </View>
-                          )
-                        )}
-                    </View>
-                  </View>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      )}
+      <FlatList
+        data={events}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item, index }) => (
+          <PostCard
+            event={item}
+            index={index}
+            openEventDetailsPage={openEventDetailsPage}
+            openLocationInMaps={openLocationInMaps}
+          />
+        )}
+        contentContainerStyle={styles.eventsContainer}
+        showsVerticalScrollIndicator={false}
+      />
     </ImageBackground>
   );
 };

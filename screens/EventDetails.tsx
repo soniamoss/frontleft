@@ -1,5 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import moment from "moment";
+import Constants from "expo-constants";
+
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,6 +18,13 @@ import {
 import DropDownPicker from "react-native-dropdown-picker";
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
+import BackButton from "@/components/backButton";
+import CalendarIcon from "@/svg/calendar";
+import PinIcon from "@/svg/pin";
+import CheckIcon from "@/svg/check";
+import StarIcon from "@/svg/star";
+import ButtonContained from "@/components/buttons/contained";
+import ButtonOutlined from "@/components/buttons/outlined";
 
 const EventDetails = () => {
   // Get params from expo-router
@@ -161,17 +170,13 @@ const EventDetails = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      style={styles.container}
+      source={require("../assets/images/friends-back.png")}
+    >
       {/* Top Section with Back Button and Dropdown Picker */}
-      <View style={styles.topSection}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backText}>{"< Back"}</Text>
-        </TouchableOpacity>
-
-        <View style={styles.pickerWrapper}>
+      <BackButton />
+      {/* <View style={styles.pickerWrapper}>
           <DropDownPicker
             open={open}
             value={selectedLocation}
@@ -185,44 +190,36 @@ const EventDetails = () => {
             zIndex={1000}
             textStyle={styles.dropdownText}
           />
-        </View>
-
-        <View style={styles.tabContainer}>
-          <View style={styles.tabWrapper}>
-            <TouchableOpacity
-              style={styles.tabButton}
-              onPress={() => setCurrentTab("Friends of Friends")}
+        </View> */}
+      <View style={styles.tabContainer}>
+        <View style={styles.tabWrapper}>
+          <TouchableOpacity
+            style={styles.tabButton}
+            onPress={() => setCurrentTab("Friends of Friends")}
+          >
+            <Text
+              style={
+                currentTab === "Friends of Friends"
+                  ? styles.tabTextActive
+                  : styles.tabTextInactive
+              }
             >
-              <Text
-                style={
-                  currentTab === "Friends of Friends"
-                    ? styles.tabTextActive
-                    : styles.tabTextInactive
-                }
-              >
-                Friends of Friends
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.tabButton}
-              onPress={() => setCurrentTab("My Friends")}
+              Friends of Friends
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.tabButton}
+            onPress={() => setCurrentTab("My Friends")}
+          >
+            <Text
+              style={
+                currentTab === "My Friends"
+                  ? styles.tabTextActive
+                  : styles.tabTextInactive
+              }
             >
-              <Text
-                style={
-                  currentTab === "My Friends"
-                    ? styles.tabTextActive
-                    : styles.tabTextInactive
-                }
-              >
-                My Friends
-              </Text>
-            </TouchableOpacity>
-          </View>
-          <TouchableOpacity onPress={openSearchPage}>
-            <Image
-              source={require("@/assets/images/search.png")}
-              style={styles.searchIcon}
-            />
+              My Friends
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -233,96 +230,138 @@ const EventDetails = () => {
             uri: event.image_url || "https://via.placeholder.com/344x257",
           }}
           style={styles.imageBackground}
-          imageStyle={styles.imageBackgroundStyle}
-        ></ImageBackground>
+          imageStyle={{
+            borderTopLeftRadius: 10,
+            borderTopRightRadius: 10,
+          }}
+        />
         <View style={styles.artistInfo}>
           <Text style={styles.artistName}>
             {event.artist || "Unknown Artist"}
           </Text>
+          <TouchableOpacity onPress={handleInterested}>
+            <StarIcon />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.boxContent}>
+        <View style={{ padding: 10 }}>
           <View style={styles.eventDetailsContainer}>
-            <Image
-              source={require("@/assets/images/calender.png")}
-              style={styles.iconSmall}
-            />
-            <Text style={styles.eventDetails}>
-              {moment(`${event.date} ${event.time}`).format("MMM DD @ hh:mmA ")}
-            </Text>
-            <Image
-              source={require("@/assets/images/pin.png")}
-              style={styles.iconSmall}
-            />
-            <TouchableOpacity
-              onPress={() => openLocationInMaps(event.venue, event.city)}
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                flex: 1,
+                gap: 5,
+              }}
             >
-              <Text style={styles.eventDetailsLink}>
-                {event.venue || "Venue not available"}
+              <CalendarIcon />
+              <Text style={styles.eventDetails}>
+                {moment(`${event.date} ${event.time}`).format(
+                  "MMM DD @ hh:mmA "
+                )}
               </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.separator} />
-
-          <View style={styles.iconContainer}>
-            <View style={styles.iconWrapper}>
-              <Image
-                source={require("@/assets/images/checkmark.png")}
-                style={styles.iconSmall2}
-              />
-              <Text style={styles.iconLabel}>Going</Text>
-              <View style={styles.attendingFriendsContainer}>
-                {attendeesData?.attendingFriends?.length > 0 &&
-                  attendeesData.attendingFriends.map((friend, idx) => (
-                    <View key={idx} style={styles.friendInfo}>
-                      <Image
-                        source={{ uri: friend.profileImage }}
-                        style={styles.friendProfileImage}
-                      />
-                      <Text style={styles.profileUrlText}>
-                        {friend.firstName}
-                      </Text>
-                    </View>
-                  ))}
-              </View>
-              <Image
-                source={require("@/assets/images/star.png")}
-                style={styles.iconSmall2}
-              />
-              <Text style={styles.iconLabel}>Interested</Text>
-              <View style={styles.interestedFriendsContainer}>
-                {attendeesData?.interestedFriends?.length > 0 &&
-                  attendeesData.interestedFriends.map((friend, idx) => (
-                    <View key={idx} style={styles.friendInfo}>
-                      <Image
-                        source={{ uri: friend.profileImage }}
-                        style={styles.friendProfileImage}
-                      />
-                      <Text style={styles.profileUrlText}>
-                        {friend.firstName}
-                      </Text>
-                    </View>
-                  ))}
-              </View>
+            </View>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                flex: 1,
+                gap: 5,
+              }}
+            >
+              <PinIcon />
+              <TouchableOpacity
+                onPress={() => openLocationInMaps(event.venue, event.city)}
+              >
+                {/* Add your function to open location maps here */}
+                <Text style={styles.eventDetailsLink}>
+                  {event.venue || "Venue not available"}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </View>
-
-        <TouchableOpacity style={styles.goingButton} onPress={handleGoing}>
-          <Text style={styles.goingButtonText}>
-            {goingStatus ? "You are Going" : "Going?"}
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.starButton} onPress={handleInterested}>
-          <Image
-            source={require("@/assets/images/star.png")}
-            style={styles.icon}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+              marginTop: 5,
+            }}
+          >
+            <View
+              style={{
+                alignContent: "center",
+                alignItems: "center",
+                width: 58,
+              }}
+            >
+              <CheckIcon />
+              <Text style={styles.eventDetails}>Going</Text>
+            </View>
+            <View style={styles.interestedFriendsContainer}>
+              {event.attendingFriends &&
+                event.attendingFriends.slice(0, 3).map((friend, idx) => (
+                  <View key={idx} style={styles.friendInfo}>
+                    <Image
+                      source={{ uri: friend.profileImage }}
+                      style={styles.friendProfileImage}
+                    />
+                  </View>
+                ))}
+              {event.attendingFriends && event.attendingFriends.length > 3 && (
+                <Text style={styles.seeMore}>
+                  +{event.attendingFriends.length - 3} more
+                </Text>
+              )}
+            </View>
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 5,
+            }}
+          >
+            <View
+              style={{
+                alignContent: "center",
+                alignItems: "center",
+                width: 58,
+              }}
+            >
+              <StarIcon />
+              <Text style={styles.eventDetails}>Interested</Text>
+            </View>
+            <View style={styles.interestedFriendsContainer}>
+              {event.interestedFriends &&
+                event.interestedFriends.slice(0, 3).map((friend, idx) => (
+                  <View key={idx} style={styles.friendInfo}>
+                    <Image
+                      source={{ uri: friend.profileImage }}
+                      style={styles.friendProfileImage}
+                    />
+                  </View>
+                ))}
+              {event.interestedFriends &&
+                event.interestedFriends.length > 3 && (
+                  <Text style={styles.seeMore}>
+                    +{event.interestedFriends.length - 3} more
+                  </Text>
+                )}
+            </View>
+          </View>
+          <ButtonContained
+            title="Going?"
+            cusStyle={{
+              alignSelf: "center",
+              borderRadius: 50,
+              paddingHorizontal: 20,
+            }}
+            onPress={handleGoing}
           />
-        </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 };
 
@@ -333,21 +372,13 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#f5f5f5",
+    paddingTop: Constants.statusBarHeight + 30,
   },
   topSection: {
     marginBottom: 20,
     position: "relative",
   },
-  backButton: {
-    position: "absolute",
-    left: 0,
-    top: 10,
-    zIndex: 1001,
-  },
-  backText: {
-    fontSize: 16,
-    color: "#6A74FB",
-  },
+
   pickerWrapper: {
     width: "50%",
     alignSelf: "center",
@@ -392,17 +423,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
-  searchIcon: {
-    marginLeft: 20,
-    marginTop: 13,
-  },
   box: {
     backgroundColor: "#fff",
     borderRadius: 10,
-    overflow: "hidden",
     marginBottom: 20,
     width: width - 40,
-    height: 520,
+    paddingBottom: 10,
+
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
@@ -412,10 +439,8 @@ const styles = StyleSheet.create({
   imageBackground: {
     height: 180,
     justifyContent: "flex-end",
-  },
-  imageBackgroundStyle: {
-    borderTopLeftRadius: 10,
-    borderTopRightRadius: 10,
+    paddingHorizontal: 1,
+    paddingBottom: 10,
   },
   artistInfo: {
     flexDirection: "row",
@@ -432,21 +457,24 @@ const styles = StyleSheet.create({
   },
   boxContent: {
     padding: 15,
+    paddingTop: 5,
+    paddingLeft: 10,
   },
   eventDetailsContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 5,
+    borderBottomWidth: 1,
+    paddingBottom: 10,
+    borderBottomColor: "#DADADA",
   },
   eventDetails: {
-    marginLeft: 5,
     fontSize: 11,
     color: "#3D4353",
     fontWeight: "400",
-    fontFamily: "Poppins",
+    fontFamily: "poppins",
   },
   eventDetailsLink: {
-    marginLeft: 5,
     fontSize: 11,
     color: "#3D4353",
     fontWeight: "500",
@@ -454,41 +482,23 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     width: width * 0.4,
   },
-  separator: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
-    marginVertical: 10,
-  },
   iconSmall: {
     width: 24,
     height: 24,
   },
-  iconSmall2: {
-    width: 24,
-    height: 24,
-  },
-  iconContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 10,
-  },
-  iconWrapper: {
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  iconLabel: {
-    fontSize: 9,
-    color: "#3D4353",
-    fontWeight: "600",
-    marginTop: 5,
-  },
   attendingFriendsContainer: {
     flexDirection: "row",
-    marginTop: 5,
+    marginTop: 10,
+    marginRight: 10,
   },
   interestedFriendsContainer: {
     flexDirection: "row",
-    marginTop: 5,
+    alignItems: "center",
+    paddingLeft: 10,
+  },
+  friendInfo: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   friendProfileImage: {
     width: 30,
@@ -496,37 +506,15 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     marginRight: 5,
   },
-  friendInfo: {
-    alignItems: "center",
-    marginRight: 10,
-  },
-  profileUrlText: {
-    fontSize: 10,
+  friendName: {
+    fontSize: 12,
     color: "#3D4353",
-    textAlign: "center",
   },
-  goingButton: {
-    marginTop: 10,
-    backgroundColor: "#3F407C",
-    paddingVertical: 15,
-    borderRadius: 4,
-    alignItems: "center",
-    width: "50%",
-    alignSelf: "center",
-  },
-  goingButtonText: {
-    color: "#fff",
-    fontSize: 13,
-    fontWeight: "bold",
-  },
-  starButton: {
-    position: "absolute",
-    top: 190,
-    right: 20,
-  },
-  icon: {
-    width: 20,
-    height: 20,
+  seeMore: {
+    fontSize: 12,
+    color: "#3D4353",
+    fontWeight: "500",
+    fontFamily: "poppins",
   },
 });
 

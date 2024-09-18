@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import React from "react";
-import { Image, Text, View } from "react-native";
+import { Image, LogBox, Text, View } from "react-native";
 import { Colors } from "react-native/Libraries/NewAppScreen";
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
@@ -12,6 +12,8 @@ import { Colors } from "react-native/Libraries/NewAppScreen";
 // }
 
 export default function TabLayout() {
+  LogBox.ignoreAllLogs();
+
   return (
     <Tabs
       screenOptions={{

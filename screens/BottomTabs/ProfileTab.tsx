@@ -14,6 +14,9 @@ import {
 } from "react-native";
 import { supabase } from "../../supabaseClient";
 import GroupUsersIcon from "@/svg/groupUsers";
+import PostCard from "@/components/card/post";
+import ProfilePostCard from "@/components/card/profilePost";
+import MusicIcon from "@/svg/music";
 
 const ProfilePage = () => {
   const [currentTab, setCurrentTab] = useState("going"); // State for tab selection
@@ -129,7 +132,7 @@ const ProfilePage = () => {
         {/* Tabs */}
         <View style={styles.eventsTabsContainer}>
           <TouchableOpacity
-            style={styles.eventTab}
+            style={[styles.eventTab, { paddingLeft: 20 }]}
             onPress={() => handleTabChange("going")}
           >
             <Text
@@ -164,19 +167,9 @@ const ProfilePage = () => {
             <ActivityIndicator size="large" color="#0000ff" />
           ) : currentTab === "going" ? (
             eventsGoing.length > 0 ? (
-              eventsGoing.map((event: any) => {
+              eventsGoing.map((event: any, index: number) => {
                 return (
-                  <View key={event.id} style={styles.eventBox}>
-                    <Image
-                      source={{ uri: event.image_url }}
-                      style={styles.eventImage}
-                    />
-                    <Text style={styles.eventName}>{event.name}</Text>
-                    <Text
-                      style={styles.eventDetails}
-                    >{`${event.date} @ ${event.time}`}</Text>
-                    <Text style={styles.eventVenue}>{event.venue}</Text>
-                  </View>
+                  <ProfilePostCard key={event.id} event={event} index={index} />
                 );
               })
             ) : (
@@ -186,19 +179,21 @@ const ProfilePage = () => {
             )
           ) : currentTab === "interested" ? (
             eventsInterested.length > 0 ? (
-              eventsInterested.map((event: any) => (
-                <View key={event.id} style={styles.eventBox}>
-                  <Text style={styles.eventName}>{event.name}</Text>
-                  <Text
-                    style={styles.eventDetails}
-                  >{`${event.date} @ ${event.time}`}</Text>
-                  <Text style={styles.eventVenue}>{event.venue}</Text>
-                </View>
+              eventsInterested.map((event: any, index: number) => (
+                <ProfilePostCard
+                  key={event.id}
+                  event={event}
+                  index={index}
+                  isInterested={true}
+                />
               ))
             ) : (
-              <Text style={styles.noEventsText}>
-                No events you're interested in at this time.
-              </Text>
+              <View style={styles.noEventsContainer}>
+                <Text style={[styles.noEventsText, { marginTop: 0 }]}>
+                  Go and find events you’re interested in!
+                </Text>
+                <MusicIcon />
+              </View>
             )
           ) : (
             <ActivityIndicator size="large" color="#0000ff" />
@@ -250,12 +245,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   eventsTabsContainer: {
+    alignSelf: "flex-start",
     flexDirection: "row",
     marginBottom: 5,
   },
   eventTab: {
     paddingHorizontal: 40,
     paddingVertical: 40,
+    paddingBottom: 10,
   },
   eventTabActive: {
     color: "#3B429F",
@@ -326,6 +323,15 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 100,
     borderRadius: 10,
+  },
+  noEventsContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    height: 200,
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    gap: 10,
   },
 });
 

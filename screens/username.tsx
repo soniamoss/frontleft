@@ -17,6 +17,9 @@ import {
 
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
+import UserIcon from "@/svg/user";
+import UserCheckIcon from "@/svg/userCheck";
+import UserExclaimIcon from "@/svg/userExclaim";
 
 const UsernameScreen = ({ navigation }: any) => {
   const [username, setUsername] = useState("");
@@ -133,7 +136,7 @@ const UsernameScreen = ({ navigation }: any) => {
             gap: 10,
           }}
         >
-          <AntDesign name="user" size={30} color="#3B429F" />
+          <UserIcon />
           <Text style={styles.text}>Create a username</Text>
         </View>
         <TextInput
@@ -144,8 +147,6 @@ const UsernameScreen = ({ navigation }: any) => {
             setIsUsernameCheck(false);
             if (text.length < 3) {
               setError("Please enter at least 3 letters for your username.");
-            } else if (!text.match(/^[a-zA-Z]+$/)) {
-              setError("Please use letters only for your username.");
             } else {
               setError("");
             }
@@ -165,11 +166,12 @@ const UsernameScreen = ({ navigation }: any) => {
                 marginBottom: 30,
               }}
             >
-              <SimpleLineIcons
+              {/* <SimpleLineIcons
                 name={isUsernameAvailable ? "user-following" : "user-unfollow"}
                 size={20}
                 color={isUsernameAvailable ? "#009C5F" : "#DF5A76"}
-              />
+              /> */}
+              {isUsernameAvailable ? <UserCheckIcon /> : <UserExclaimIcon />}
               <Text
                 style={[
                   styles.textSmaller,

@@ -20,7 +20,6 @@ const ButtonContained: React.FC<ButtonContainedProps> = ({
         borderColor: "#3F407C",
         borderWidth: 1,
         backgroundColor: "#3F407C",
-        flex: 1,
         padding: 11,
         borderRadius: 5,
         ...cusStyle,
@@ -34,6 +33,7 @@ const ButtonContained: React.FC<ButtonContainedProps> = ({
           textAlign: "center",
           fontWeight: "600",
           fontFamily: "Poppins",
+          zIndex: 1,
           fontSize: 14,
         }}
       >

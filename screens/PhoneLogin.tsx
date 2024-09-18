@@ -230,6 +230,7 @@ import {
 
 import { supabase } from "../supabaseClient";
 import { Colors } from "@/constants/Colors";
+import Toast from "react-native-toast-message";
 
 // interface PhoneLoginScreenProps {
 //   navigation: any;
@@ -330,7 +331,11 @@ const PhoneLoginScreen = () => {
     if (error) {
       Alert.alert("Error", error.message);
     } else {
-      Alert.alert("Success", "Phone number verified!");
+      Toast.show({
+        type: "successToast",
+        text1: `Phone number verified!`,
+        position: "bottom",
+      });
       checkOnboardingStatus();
     }
   };

@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
+import UserIcon from "@/svg/user";
 
 const FirstNameScreen = () => {
   const [firstName, setFirstName] = useState("");
@@ -32,7 +33,7 @@ const FirstNameScreen = () => {
 
       if (length > maxLength) {
         setFontSize(
-          Math.max(minSize, 36 - (length - maxLength) * sizeReductionFactor)
+          Math.max(minSize, 20 - (length - maxLength) * sizeReductionFactor)
         );
       } else {
         setFontSize(36); // Reset to default size if length is within limit
@@ -93,7 +94,7 @@ const FirstNameScreen = () => {
             gap: 10,
           }}
         >
-          <AntDesign name="user" size={30} color="#3B429F" />
+          <UserIcon />
           <Text style={styles.text}>What's your first name?</Text>
         </View>
         <TextInput
@@ -101,10 +102,16 @@ const FirstNameScreen = () => {
           placeholder=""
           value={firstName}
           onChangeText={(text) => {
-            if (text.length >= 3) {
-              setError("");
-            } else {
+            const regex = /^[a-zA-Z\s]*$/;
+
+            if (!text) {
               setError("Please enter at least 3 letters for your name.");
+            } else if (!regex.test(text)) {
+              setError("Please use letters only for your name.");
+            } else if (text.length < 3) {
+              setError("Please enter at least 3 letters for your name.");
+            } else {
+              setError("");
             }
             setFirstName(text);
           }}

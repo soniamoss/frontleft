@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
+import UserIcon from "@/svg/user";
 
 const LastNameScreen = ({ navigation }: any) => {
   const [lastName, setlastName] = useState("");
@@ -92,7 +93,7 @@ const LastNameScreen = ({ navigation }: any) => {
             gap: 10,
           }}
         >
-          <AntDesign name="user" size={30} color="#3B429F" />
+          <UserIcon />
           <Text style={styles.text}>What's your last name?</Text>
         </View>
         <TextInput
@@ -100,11 +101,19 @@ const LastNameScreen = ({ navigation }: any) => {
           placeholder=""
           value={lastName}
           onChangeText={(text) => {
-            if (text.length >= 3) {
-              setError("");
-            } else {
+            // only allow letters and spaces
+            const regex = /^[a-zA-Z\s]*$/;
+
+            if (!text) {
               setError("Please enter at least 3 letters for your name.");
+            } else if (!regex.test(text)) {
+              setError("Please use letters only for your name.");
+            } else if (text.length < 3) {
+              setError("Please enter at least 3 letters for your name.");
+            } else {
+              setError("");
             }
+
             setlastName(text);
           }}
         />
