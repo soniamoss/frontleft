@@ -17,9 +17,9 @@ const ButtonContained: React.FC<ButtonContainedProps> = ({
   return (
     <TouchableOpacity
       style={{
-        borderColor: "#3F407C",
+        borderColor: disabled ? "#F5F5F5" : "#3F407C",
         borderWidth: 1,
-        backgroundColor: "#3F407C",
+        backgroundColor: disabled ? "#F5F5F5" : "#3F407C",
         padding: 11,
         borderRadius: 5,
         ...cusStyle,
@@ -29,9 +29,9 @@ const ButtonContained: React.FC<ButtonContainedProps> = ({
     >
       <Text
         style={{
-          color: "#fff",
+          color: disabled ? "#000" : "#fff",
           textAlign: "center",
-          fontWeight: "600",
+          fontWeight: "500",
           fontFamily: "Poppins",
           zIndex: 1,
           fontSize: 14,

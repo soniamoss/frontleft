@@ -1,26 +1,66 @@
-import { router } from "expo-router";
-import moment from "moment";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
 import Constants from "expo-constants";
-
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
-  Dimensions,
   Image,
   ImageBackground,
-  Linking,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ActivityIndicator,
-  FlatList,
 } from "react-native";
+import FriendsTabScreen from "../findFriends";
+import FriendsListTabScreen from "../friendList";
+import RequestTabScreen from "../requests";
+import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
+import ExploreFriendsTab from "../Explore/Friends";
 import DropDownPicker from "react-native-dropdown-picker";
-import { supabase } from "../../supabaseClient";
-import PostCard from "@/components/card/post";
+import ExploreFoFriendsTab from "../Explore/FoFriends";
 
-const ExploreTab = () => {
+type FriendsTopTabParamList = {
+  "Friends of Friends": undefined;
+  "My Friends": undefined;
+  Requests: undefined;
+};
+
+const FriendsTopTab = createMaterialTopTabNavigator<FriendsTopTabParamList>();
+
+const FriendsTab: React.FC = () => (
+  <ImageBackground
+    style={{
+      flex: 1,
+      paddingTop: Constants.statusBarHeight,
+    }}
+    source={require("../../assets/images/friends-back.png")}
+  >
+    <FriendsTopTab.Navigator tabBar={(props) => <CustomTabBar {...props} />}>
+      <FriendsTopTab.Screen
+        name="Friends of Friends"
+        component={ExploreFriendsTab}
+        options={{
+          tabBarLabel: "Friends of Friends",
+        }}
+      />
+      <FriendsTopTab.Screen
+        name="My Friends"
+        component={ExploreFoFriendsTab}
+        options={{
+          tabBarLabel: "My Friends",
+        }}
+      />
+    </FriendsTopTab.Navigator>
+  </ImageBackground>
+);
+
+const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
+  state,
+  descriptors,
+  navigation,
+}) => {
+  const openSearchPage = () => {
+    navigation.navigate("SearchScreen");
+  };
+
   const [open, setOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState("Los Angeles");
   const [items, setItems] = useState([
@@ -28,185 +68,15 @@ const ExploreTab = () => {
     { label: "New York", value: "New York" },
     { label: "San Francisco", value: "San Francisco" },
   ]);
-  const [currentTab, setCurrentTab] = useState("Friends of Friends");
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [friends, setFriends] = useState<string[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>(null);
-
-  console.log("friends", friends);
-
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        // Fetch the authenticated user's data
-        const { data: userData, error: userError } =
-          await supabase.auth.getUser();
-        if (userError || !userData.user) {
-          console.error("Error fetching user data 01:", userError);
-          return;
-        }
-
-        setCurrentUser(userData.user);
-
-        // Fetch friends and events after the user is set
-        await fetchFriends(userData.user.id);
-        await fetchEvents(userData.user);
-      } catch (error) {
-        console.error("Error during initial data load:", error);
-      }
-    };
-
-    loadUserData();
-  }, [selectedLocation, currentTab]);
-
-  const fetchFriends = async (userId: string) => {
-    try {
-      const { data: friendsData, error } = await supabase
-        .from("friendships")
-        .select("friend_id, user_id")
-        .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
-        .eq("status", "accepted");
-
-      if (error) {
-        console.error("Error fetching friends:", error);
-      } else {
-        // Extracting the friend's ID based on which field doesn't match the userId
-        const friendIds = friendsData.map((friend: any) =>
-          friend.user_id === userId ? friend.friend_id : friend.user_id
-        );
-        console.log("Friends Data:", friendIds);
-        setFriends(friendIds);
-      }
-    } catch (error) {
-      console.error("Error fetching friends:", error);
-    }
-  };
-
-  const fetchEvents = async (user: any) => {
-    setLoading(true);
-    try {
-      const { data: eventsData, error: eventsError } = await supabase
-        .from("events")
-        .select("*")
-        .eq("city", selectedLocation);
-
-      if (eventsError) {
-        console.error("Error fetching events:", eventsError);
-      } else {
-        const upcomingEvents = eventsData
-          .filter((event: any) =>
-            moment(`${event.date} ${event.time}`).isAfter(moment())
-          )
-          .sort((a: any, b: any) =>
-            moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`))
-          );
-
-        const eventIds = upcomingEvents.map((event: any) => event.id);
-        const { data: attendeesData, error: attendeesError } = await supabase
-          .from("event_attendees")
-          .select(
-            "event_id, status, user_id, profiles!event_attendees_user_id_fkey(profile_image_url, first_name)"
-          )
-          .in("event_id", eventIds)
-          .or("status.eq.going,status.eq.interested");
-
-        if (attendeesError) {
-          console.error("Error fetching attendees:", attendeesError);
-        } else {
-          const eventsWithAttendees = upcomingEvents.map((event: any) => {
-            const attendingFriends = attendeesData
-              .filter(
-                (att: any) =>
-                  att.event_id === event.id &&
-                  att.status === "going" &&
-                  (friends.includes(att.user_id) || att.user_id === user.id)
-              )
-              .map((att: any) => ({
-                profileImage: att.profiles.profile_image_url,
-                firstName: att.profiles.first_name,
-              }));
-
-            const interestedFriends = attendeesData
-              .filter(
-                (att: any) =>
-                  att.event_id === event.id &&
-                  att.status === "interested" &&
-                  (friends.includes(att.user_id) || att.user_id === user.id)
-              )
-              .map((att: any) => ({
-                profileImage: att.profiles.profile_image_url,
-                firstName: att.profiles.first_name,
-              }));
-
-            return { ...event, attendingFriends, interestedFriends };
-          });
-
-          const eventsWithFriends = eventsWithAttendees.filter(
-            (event: any) =>
-              event.attendingFriends.length > 0 ||
-              event.interestedFriends.length > 0
-          );
-          const eventsWithoutFriends = eventsWithAttendees.filter(
-            (event: any) =>
-              event.attendingFriends.length === 0 &&
-              event.interestedFriends.length === 0
-          );
-
-          const finalSortedEvents = [
-            ...eventsWithFriends.sort((a: any, b: any) =>
-              moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`))
-            ),
-            ...eventsWithoutFriends.sort((a: any, b: any) =>
-              moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`))
-            ),
-          ];
-
-          setEvents(finalSortedEvents);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching events:", error);
-    }
-    setLoading(false);
-  };
-
-  const handleTabChange = (tab: string) => {
-    setCurrentTab(tab);
-  };
-
-  const openSearchPage = () => {
-    router.push("/SearchScreen");
-  };
-
-  const openEventDetailsPage = (event: any) => {
-    const eventAttendees = {
-      attendingFriends: event.attendingFriends,
-      interestedFriends: event.interestedFriends,
-    };
-
-    router.push({
-      pathname: "/EventDetailsScreen",
-      params: {
-        event: JSON.stringify(event),
-        eventAttendees: JSON.stringify(eventAttendees),
-      },
-    });
-  };
-
-  const openLocationInMaps = (venue: string, city: string) => {
-    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-      `${venue}, ${city}`
-    )}`;
-    Linking.openURL(url).catch((err) =>
-      console.error("Couldn't open Google Maps", err)
-    );
-  };
 
   return (
-    <ImageBackground
-      style={styles.container}
-      source={require("../../assets/images/friends-back.png")}
+    <View
+      style={{
+        padding: 20,
+        paddingTop: 0,
+        paddingBottom: 0,
+        zIndex: 1000,
+      }}
     >
       <View style={styles.pickerWrapper}>
         <DropDownPicker
@@ -219,81 +89,92 @@ const ExploreTab = () => {
           containerStyle={styles.pickerContainer}
           style={styles.picker}
           placeholder="Select a location"
-          zIndex={1000}
+          zIndex={10000}
           textStyle={styles.dropdownText}
         />
       </View>
+      <View style={styles.container}>
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const label = options.tabBarLabel as string;
 
-      <View style={styles.tabContainer}>
-        <View style={styles.tabWrapper}>
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => handleTabChange("Friends of Friends")}
-          >
-            <Text
-              style={
-                currentTab === "Friends of Friends"
-                  ? styles.tabTextActive
-                  : styles.tabTextInactive
-              }
+          const isFocused = state.index === index;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: "tabPress",
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!isFocused && !event.defaultPrevented) {
+              navigation.navigate(route.name);
+            }
+          };
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              style={[
+                styles.tabButton,
+                {
+                  width: "50%",
+                },
+              ]}
+              onPress={onPress}
             >
-              Friends of Friends
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.tabButton}
-            onPress={() => handleTabChange("My Friends")}
-          >
-            <Text
-              style={
-                currentTab === "My Friends"
-                  ? styles.tabTextActive
-                  : styles.tabTextInactive
-              }
-            >
-              My Friends
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <TouchableOpacity onPress={openSearchPage}>
+              <Text
+                style={[
+                  styles.tabText,
+                  { color: isFocused ? "#6A74FB" : "#9CA9B7" },
+                ]}
+              >
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+
+        <TouchableOpacity
+          onPress={openSearchPage}
+          style={{
+            position: "absolute",
+            right: 0,
+            top: 10,
+          }}
+        >
           <Image
             source={require("@/assets/images/search.png")}
             style={styles.searchIcon}
           />
         </TouchableOpacity>
       </View>
-
-      <FlatList
-        data={events}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item, index }) => (
-          <PostCard
-            event={item}
-            index={index}
-            openEventDetailsPage={openEventDetailsPage}
-            openLocationInMaps={openLocationInMaps}
-          />
-        )}
-        contentContainerStyle={styles.eventsContainer}
-        showsVerticalScrollIndicator={false}
-      />
-    </ImageBackground>
+    </View>
   );
 };
 
-const { width } = Dimensions.get("window");
-
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f5f5f5",
-    paddingTop: Constants.statusBarHeight,
+    flexDirection: "row",
+    borderRadius: 10,
+    paddingHorizontal: 5,
+    paddingVertical: 5,
+    position: "relative",
+  },
+  tabButton: {
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 5,
+  },
+  tabText: {
+    fontSize: 13,
+    fontWeight: "bold",
+    fontFamily: "Poppins",
   },
   pickerWrapper: {
     width: "50%",
     alignSelf: "center",
-    marginBottom: 10,
     zIndex: 1000,
   },
   pickerContainer: {
@@ -310,121 +191,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 15,
   },
-  tabContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 15,
-  },
-  tabWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  tabButton: {
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderRadius: 5,
-  },
-  tabTextActive: {
-    color: "#6A74FB",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  tabTextInactive: {
-    color: "#9E9E9E",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  searchIcon: {
-    left: 20,
-    top: 13,
-  },
-  eventsContainer: {
-    paddingVertical: 20,
-    alignItems: "center",
-  },
-  box: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    marginBottom: 20,
-    width: width - 40,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-  },
-  imageBackground: {
-    height: 180,
-    justifyContent: "flex-end",
-    paddingHorizontal: 1,
-    paddingBottom: 10,
-  },
-  artistInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 14,
-    paddingTop: 8,
-  },
-  artistName: {
-    fontFamily: "poppins",
-    fontWeight: "700",
-    fontSize: 19,
-    color: "#3D4353",
-  },
-  boxContent: {
-    padding: 15,
-  },
-  eventDetailsContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  eventDetails: {
-    marginLeft: 5,
-    fontSize: 11,
-    color: "#3D4353",
-    fontWeight: "500",
-    fontFamily: "poppins",
-  },
-  eventDetailsLink: {
-    marginLeft: 5,
-    fontSize: 11,
-    color: "#3D4353",
-    fontWeight: "500",
-    flexShrink: 1,
-    flexWrap: "wrap",
-    width: width * 0.4,
-  },
-  iconSmall: {
-    width: 24,
-    height: 24,
-  },
-  attendingFriendsContainer: {
-    flexDirection: "row",
-    marginTop: 10,
-    marginRight: 10,
-  },
-  interestedFriendsContainer: {
-    flexDirection: "row",
-    marginTop: 10,
-  },
-  friendInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 10,
-  },
-  friendProfileImage: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    marginRight: 5,
-  },
-  friendName: {
-    fontSize: 12,
-    color: "#3D4353",
-  },
 });
 
-export default ExploreTab;
+export default FriendsTab;

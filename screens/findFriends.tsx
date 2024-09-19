@@ -239,7 +239,7 @@ export default function ShowContacts() {
               : requests.findIndex((r) => r?.friend_id === item.user_id) >= 0;
 
             return (
-              <View key={index} style={styles.profileContainer}>
+              <View style={styles.profileContainer}>
                 <Image
                   source={{
                     uri:

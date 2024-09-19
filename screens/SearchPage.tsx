@@ -1,10 +1,18 @@
 import { router } from "expo-router";
+import Constants from "expo-constants";
+import AntDesign from "@expo/vector-icons/AntDesign";
+
 import moment from "moment";
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
+  FlatList,
   Image,
+  ImageBackground,
   Keyboard,
+  KeyboardAvoidingView,
+  Linking,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,6 +21,12 @@ import {
   View,
 } from "react-native";
 import { supabase } from "../supabaseClient";
+import BackButton from "@/components/backButton";
+import SearchIcon from "@/svg/search";
+import CrossCircleIcon from "@/svg/crossCover";
+import PinIcon from "@/svg/pin";
+import CalendarIcon from "@/svg/calendar";
+import ButtonContained from "@/components/buttons/contained";
 
 const SearchPage = ({ navigation }: any) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,9 +34,31 @@ const SearchPage = ({ navigation }: any) => {
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFocused, setIsFocused] = useState(false);
+  const [bottomPosition, setBottomPosition] = useState(20);
+  const [modal, setModal] = useState(true);
 
   useEffect(() => {
     fetchAllEvents();
+  }, []);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      "keyboardDidShow",
+      (e) => {
+        setBottomPosition(e.endCoordinates.height + 10); // Move the circle up when the keyboard is shown
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      "keyboardDidHide",
+      () => {
+        setBottomPosition(20); // Reset the circle to its original position
+      }
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
   }, []);
 
   const fetchAllEvents = async () => {
@@ -97,6 +133,7 @@ const SearchPage = ({ navigation }: any) => {
     setSearchQuery("");
     setIsFocused(false); // Reset to default size when cancel is pressed
     Keyboard.dismiss(); // Dismiss the keyboard
+    router.push("../");
   };
 
   const handleEventPress = (event: any) => {
@@ -106,25 +143,34 @@ const SearchPage = ({ navigation }: any) => {
     });
   };
 
+  const handleContactUs = () => {
+    const email = "faryar48@gmail.com";
+    const subject = "[Doost]: I’d like to add an event!";
+    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
+    Linking.openURL(mailtoUrl);
+  };
+
   return (
-    <View style={styles.container}>
+    <ImageBackground
+      style={styles.container}
+      source={require("../assets/images/friends-back.png")}
+    >
+      <BackButton />
       <View>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backText}>{"< Back"}</Text>
-        </TouchableOpacity>
         {/* New White Box Below Search Bar */}
         <View style={styles.whiteBox}>
           <View style={styles.searchBoxContainer}>
             <View
               style={[
                 styles.searchBox,
-                { width: isFocused || searchQuery.length > 0 ? "80%" : "100%" },
+                {
+                  width: isFocused || searchQuery.length > 0 ? "80%" : "100%",
+                },
               ]}
             >
-              <Image
-                source={require("@/assets/images/search.png")}
-                style={styles.searchIcon}
-              />
+              <View style={styles.searchIcon}>
+                <SearchIcon />
+              </View>
               <TextInput
                 style={styles.searchInput}
                 placeholder="Search events"
@@ -135,13 +181,12 @@ const SearchPage = ({ navigation }: any) => {
               />
               {searchQuery.length > 0 && (
                 <TouchableOpacity
-                  onPress={() => setSearchQuery("")}
+                  onPress={() => {
+                    setSearchQuery("");
+                  }}
                   style={styles.clearButton}
                 >
-                  <Image
-                    source={require("@/assets/images/clear.png")}
-                    style={styles.iconSmall}
-                  />
+                  <CrossCircleIcon />
                 </TouchableOpacity>
               )}
             </View>
@@ -157,51 +202,87 @@ const SearchPage = ({ navigation }: any) => {
         </View>
       </View>
 
-      {loading ? (
-        <Text style={styles.loadingText}>Loading events...</Text>
-      ) : (
-        <View style={styles.eventsContainer}>
-          <Text style={styles.recentSearches}>Recent Searches</Text>
-          <ScrollView style={styles.scrollView}>
-            {filteredEvents.map((event: any, index) => (
-              <TouchableOpacity
-                key={index}
-                onPress={() => handleEventPress(event)}
-              >
-                <View style={styles.eventCard}>
-                  <View style={styles.eventInfo}>
-                    <Text style={styles.eventTitle}>
-                      {highlightText(event.artist, searchQuery)}
+      <View style={styles.eventsContainer}>
+        <Text style={styles.recentSearches}>Recent Searches</Text>
+        <FlatList
+          data={filteredEvents}
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => handleEventPress(item)}>
+              <View style={styles.eventCard}>
+                <View style={styles.eventInfo}>
+                  <Text style={styles.eventTitle}>
+                    {highlightText(item.artist, searchQuery)}
+                  </Text>
+                  <View style={styles.eventDetailsContainer}>
+                    <CalendarIcon />
+                    <Text style={styles.eventDetails}>
+                      {moment(`${item.date} ${item.time}`).format(
+                        "MMM DD @ hh:mm A"
+                      )}
                     </Text>
-                    <View style={styles.eventDetailsContainer}>
-                      <Image
-                        source={require("@/assets/images/calender.png")}
-                        style={styles.iconSmall}
-                      />
-                      <Text style={styles.eventDetails}>
-                        {moment(`${event.date} ${event.time}`).format(
-                          "MMM DD @ hh:mm A"
-                        )}
-                      </Text>
-                      <Image
-                        source={require("@/assets/images/pin.png")}
-                        style={styles.iconSmall}
-                      />
-                      <Text style={styles.eventDetails}>
-                        {highlightText(event.venue, searchQuery)}
-                      </Text>
-                    </View>
+                    <PinIcon />
+                    <Text style={styles.eventDetails}>
+                      {highlightText(item.venue, searchQuery)}
+                    </Text>
                   </View>
                 </View>
-              </TouchableOpacity>
-            ))}
-            {filteredEvents.length === 0 && (
-              <Text style={styles.noResultsText}>No events found</Text>
-            )}
-          </ScrollView>
+              </View>
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item, index) => index.toString()}
+          contentContainerStyle={styles.scrollView}
+          ListEmptyComponent={() =>
+            loading && <Text style={styles.loadingText}>Loading events...</Text>
+          }
+        />
+      </View>
+      {modal && (
+        <View
+          style={{
+            position: "absolute",
+            borderRadius: 20,
+
+            bottom: bottomPosition,
+            left: 20,
+            right: 20,
+            backgroundColor: "#fff",
+
+            padding: 20,
+          }}
+        >
+          <TouchableOpacity
+            onPress={() => setModal(false)}
+            style={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+            }}
+          >
+            <AntDesign name="close" size={20} color="#838383" />
+          </TouchableOpacity>
+          <Text
+            style={{
+              fontSize: 19,
+              fontWeight: "bold",
+              marginBottom: 10,
+              fontFamily: "poppins",
+              color: "#3D4353",
+            }}
+          >
+            Don’t see your event? Add it!
+          </Text>
+          <ButtonContained
+            title="Add"
+            cusStyle={{
+              borderRadius: 50,
+              alignSelf: "center",
+              paddingHorizontal: 50,
+            }}
+            onPress={handleContactUs}
+          />
         </View>
       )}
-    </View>
+    </ImageBackground>
   );
 };
 
@@ -209,6 +290,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F9F9F9",
+    paddingTop: Constants.statusBarHeight + 20,
   },
   backText: {
     color: "#6A74FB",
@@ -239,9 +321,11 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   clearButton: {
-    padding: 5,
+    // padding: 5,
   },
   cancelButton: {
     position: "absolute",
@@ -273,6 +357,7 @@ const styles = StyleSheet.create({
   },
   eventsContainer: {
     marginTop: 20, // Ensures space between the search box and "Recent Searches" text
+    flex: 1,
   },
   recentSearches: {
     fontSize: 15,
@@ -318,6 +403,7 @@ const styles = StyleSheet.create({
     flexShrink: 1,
     flexWrap: "wrap",
     width: Dimensions.get("window").width * 0.6,
+    fontFamily: "poppins",
   },
   highlight: {
     backgroundColor: "#8E9BFD",
