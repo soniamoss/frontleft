@@ -56,10 +56,21 @@ const FirstNameScreen = () => {
   };
 
   const handleNext = async () => {
+    const regex = /^[a-zA-Z\s]*$/;
+
     if (!firstName) {
-      setError("Please enter your first name");
+      setError("Please enter at least 3 letters for your name.");
       return;
+    } else if (!regex.test(firstName)) {
+      setError("Please use letters only for your name.");
+      return;
+    } else if (firstName.length < 3) {
+      setError("Please enter at least 3 letters for your name.");
+      return;
+    } else {
+      setError("");
     }
+
     await setFirstNameInDB();
     router.push("/LastNameScreen");
   };

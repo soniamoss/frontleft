@@ -212,6 +212,8 @@ import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
 import PhoneInput from "react-native-phone-number-input";
 import OTPInputView from "@twotalltotems/react-native-otp-input";
+import { OtpInput } from "react-native-otp-entry";
+
 import Constants from "expo-constants";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -219,6 +221,7 @@ import {
   Alert,
   Image,
   Keyboard,
+  Linking,
   ScrollView,
   StyleSheet,
   Text,
@@ -244,12 +247,12 @@ interface Data {
 
 const PhoneLoginScreen = () => {
   const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("789012");
+  const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [data, setData] = useState<Data>({
     phone: "",
     countryCode: "",
-    phNumWithCode: "+923022321605",
+    phNumWithCode: "+",
   });
 
   const handleSendOtp = async () => {
@@ -261,9 +264,19 @@ const PhoneLoginScreen = () => {
 
     const { error }: any = await supabase.auth.signInWithOtp({ phone });
     if (error) {
-      Alert.alert("Error", error.message);
+      // Alert.alert("Error", error.message);
+      Toast.show({
+        type: "tomatoToast",
+        text1: error.message,
+        position: "bottom",
+      });
     } else {
       setIsOtpSent(true);
+      Toast.show({
+        type: "successToast",
+        text1: `Verification code on its way!`,
+        position: "bottom",
+      });
     }
   };
 
@@ -329,7 +342,11 @@ const PhoneLoginScreen = () => {
       type: "sms",
     });
     if (error) {
-      Alert.alert("Error", error.message);
+      Toast.show({
+        type: "tomatoToast",
+        text1: error.message,
+        position: "bottom",
+      });
     } else {
       Toast.show({
         type: "successToast",
@@ -408,21 +425,42 @@ const PhoneLoginScreen = () => {
               <Text style={styles.textsmaller}>
                 By continuing, you agree to our
               </Text>
-              <TouchableOpacity>
-                <Text style={[styles.textsmaller, { color: "#6A74FB" }]}>
+              <TouchableOpacity
+                onPress={() => Linking.openURL("https://supabase.com/privacy")}
+              >
+                <Text
+                  style={[
+                    styles.textsmaller,
+                    { color: "#3B429F", textDecorationLine: "underline" },
+                  ]}
+                >
                   {" "}
                   Privacy
                 </Text>
               </TouchableOpacity>
-              <TouchableOpacity>
-                <Text style={[styles.textsmaller, { color: "#6A74FB" }]}>
+              <TouchableOpacity
+                onPress={() => Linking.openURL("https://supabase.com/privacy")}
+              >
+                <Text
+                  style={[
+                    styles.textsmaller,
+                    { color: "#3B429F", textDecorationLine: "underline" },
+                  ]}
+                >
                   {" "}
                   Policy
                 </Text>
               </TouchableOpacity>
               <Text style={styles.textsmaller}>and </Text>
-              <TouchableOpacity>
-                <Text style={[styles.textsmaller, { color: "#6A74FB" }]}>
+              <TouchableOpacity
+                onPress={() => Linking.openURL("https://supabase.com/terms")}
+              >
+                <Text
+                  style={[
+                    styles.textsmaller,
+                    { color: "#3B429F", textDecorationLine: "underline" },
+                  ]}
+                >
                   Terms of Service.
                 </Text>
               </TouchableOpacity>
@@ -450,7 +488,7 @@ const PhoneLoginScreen = () => {
               <Text style={styles.text2}>Verify your number</Text>
             </View>
 
-            <OTPInputView
+            {/* <OTPInputView
               style={{ width: "80%", height: 150 }}
               pinCount={6}
               autoFocusOnLoad
@@ -460,6 +498,24 @@ const PhoneLoginScreen = () => {
                 // console.log(`Code is ${code}, you are good to go!`);
                 setOtp(code);
                 Keyboard.dismiss();
+              }}
+            /> */}
+
+            <OtpInput
+              numberOfDigits={6}
+              focusColor="#3B429F"
+              focusStickBlinkingDuration={500}
+              onTextChange={(text) => console.log(text)}
+              onFilled={(text) => {
+                setOtp(text);
+                Keyboard.dismiss();
+              }}
+              textInputProps={{
+                accessibilityLabel: "One-Time Password",
+              }}
+              theme={{
+                containerStyle: styles.otpContainer,
+                pinCodeContainerStyle: styles.pinCodeContainer,
               }}
             />
 
@@ -562,8 +618,8 @@ const styles = StyleSheet.create({
   otpContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    width: "80%",
-    marginBottom: 180, // Reduced marginBottom
+    width: "100%",
+    marginBottom: 50, // Reduced marginBottom
   },
   otpBox: {
     width: 50,
@@ -594,6 +650,10 @@ const styles = StyleSheet.create({
 
   borderStyleHighLighted: {
     borderColor: "#3F407C",
+  },
+
+  pinCodeContainer: {
+    borderRadius: 2,
   },
 });
 

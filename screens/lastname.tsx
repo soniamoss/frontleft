@@ -56,11 +56,21 @@ const LastNameScreen = ({ navigation }: any) => {
   };
 
   const handleNext = async () => {
+    const regex = /^[a-zA-Z\s]*$/;
+
     if (!lastName) {
-      console.error("Last name is required.");
-      setError("Last name is required.");
+      setError("Please enter at least 3 letters for your name.");
       return;
+    } else if (!regex.test(lastName)) {
+      setError("Please use letters only for your name.");
+      return;
+    } else if (lastName.length < 3) {
+      setError("Please enter at least 3 letters for your name.");
+      return;
+    } else {
+      setError("");
     }
+
     await setLastNameInDB();
     router.push("/EmailScreen");
   };

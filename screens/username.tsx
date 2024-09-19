@@ -64,8 +64,11 @@ const UsernameScreen = ({ navigation }: any) => {
   };
 
   const handleNext = async () => {
-    if (!username) {
+    if (username.length < 3) {
+      setError("Please enter at least 3 letters for your username.");
       return;
+    } else {
+      setError("");
     }
 
     if (!isUsernameAvailable) {

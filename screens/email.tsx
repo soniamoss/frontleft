@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import Constants from "expo-constants";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Image,
   Keyboard,
@@ -18,6 +18,28 @@ import { supabase } from "../supabaseClient";
 
 const EmailScreen = () => {
   const [email, setEmail] = useState("");
+  const [fontSize, setFontSize] = useState(36); // Default font size
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // Adjust font size based on the length of the text
+    const calculateFontSize = () => {
+      const maxLength = 20; // Maximum length for which the font size is large
+      const minSize = 16; // Minimum font size
+      const sizeReductionFactor = 0.5; // Amount to reduce font size for each character above the max length
+      const length = email.length;
+
+      if (length > maxLength) {
+        setFontSize(
+          Math.max(minSize, 20 - (length - maxLength) * sizeReductionFactor)
+        );
+      } else {
+        setFontSize(36); // Reset to default size if length is within limit
+      }
+    };
+
+    calculateFontSize();
+  }, [email]);
 
   const setEmailInDB = async () => {
     const user = await getCurrentUser();
@@ -29,10 +51,17 @@ const EmailScreen = () => {
   };
 
   const handleNext = async () => {
+    const regex = /\S+@\S+\.\S+/;
     if (!email) {
-      console.error("Email is required.");
+      setError("Please enter your email.");
       return;
+    } else if (!regex.test(email)) {
+      setError("Please enter a valid email.");
+      return;
+    } else {
+      setError("");
     }
+
     await setEmailInDB();
     router.push("/UsernameScreen");
   };
@@ -55,6 +84,7 @@ const EmailScreen = () => {
         <TouchableOpacity style={styles.closeButton} onPress={handleExit}>
           <Ionicons name="close" size={24} color="black" />
         </TouchableOpacity>
+
         <View
           style={{
             marginBottom: 30,
@@ -71,12 +101,26 @@ const EmailScreen = () => {
           <Text style={styles.text}>What's your email?</Text>
         </View>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
           placeholder=""
           value={email}
-          onChangeText={setEmail}
+          onChangeText={(text) => {
+            // email validation
+            const regex = /\S+@\S+\.\S+/;
+
+            if (!text) {
+              setError("Please enter your email.");
+            } else if (!regex.test(text)) {
+              setError("Please enter a valid email.");
+            } else {
+              setError("");
+            }
+
+            setEmail(text);
+          }}
         />
-        <Text style={styles.textsmaller}>How can we reach you</Text>
+        {error && <Text style={styles.error}>{error}</Text>}
+        <Text style={styles.textSmaller}>How can we reach you</Text>
         <TouchableOpacity style={styles.button} onPress={handleNext}>
           <Text style={styles.buttonText}>Continue</Text>
         </TouchableOpacity>
@@ -146,6 +190,24 @@ const styles = StyleSheet.create({
   image: {
     width: 40, // Adjust width as needed
     height: 40, // Adjust height as needed
+  },
+
+  error: {
+    color: "#DF5A76",
+    fontFamily: "poppins",
+    fontSize: 11,
+    fontWeight: "400",
+    marginBottom: 30,
+  },
+
+  textSmaller: {
+    fontSize: 12,
+    fontWeight: "bold",
+    fontFamily: "poppins",
+    textAlign: "center",
+    color: "#3B429F",
+    marginBottom: 16,
+    zIndex: 1,
   },
 });
 
