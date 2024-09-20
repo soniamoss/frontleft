@@ -10,7 +10,7 @@ type ButtonContainedProps = {
 
 const ButtonContained: React.FC<ButtonContainedProps> = ({
   title = "",
-  onPress = () => {},
+  onPress,
   disabled = false,
   cusStyle = {},
 }) => {

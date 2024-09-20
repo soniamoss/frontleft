@@ -19,11 +19,11 @@ import {
 import DropDownPicker from "react-native-dropdown-picker";
 import { supabase } from "../../supabaseClient";
 import PostCard from "@/components/card/post";
+import useExplore from "@/hooks/useExplore";
 
 const ExploreFriendsTab = () => {
-  const [selectedLocation, setSelectedLocation] = useState("Los Angeles");
+  const { selectedLocation, setSelectedLocation } = useExplore();
 
-  const [currentTab, setCurrentTab] = useState("Friends of Friends");
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [friends, setFriends] = useState<string[]>([]);
@@ -51,7 +51,7 @@ const ExploreFriendsTab = () => {
     };
 
     loadUserData();
-  }, [selectedLocation, currentTab]);
+  }, [selectedLocation]);
 
   const fetchFriends = async (userId: string) => {
     try {
@@ -206,6 +206,13 @@ const ExploreFriendsTab = () => {
         )}
         contentContainerStyle={styles.eventsContainer}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          loading ? (
+            <ActivityIndicator color="#3F407C" size="large" />
+          ) : (
+            <View />
+          )
+        }
       />
     </ImageBackground>
   );

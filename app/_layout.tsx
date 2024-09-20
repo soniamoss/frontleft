@@ -10,6 +10,7 @@ import Toast from "react-native-toast-message";
 
 import React, { useEffect } from "react";
 import { Text, View } from "react-native";
+import ExploreProvider from "@/contexts/exploreContext";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -118,9 +119,11 @@ export default function RootLayout() {
 function RootLayoutNav() {
   return (
     <ThemeProvider value={DefaultTheme}>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-      </Stack>
+      <ExploreProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        </Stack>
+      </ExploreProvider>
       <Toast config={toastConfig} />
       <StatusBar style="dark" />
     </ThemeProvider>

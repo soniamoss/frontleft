@@ -1,7 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -19,6 +19,9 @@ import ProfilePostCard from "@/components/card/profilePost";
 import MusicIcon from "@/svg/music";
 import ButtonContained from "@/components/buttons/contained";
 import BackButton from "@/components/backButton";
+import { getCurrentUser } from "@/services/userService";
+import { addFriend } from "@/services/friendshipService";
+import Toast from "react-native-toast-message";
 
 const ProfilePage = () => {
   const params = useLocalSearchParams();
@@ -28,14 +31,54 @@ const ProfilePage = () => {
   const [profileData, setProfileData] = useState<any>({});
   const [eventsGoing, setEventsGoing] = useState<any>([]);
   const [eventsInterested, setEventsInterested] = useState([]);
-  const [isFriend, setIsFriend] = useState(false);
+  const [contacts, setContacts] = useState<any>([]);
+  const [initalLoad, setInitalLoad] = useState(false);
 
   useEffect(() => {
     fetchProfileData();
+    fetchContacts();
   }, []);
+
+  const handleAddFriend = async () => {
+    const user = await getCurrentUser();
+
+    const result = await addFriend(user.id, userId);
+    if (result.success) {
+      Toast.show({
+        type: "successToast",
+        text1: "Friend request sent!",
+        position: "bottom",
+      });
+
+      fetchContacts();
+    } else {
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
+    }
+  };
+
+  const fetchContacts = async () => {
+    const user = await getCurrentUser();
+
+    const { data, error }: any = await supabase
+      .from("friendships")
+      .select("*")
+      .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+
+    if (error) {
+      console.error("Error fetching contacts:", error);
+    } else {
+      console.log("Contacts Data:", data);
+      setContacts(data);
+    }
+  };
 
   const fetchProfileData = async () => {
     try {
+      setInitalLoad(true);
       const user: any = await supabase.auth.getUser();
 
       const { data: profile, error: profileError }: any = await supabase
@@ -50,22 +93,19 @@ const ProfilePage = () => {
         .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
         .eq("status", "accepted");
 
-      const isFr =
-        friendsData?.findIndex(
-          (friend: any) =>
-            friend.user_id === user.id || friend.friend_id === user.id
-        ) !== -1;
+      const isFr = friendsData?.find(
+        (friend: any) =>
+          friend.user_id === user.id || friend.friend_id === user.id
+      );
 
-      console.log("isFirend", isFr);
-
-      if (!isFr) {
+      if (isFr?.status !== "accepted") {
         setProfileData({
           profilePicture: profile.profile_image_url,
           name: `${profile.first_name} ${profile.last_name}`,
           username: `@${profile.username}`,
           numOfFriends: friendsData.length,
         });
-        setIsFriend(false);
+        // setIsFriend(false);
         setLoading(false);
         return;
       }
@@ -111,6 +151,8 @@ const ProfilePage = () => {
       }
     } catch (error) {
       console.error("Error fetching profile data:", error);
+    } finally {
+      setInitalLoad(false);
     }
     setLoading(false);
   };
@@ -119,11 +161,28 @@ const ProfilePage = () => {
     setCurrentTab(tab);
   };
 
+  const isFriend = useMemo(() => {
+    return contacts?.find(
+      (contact: any) =>
+        contact?.friend_id === userId || contact?.user_id === userId
+    );
+  }, [contacts, userId]);
+
+  if (initalLoad) {
+    return (
+      <ImageBackground
+        style={[styles.container, { justifyContent: "center" }]}
+        source={require("../assets/images/friends-back.png")}
+      >
+        <BackButton />
+
+        <ActivityIndicator size="large" color="#0000ff" />
+      </ImageBackground>
+    );
+  }
   return (
     <ImageBackground
-      style={{
-        flex: 1,
-      }}
+      style={{ flex: 1 }}
       source={require("../assets/images/friends-back.png")}
     >
       <BackButton />
@@ -136,23 +195,42 @@ const ProfilePage = () => {
           />
           <View style={{ flex: 1 }}>
             <Text style={styles.name}>{profileData.name}</Text>
-            <Text style={styles.username}>{profileData.username}</Text>
             <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
             >
-              <GroupUsersIcon />
-              <Text style={styles.numOfFriends}>
-                {profileData.numOfFriends} friends
-              </Text>
+              <View>
+                <Text style={styles.username}>{profileData.username}</Text>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
+                >
+                  <GroupUsersIcon />
+                  <Text style={styles.numOfFriends}>
+                    {profileData.numOfFriends} friends
+                  </Text>
+                </View>
+              </View>
+              {isFriend?.status !== "accepted" &&
+                isFriend?.status !== "declined" && (
+                  <ButtonContained
+                    title={isFriend?.status === "pending" ? "Pending" : "Add"}
+                    cusStyle={{
+                      borderRadius: 50,
+                      alignSelf: "flex-end",
+                    }}
+                    onPress={() => handleAddFriend()}
+                    disabled={
+                      isFriend?.status === "pending" ||
+                      loading ||
+                      isFriend?.status === "declined"
+                    }
+                  />
+                )}
             </View>
           </View>
-          <ButtonContained
-            title="Add"
-            cusStyle={{
-              borderRadius: 50,
-              alignSelf: "flex-end",
-            }}
-          />
         </View>
         {/* Tabs */}
         <View style={styles.eventsTabsContainer}>
@@ -193,7 +271,7 @@ const ProfilePage = () => {
         >
           {loading && <ActivityIndicator size="large" color="#0000ff" />}
 
-          {!loading && isFriend && (
+          {!loading && isFriend?.status === "accepted" && (
             <React.Fragment>
               {currentTab === "going" &&
                 (eventsGoing.length > 0 ? (
@@ -233,7 +311,7 @@ const ProfilePage = () => {
             </React.Fragment>
           )}
 
-          {!isFriend && !loading && (
+          {!loading && isFriend?.status !== "accepted" && (
             <View style={styles.noEventsContainer}>
               <Text style={[styles.noEventsText, { marginTop: 0 }]}>
                 You gotta be friends to see their events!
@@ -290,7 +368,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 80,
     flexDirection: "row",
-    padding: 20,
+    padding: 10,
+    paddingVertical: 20,
     alignItems: "center",
     gap: 10,
   },

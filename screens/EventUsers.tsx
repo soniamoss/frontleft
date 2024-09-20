@@ -15,6 +15,9 @@ import {
 import BackButton from "@/components/backButton";
 import { AntDesign } from "@expo/vector-icons";
 import { getCurrentUser } from "@/services/userService";
+import Toast from "react-native-toast-message";
+import { addFriend } from "@/services/friendshipService";
+import { supabase } from "@/supabaseClient";
 
 const EventDetails = () => {
   const params = useLocalSearchParams();
@@ -24,6 +27,7 @@ const EventDetails = () => {
   const [currentTab, setCurrentTab] = useState(ct);
   const [currentUser, setCurrentUser] = useState({});
   const [requests, setRequests] = useState([]);
+  const [contacts, setContacts] = useState<any>([]);
 
   // const data = JSON.parse(eventAttendeesString);
 
@@ -35,6 +39,7 @@ const EventDetails = () => {
     };
 
     getUser();
+    fetchContacts();
   }, []);
 
   const data = useMemo(() => {
@@ -44,6 +49,43 @@ const EventDetails = () => {
 
     return dt[currentTab];
   }, [eventAttendeesString, currentTab]);
+
+  const handleAddFriend = async (userId: string) => {
+    const user = await getCurrentUser();
+
+    const result = await addFriend(user.id, userId);
+    if (result.success) {
+      Toast.show({
+        type: "successToast",
+        text1: "Friend request sent!",
+        position: "bottom",
+      });
+
+      fetchContacts();
+    } else {
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
+    }
+  };
+
+  const fetchContacts = async () => {
+    const user = await getCurrentUser();
+
+    const { data, error }: any = await supabase
+      .from("friendships")
+      .select("*")
+      .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+
+    if (error) {
+      console.error("Error fetching contacts:", error);
+    } else {
+      console.log("Contacts Data:", data);
+      setContacts(data);
+    }
+  };
 
   return (
     <ImageBackground
@@ -88,9 +130,10 @@ const EventDetails = () => {
         <FlatList
           data={data}
           renderItem={({ item }) => {
-            const isAdded = item?.invite
-              ? false
-              : requests.findIndex((r) => r?.friend_id === item.user_id) >= 0;
+            const isAdded = contacts.find(
+              (r) =>
+                r?.friend_id === item.user_id || r?.user_id === item.user_id
+            );
             return (
               <>
                 <TouchableOpacity
@@ -129,25 +172,27 @@ const EventDetails = () => {
                     </View>
                   </View>
 
-                  {currentUser.id !== item.user_id && (
-                    <TouchableOpacity
-                      style={[
-                        styles.buttonAdd,
-                        isAdded && { backgroundColor: "#F5F5F5" },
-                      ]}
-                      // onPress={() => handleAddFriend(item.user_id)}
-                      // disabled={isAdded}
-                    >
-                      <Text
+                  {currentUser.id !== item.user_id &&
+                    isAdded?.status !== "accepted" &&
+                    isAdded?.status !== "declined" && (
+                      <TouchableOpacity
                         style={[
-                          styles.buttonTextAdd,
-                          isAdded && { color: "#3F407C" },
+                          styles.buttonAdd,
+                          isAdded && { backgroundColor: "#F5F5F5" },
                         ]}
+                        onPress={() => handleAddFriend(item.user_id)}
+                        disabled={isAdded}
                       >
-                        {isAdded ? "Pending" : "Add"}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                        <Text
+                          style={[
+                            styles.buttonTextAdd,
+                            isAdded && { color: "#3F407C" },
+                          ]}
+                        >
+                          {isAdded?.status === "pending" ? "Pending" : "Add"}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                 </TouchableOpacity>
               </>
             );

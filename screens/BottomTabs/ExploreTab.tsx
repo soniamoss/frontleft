@@ -16,6 +16,7 @@ import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs
 import ExploreFriendsTab from "../Explore/Friends";
 import DropDownPicker from "react-native-dropdown-picker";
 import ExploreFoFriendsTab from "../Explore/FoFriends";
+import useExplore from "@/hooks/useExplore";
 
 type FriendsTopTabParamList = {
   "Friends of Friends": undefined;
@@ -62,12 +63,13 @@ const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
   };
 
   const [open, setOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState("Los Angeles");
   const [items, setItems] = useState([
     { label: "Los Angeles", value: "Los Angeles" },
     { label: "New York", value: "New York" },
     { label: "San Francisco", value: "San Francisco" },
   ]);
+
+  const { selectedLocation, setSelectedLocation } = useExplore();
 
   return (
     <View
