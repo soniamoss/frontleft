@@ -6,7 +6,8 @@ import { ScreenContainer } from "@/screens/Intro/components/ScreenContainer";
 import { Spacer } from "@/screens/Intro/components/Spacer";
 import { router } from "expo-router";
 import React from "react";
-import { StyleSheet, Text } from "react-native";
+import { ImageBackground, StyleSheet, Text, View } from "react-native";
+import Constants from "expo-constants";
 
 const IntroScreen = () => {
   const onPress = () => {
@@ -16,30 +17,37 @@ const IntroScreen = () => {
   };
 
   return (
-    <ScreenContainer>
+    <ImageBackground
+      style={styles.container}
+      source={require("../../assets/images/friends-back.png")}
+    >
       <HeaderText>Doost</HeaderText>
-      <PaddedView>
-        <Text style={styles.textsmaller}>Where events and friends meet</Text>
-        <Spacer />
-        <Spacer />
-        <Spacer />
-        <Spacer />
-        <Spacer />
-        <Spacer />
-        <Spacer />
-        <Spacer />
-        <Spacer />
-        <Spacer />
+      <Text style={styles.textsmaller}>Where events and friends meet</Text>
+
+      <View
+        style={{
+          position: "absolute",
+          bottom: 70,
+          left: 20,
+          right: 20,
+          alignItems: "center",
+          gap: 40,
+        }}
+      >
         <PrivacyAgreement />
-        <Spacer />
-        <Spacer />
         <DoostButton onPress={onPress} />
-      </PaddedView>
-    </ScreenContainer>
+      </View>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    paddingTop: Constants.statusBarHeight + 200,
+  },
   textsmaller: {
     fontSize: 16,
     fontWeight: "bold",

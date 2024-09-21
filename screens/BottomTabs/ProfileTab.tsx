@@ -162,7 +162,10 @@ const ProfilePage = () => {
         </View>
 
         {/* Events Section */}
-        <ScrollView style={styles.eventsContainer}>
+        <ScrollView
+          style={styles.eventsContainer}
+          showsVerticalScrollIndicator={false}
+        >
           {loading ? (
             <ActivityIndicator size="large" color="#0000ff" />
           ) : currentTab === "going" ? (
@@ -211,6 +214,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 40,
+    paddingBottom: 0,
   },
   profilePicture: {
     width: 80,

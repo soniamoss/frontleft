@@ -25,9 +25,9 @@ import StarIcon from "@/svg/star";
 import ButtonContained from "@/components/buttons/contained";
 import StarFillIcon from "@/svg/starfill";
 import Toast from "react-native-toast-message";
+import GoingButton from "@/components/buttons/going";
 
 const EventDetails = () => {
-  const user = getCurrentUser();
   const params = useLocalSearchParams();
   const eventString = params?.event || "";
   const eventAttendeesString = params?.eventAttendees || "";
@@ -43,10 +43,42 @@ const EventDetails = () => {
   const [currentTab, setCurrentTab] = useState("Friends of Friends");
   const [attendeesData, setAttendeesData] = useState(eventAttendees);
   const [loading, setLoading] = useState(!eventAttendees);
+  const [friends, setFriends] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchEventAttendees();
+    // fetchEventAttendees();
+
+    const getData = async () => {
+      const user = await getCurrentUser();
+      await fetchFriends(user.id);
+      await fetchEventAttendees();
+    };
+
+    getData();
   }, []);
+
+  const fetchFriends = async (userId: string) => {
+    try {
+      const { data: friendsData, error } = await supabase
+        .from("friendships")
+        .select("friend_id, user_id")
+        .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
+        .eq("status", "accepted");
+
+      if (error) {
+        console.error("Error fetching friends:", error);
+      } else {
+        // Extracting the friend's ID based on which field doesn't match the userId
+        const friendIds = friendsData.map((friend: any) =>
+          friend.user_id === userId ? friend.friend_id : friend.user_id
+        );
+        console.log("Friends Data:", friendIds);
+        setFriends(friendIds);
+      }
+    } catch (error) {
+      console.error("Error fetching friends:", error);
+    }
+  };
 
   const fetchEventAttendees = async () => {
     setLoading(true);
@@ -64,7 +96,12 @@ const EventDetails = () => {
         console.error("Error fetching event attendees:", error);
       } else {
         const attendingFriends = fetchedAttendees
-          .filter((att: any) => att.status === "going")
+          .filter(
+            (att: any) =>
+              att.status === "going" &&
+              (friends.includes(att.profiles.user_id) ||
+                att.profiles.user_id === user.id)
+          )
           .map((att: any) => ({
             user_id: att.profiles.user_id,
             firstName: att.profiles.first_name,
@@ -82,7 +119,12 @@ const EventDetails = () => {
         }
 
         const interestedFriends = fetchedAttendees
-          .filter((att: any) => att.status === "interested")
+          .filter(
+            (att: any) =>
+              att.status === "interested" &&
+              (friends.includes(att.profiles.user_id) ||
+                att.profiles.user_id === user.id)
+          )
           .map((att: any) => ({
             user_id: att.profiles.user_id,
             firstName: att.profiles.first_name,
@@ -103,12 +145,15 @@ const EventDetails = () => {
       }
     } catch (error) {
       console.error("Error fetching event attendees:", error);
+    } finally {
+      setLoading(false);
     }
     setLoading(false);
   };
 
   const handleGoing = async () => {
     try {
+      setLoading(true);
       const user = await getCurrentUser();
       const { data, error }: any = await supabase
         .from("event_attendees")
@@ -116,6 +161,7 @@ const EventDetails = () => {
 
       if (error) {
         if (error.code === "23505") {
+          console.log(error);
           Toast.show({
             type: "tomatoToast",
             text1: "You're already going to the show!",
@@ -140,11 +186,14 @@ const EventDetails = () => {
       }
     } catch (err) {
       console.error("Error going to event:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleInterested = async () => {
     try {
+      setLoading(true);
       const user = await getCurrentUser();
       const { data, error }: any = await supabase
         .from("event_attendees")
@@ -178,6 +227,8 @@ const EventDetails = () => {
       }
     } catch (err) {
       console.error("Error marking interest in event:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -188,6 +239,86 @@ const EventDetails = () => {
     Linking.openURL(url).catch((err) =>
       console.error("Couldn't open Google Maps", err)
     );
+  };
+
+  const unInterested = async () => {
+    try {
+      setLoading(true);
+      const user = await getCurrentUser();
+      console.log(event.id, user.id);
+      const { data, error }: any = await supabase
+        .from("event_attendees")
+        .delete()
+        .eq("event_id", event.id)
+        .eq("user_id", user.id)
+        .eq("status", "interested");
+
+      console.log(data, error);
+
+      if (error) {
+        Toast.show({
+          type: "tomatoToast",
+          text1: "That didn’t work, please try again!",
+          position: "bottom",
+        });
+      } else {
+        setInterestedStatus(false);
+        fetchEventAttendees(); // Refresh the attendees list
+        Toast.show({
+          type: "successToast",
+          text1: `Someone lost interest`,
+          position: "bottom",
+        });
+      }
+    } catch (err) {
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNotGoing = async () => {
+    try {
+      setLoading(true);
+      const user = await getCurrentUser();
+      console.log(event.id, user.id);
+      const { data, error }: any = await supabase
+        .from("event_attendees")
+        .delete()
+        .eq("event_id", event.id)
+        .eq("user_id", user.id)
+        .eq("status", "going");
+
+      console.log(data, error);
+
+      if (error) {
+        Toast.show({
+          type: "tomatoToast",
+          text1: "That didn’t work, please try again!",
+          position: "bottom",
+        });
+      } else {
+        setGoingStatus(false);
+        fetchEventAttendees(); // Refresh the attendees list
+        Toast.show({
+          type: "successToast",
+          text1: `Aww you’re not going :(`,
+          position: "bottom",
+        });
+      }
+    } catch (err) {
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   // if (loading) {
@@ -255,12 +386,23 @@ const EventDetails = () => {
           <Text style={styles.artistName}>
             {event.artist || "Unknown Artist"}
           </Text>
-          <TouchableOpacity
-            onPress={handleInterested}
-            disabled={interestedStatus}
-          >
-            {interestedStatus ? <StarFillIcon /> : <StarIcon />}
-          </TouchableOpacity>
+          {interestedStatus ? (
+            <TouchableOpacity
+              onPress={unInterested}
+              disabled={loading}
+              style={{ opacity: loading ? 0.5 : 1 }}
+            >
+              <StarFillIcon />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={handleInterested}
+              disabled={loading}
+              style={{ opacity: loading ? 0.5 : 1 }}
+            >
+              <StarIcon />
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={{ padding: 10 }}>
@@ -314,10 +456,26 @@ const EventDetails = () => {
                 width: 58,
               }}
             >
-              <CheckIcon />
+              <View
+                style={{
+                  height: 30,
+                  width: 30,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <CheckIcon />
+              </View>
               <Text style={styles.eventDetails}>Going</Text>
             </View>
-            <View style={styles.interestedFriendsContainer}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                flex: 1,
+                gap: 3,
+              }}
+            >
               {attendeesData.attendingFriends &&
                 attendeesData.attendingFriends
                   .slice(0, 3)
@@ -336,20 +494,20 @@ const EventDetails = () => {
                     +{attendeesData.attendingFriends.length - 3} more
                   </Text>
                 )}
-              <TouchableOpacity
-                onPress={() => {
-                  router.push({
-                    pathname: "/EventUsers",
-                    params: {
-                      eventAttendees: JSON.stringify(attendeesData),
-                      currentTab: "attendingFriends",
-                    },
-                  });
-                }}
-              >
-                <Text style={styles.seeMore}>See more &#62;</Text>
-              </TouchableOpacity>
             </View>
+            <TouchableOpacity
+              onPress={() => {
+                router.push({
+                  pathname: "/EventUsers",
+                  params: {
+                    eventAttendees: JSON.stringify(attendeesData),
+                    currentTab: "attendingFriends",
+                  },
+                });
+              }}
+            >
+              <Text style={styles.seeMore}>See more &#62;</Text>
+            </TouchableOpacity>
           </View>
           <View
             style={{
@@ -367,10 +525,26 @@ const EventDetails = () => {
                 width: 58,
               }}
             >
-              <StarIcon />
+              <View
+                style={{
+                  height: 30,
+                  width: 30,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <StarIcon />
+              </View>
               <Text style={styles.eventDetails}>Interested</Text>
             </View>
-            <View style={styles.interestedFriendsContainer}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                flex: 1,
+                gap: 3,
+              }}
+            >
               {attendeesData.interestedFriends &&
                 attendeesData.interestedFriends
                   .slice(0, 3)
@@ -389,32 +563,33 @@ const EventDetails = () => {
                     +{attendeesData.interestedFriends.length - 3} more
                   </Text>
                 )}
-
-              <TouchableOpacity
-                onPress={() => {
-                  router.push({
-                    pathname: "/EventUsers",
-                    params: {
-                      eventAttendees: JSON.stringify(attendeesData),
-                      currentTab: "interestedFriends",
-                    },
-                  });
-                }}
-              >
-                <Text style={styles.seeMore}>See more &#62;</Text>
-              </TouchableOpacity>
             </View>
+            <TouchableOpacity
+              onPress={() => {
+                router.push({
+                  pathname: "/EventUsers",
+                  params: {
+                    eventAttendees: JSON.stringify(attendeesData),
+                    currentTab: "interestedFriends",
+                  },
+                });
+              }}
+            >
+              <Text style={styles.seeMore}>See more &#62;</Text>
+            </TouchableOpacity>
           </View>
 
-          <ButtonContained
-            title="Going?"
+          <GoingButton
+            goingStatus={goingStatus}
             cusStyle={{
               alignSelf: "center",
               borderRadius: 50,
               paddingHorizontal: 20,
             }}
-            onPress={handleGoing}
-            disabled={goingStatus}
+            onPress={() => {
+              goingStatus ? handleNotGoing() : handleGoing();
+            }}
+            disabled={loading}
           />
         </View>
       </View>

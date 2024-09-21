@@ -227,6 +227,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f5f5f5",
     marginTop: -142,
     paddingTop: 140,
+    paddingBottom: 0,
   },
   pickerWrapper: {
     width: "50%",

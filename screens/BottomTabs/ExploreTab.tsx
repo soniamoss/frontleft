@@ -37,14 +37,14 @@ const FriendsTab: React.FC = () => (
     <FriendsTopTab.Navigator tabBar={(props) => <CustomTabBar {...props} />}>
       <FriendsTopTab.Screen
         name="Friends of Friends"
-        component={ExploreFriendsTab}
+        component={ExploreFoFriendsTab}
         options={{
           tabBarLabel: "Friends of Friends",
         }}
       />
       <FriendsTopTab.Screen
         name="My Friends"
-        component={ExploreFoFriendsTab}
+        component={ExploreFriendsTab}
         options={{
           tabBarLabel: "My Friends",
         }}
