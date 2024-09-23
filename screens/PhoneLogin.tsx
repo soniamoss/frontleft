@@ -252,7 +252,7 @@ const PhoneLoginScreen = () => {
   const [data, setData] = useState<Data>({
     phone: "",
     countryCode: "",
-    phNumWithCode: "+923022321605",
+    phNumWithCode: "",
   });
 
   const handleSendOtp = async () => {

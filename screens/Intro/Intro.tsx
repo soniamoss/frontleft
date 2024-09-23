@@ -11,7 +11,7 @@ import Constants from "expo-constants";
 
 const IntroScreen = () => {
   const onPress = () => {
-    // if (true) return router.push("/EmailScreen");
+    // if (true) return router.push("/UsernameScreen");
 
     router.push("/PhoneLoginScreen"); // Navigate to the phone login screen
   };
