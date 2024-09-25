@@ -22,6 +22,7 @@ import BackButton from "@/components/backButton";
 import { getCurrentUser } from "@/services/userService";
 import { addFriend } from "@/services/friendshipService";
 import Toast from "react-native-toast-message";
+import { sendNotifications } from "@/utils/notification";
 
 const ProfilePage = () => {
   const params = useLocalSearchParams();
@@ -42,6 +43,18 @@ const ProfilePage = () => {
   const handleAddFriend = async () => {
     const user = await getCurrentUser();
 
+    const res = await sendNotifications({
+      userId: userId,
+      title: "Friend Request",
+      body: `${user?.user_metadata?.fullName} sent you a friend request!`,
+      data: {
+        url: "(tabs)/Friends",
+        params: { screen: "Requests" },
+      },
+    });
+
+    return;
+
     const result = await addFriend(user.id, userId);
     if (result.success) {
       Toast.show({
@@ -49,8 +62,16 @@ const ProfilePage = () => {
         text1: "Friend request sent!",
         position: "bottom",
       });
-
       fetchContacts();
+      const res = await sendNotifications({
+        userId: userId,
+        title: "Friend Request",
+        body: `${user.name} sent you a friend request!`,
+        data: {
+          url: "(tabs)/Friends",
+          params: { screen: "Requests" },
+        },
+      });
     } else {
       Toast.show({
         type: "tomatoToast",

@@ -18,6 +18,7 @@ import { getCurrentUser } from "@/services/userService";
 import Toast from "react-native-toast-message";
 import { addFriend } from "@/services/friendshipService";
 import { supabase } from "@/supabaseClient";
+import { sendNotifications } from "@/utils/notification";
 
 const EventDetails = () => {
   const params = useLocalSearchParams();
@@ -59,6 +60,16 @@ const EventDetails = () => {
         type: "successToast",
         text1: "Friend request sent!",
         position: "bottom",
+      });
+
+      const res = await sendNotifications({
+        userId: userId,
+        title: "Friend Request",
+        body: `${user?.user_metadata?.fullName} sent you a friend request!`,
+        data: {
+          url: "(tabs)/Friends",
+          params: { screen: "Requests" },
+        },
       });
 
       fetchContacts();

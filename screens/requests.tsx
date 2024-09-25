@@ -21,6 +21,7 @@ import SearchBar from "@/components/SearchBar";
 import { AntDesign } from "@expo/vector-icons";
 import ButtonOutlined from "@/components/buttons/outlined";
 import Toast from "react-native-toast-message";
+import { sendNotifications } from "@/utils/notification";
 
 export default function ShowContacts() {
   const [matchingProfiles, setMatchingProfiles] = useState([]);
@@ -46,6 +47,7 @@ export default function ShowContacts() {
         `
         *,
         profiles!fk_user_id (
+          user_id,
           first_name,
           last_name,
           username
@@ -70,6 +72,7 @@ export default function ShowContacts() {
         `
         *,
         profiles!fk_friend_id (
+          user_id,
           first_name,
           last_name,
           username
@@ -129,8 +132,13 @@ export default function ShowContacts() {
     }
   };
 
-  const handleAcceptRequest = async (requestId: any, name: any) => {
+  const handleAcceptRequest = async (
+    requestId: any,
+    name: any,
+    friendId: any
+  ) => {
     // Update the friendship status to "accepted"
+    const user = await getCurrentUser();
     const { error }: any = await supabase
       .from("friendships")
       .update({ status: "accepted" })
@@ -150,6 +158,18 @@ export default function ShowContacts() {
         type: "successToast",
         text1: `You and ${name} are now friends!`,
         position: "bottom",
+      });
+
+      const res = await sendNotifications({
+        userId: friendId,
+        title: "Friend Request",
+        body: `${name} accepted your friend request!`,
+        data: {
+          url: "/FirendsProfile",
+          params: {
+            user_id: user.id,
+          },
+        },
       });
 
       fetchRequests();
@@ -184,6 +204,30 @@ export default function ShowContacts() {
     }
   };
 
+  const handleDeleteRequest = async (requestId: any) => {
+    const { error }: any = await supabase
+      .from("friendships")
+      .delete()
+      .eq("id", requestId);
+
+    if (error) {
+      console.error("Error deleting friendship:", error);
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
+    } else {
+      Toast.show({
+        type: "successToast",
+        text1: "Friend request deleted",
+        position: "bottom",
+      });
+
+      fetchRequests();
+    }
+  };
+
   return (
     <ImageBackground
       style={{
@@ -203,8 +247,14 @@ export default function ShowContacts() {
         <View style={styles.headerContainer}>
           <Text style={styles.text}>
             Requests{" "}
-            {(!loading || friendRequests.length > 0) &&
-              `(${friendRequests.length})`}
+            {(!loading ||
+              (currentTab === "sent" && sentRequests.length > 0) ||
+              (currentTab === "received" && friendRequests.length > 0)) &&
+              `(${
+                currentTab === "received"
+                  ? friendRequests.length
+                  : sentRequests.length
+              })`}
           </Text>
         </View>
 
@@ -265,7 +315,11 @@ export default function ShowContacts() {
                   <ButtonOutlined
                     title="Accept"
                     onPress={() =>
-                      handleAcceptRequest(item.id, item?.profiles?.username)
+                      handleAcceptRequest(
+                        item.id,
+                        item?.profiles?.username,
+                        item?.profiles?.user_id
+                      )
                     }
                     cusStyle={{
                       borderRadius: 50,
@@ -350,11 +404,7 @@ export default function ShowContacts() {
                           },
                           {
                             text: "Remove",
-                            onPress: () =>
-                              handleDeclineRequest(
-                                item.id,
-                                item?.profiles?.username
-                              ),
+                            onPress: () => handleDeleteRequest(item.id),
                             style: "destructive",
                           },
                         ]

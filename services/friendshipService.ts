@@ -11,6 +11,8 @@ export async function addFriend(userId: any, friendId: any) {
       return { success: false, message: error.message };
     }
 
+    
+
     return { success: true, data };
   } catch (err: any) {
     console.error("Unexpected error:", err);

@@ -40,10 +40,11 @@ const EventDetails = () => {
   const [goingStatus, setGoingStatus] = useState(false);
   const [interestedStatus, setInterestedStatus] = useState(false);
 
-  const [currentTab, setCurrentTab] = useState("Friends of Friends");
+  const [currentTab, setCurrentTab] = useState(params?.tab || "friends");
   const [attendeesData, setAttendeesData] = useState(eventAttendees);
   const [loading, setLoading] = useState(!eventAttendees);
   const [friends, setFriends] = useState<any[]>([]);
+  const [friendsOfFriends, setFriendsOfFriends] = useState<any[]>([]);
 
   useEffect(() => {
     // fetchEventAttendees();
@@ -51,11 +52,10 @@ const EventDetails = () => {
     const getData = async () => {
       const user = await getCurrentUser();
       await fetchFriends(user.id);
-      await fetchEventAttendees();
     };
 
     getData();
-  }, []);
+  }, [currentTab]);
 
   const fetchFriends = async (userId: string) => {
     try {
@@ -72,15 +72,56 @@ const EventDetails = () => {
         const friendIds = friendsData.map((friend: any) =>
           friend.user_id === userId ? friend.friend_id : friend.user_id
         );
-        console.log("Friends Data:", friendIds);
+
         setFriends(friendIds);
+        if (currentTab === "friends") {
+          await fetchEventAttendees(friendIds);
+        } else {
+          await getFriendsofFriends(friendIds);
+        }
       }
     } catch (error) {
       console.error("Error fetching friends:", error);
     }
   };
 
-  const fetchEventAttendees = async () => {
+  const getFriendsofFriends = async (friendIds: string[]) => {
+    try {
+      // Fetch friends of each friend from the provided friendIds array
+      const { data: friendsOfFriendsData, error } = await supabase
+        .from("friendships")
+        .select("friend_id, user_id")
+        .or(
+          friendIds.map((id) => `user_id.eq.${id},friend_id.eq.${id}`).join(",")
+        )
+        .eq("status", "accepted");
+
+      if (error) {
+        console.error("Error fetching friends of friends:", error);
+        return;
+      }
+
+      // Extract the friend IDs while excluding the original friends (friendIds)
+      const friendsOfFriends = friendsOfFriendsData.map((relation: any) =>
+        friendIds.includes(relation.user_id)
+          ? relation.friend_id
+          : relation.user_id
+      );
+
+      // Remove duplicates by creating a Set
+      const uniqueFriendsOfFriends = [...new Set(friendsOfFriends)].filter(
+        (id) => !friendIds.includes(id) // Exclude the friends we already know
+      );
+
+      // Optionally, you can set state with the friends of friends data or do other operations
+      setFriendsOfFriends(uniqueFriendsOfFriends);
+      fetchEventAttendees(uniqueFriendsOfFriends);
+    } catch (error) {
+      console.error("Error fetching friends of friends:", error);
+    }
+  };
+
+  const fetchEventAttendees = async (friendIds: any[]) => {
     setLoading(true);
     try {
       const user = await getCurrentUser();
@@ -99,7 +140,7 @@ const EventDetails = () => {
           .filter(
             (att: any) =>
               att.status === "going" &&
-              (friends.includes(att.profiles.user_id) ||
+              (friendIds.includes(att.profiles.user_id) ||
                 att.profiles.user_id === user.id)
           )
           .map((att: any) => ({
@@ -182,7 +223,9 @@ const EventDetails = () => {
           text1: `You’re going to the show!`,
           position: "bottom",
         });
-        fetchEventAttendees(); // Refresh the attendees list
+        fetchEventAttendees(
+          currentTab === "friends" ? friends : friendsOfFriends
+        ); // Refresh the attendees list
       }
     } catch (err) {
       console.error("Error going to event:", err);
@@ -223,7 +266,9 @@ const EventDetails = () => {
           text1: `You’re interested in the show!`,
           position: "bottom",
         });
-        fetchEventAttendees(); // Refresh the attendees list
+        fetchEventAttendees(
+          currentTab === "friends" ? friends : friendsOfFriends
+        ); // Refresh the attendees list
       }
     } catch (err) {
       console.error("Error marking interest in event:", err);
@@ -263,7 +308,9 @@ const EventDetails = () => {
         });
       } else {
         setInterestedStatus(false);
-        fetchEventAttendees(); // Refresh the attendees list
+        fetchEventAttendees(
+          currentTab === "friends" ? friends : friendsOfFriends
+        ); // Refresh the attendees list
         Toast.show({
           type: "successToast",
           text1: `Someone lost interest`,
@@ -303,7 +350,9 @@ const EventDetails = () => {
         });
       } else {
         setGoingStatus(false);
-        fetchEventAttendees(); // Refresh the attendees list
+        fetchEventAttendees(
+          currentTab === "friends" ? friends : friendsOfFriends
+        ); // Refresh the attendees list
         Toast.show({
           type: "successToast",
           text1: `Aww you’re not going :(`,
@@ -321,16 +370,6 @@ const EventDetails = () => {
     }
   };
 
-  // if (loading) {
-  //   return (
-  //     <ActivityIndicator
-  //       size="large"
-  //       color="#0000ff"
-  //       style={{ marginTop: 50 }}
-  //     />
-  //   );
-  // }
-
   return (
     <ImageBackground
       style={styles.container}
@@ -342,11 +381,11 @@ const EventDetails = () => {
         <View style={styles.tabWrapper}>
           <TouchableOpacity
             style={styles.tabButton}
-            onPress={() => setCurrentTab("Friends of Friends")}
+            onPress={() => setCurrentTab("fof")}
           >
             <Text
               style={
-                currentTab === "Friends of Friends"
+                currentTab === "fof"
                   ? styles.tabTextActive
                   : styles.tabTextInactive
               }
@@ -356,11 +395,11 @@ const EventDetails = () => {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.tabButton}
-            onPress={() => setCurrentTab("My Friends")}
+            onPress={() => setCurrentTab("friends")}
           >
             <Text
               style={
-                currentTab === "My Friends"
+                currentTab === "friends"
                   ? styles.tabTextActive
                   : styles.tabTextInactive
               }

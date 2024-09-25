@@ -1,22 +1,16 @@
 import { router } from "expo-router";
 import moment from "moment";
-import Constants from "expo-constants";
 
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
-  Image,
   ImageBackground,
   Linking,
-  ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
   ActivityIndicator,
   FlatList,
 } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
 import { supabase } from "../../supabaseClient";
 import PostCard from "@/components/card/post";
 import useExplore from "@/hooks/useExplore";
@@ -43,7 +37,7 @@ const ExploreFoFriendsTab = () => {
 
         // Fetch friends and events after the user is set
         await fetchFriends(userData.user.id);
-        await fetchEvents(userData.user);
+        // await fetchEvents(userData.user);
       } catch (error) {
         console.error("Error during initial data load:", error);
       }
@@ -54,6 +48,8 @@ const ExploreFoFriendsTab = () => {
 
   const fetchFriends = async (userId: string) => {
     try {
+      console.log("User ID:", userId);
+
       const { data: friendsData, error } = await supabase
         .from("friendships")
         .select("friend_id, user_id")
@@ -63,19 +59,55 @@ const ExploreFoFriendsTab = () => {
       if (error) {
         console.error("Error fetching friends:", error);
       } else {
-        // Extracting the friend's ID based on which field doesn't match the userId
         const friendIds = friendsData.map((friend: any) =>
           friend.user_id === userId ? friend.friend_id : friend.user_id
         );
         console.log("Friends Data:", friendIds);
-        setFriends(friendIds);
+
+        // setFriends(friendIds);
+        await getFriendsofFriends(userId, friendIds);
       }
     } catch (error) {
       console.error("Error fetching friends:", error);
     }
   };
 
-  const fetchEvents = async (user: any) => {
+  const getFriendsofFriends = async (userId: string, friendIds: string[]) => {
+    try {
+      // Fetch friends of each friend from the provided friendIds array
+      const { data: friendsOfFriendsData, error } = await supabase
+        .from("friendships")
+        .select("friend_id, user_id")
+        .or(
+          friendIds.map((id) => `user_id.eq.${id},friend_id.eq.${id}`).join(",")
+        )
+        .eq("status", "accepted");
+
+      if (error) {
+        console.error("Error fetching friends of friends:", error);
+        return;
+      }
+
+      // Extract the friend IDs while excluding the original friends (friendIds)
+      const friendsOfFriends = friendsOfFriendsData.map((relation: any) =>
+        friendIds.includes(relation.user_id)
+          ? relation.friend_id
+          : relation.user_id
+      );
+
+      // Remove duplicates by creating a Set
+      const uniqueFriendsOfFriends = [...new Set(friendsOfFriends)].filter(
+        (id) => !friendIds.includes(id) // Exclude the friends we already know
+      );
+
+      // Optionally, you can set state with the friends of friends data or do other operations
+      fetchEvents({ id: userId }, uniqueFriendsOfFriends);
+    } catch (error) {
+      console.error("Error fetching friends of friends:", error);
+    }
+  };
+
+  const fetchEvents = async (user: any, friendIds: string[]) => {
     setLoading(true);
     try {
       const { data: eventsData, error: eventsError } = await supabase
@@ -98,7 +130,7 @@ const ExploreFoFriendsTab = () => {
         const { data: attendeesData, error: attendeesError } = await supabase
           .from("event_attendees")
           .select(
-            "event_id, status, user_id, profiles!event_attendees_user_id_fkey(profile_image_url, first_name)"
+            "event_id, status, user_id, profiles!event_attendees_user_id_fkey(profile_image_url, first_name, username, last_name)"
           )
           .in("event_id", eventIds)
           .or("status.eq.going,status.eq.interested");
@@ -112,7 +144,7 @@ const ExploreFoFriendsTab = () => {
                 (att: any) =>
                   att.event_id === event.id &&
                   att.status === "going" &&
-                  (friends.includes(att.user_id) || att.user_id === user.id)
+                  (friendIds.includes(att.user_id) || att.user_id === user.id)
               )
               .map((att: any) => ({
                 profileImage: att.profiles.profile_image_url,
@@ -124,7 +156,7 @@ const ExploreFoFriendsTab = () => {
                 (att: any) =>
                   att.event_id === event.id &&
                   att.status === "interested" &&
-                  (friends.includes(att.user_id) || att.user_id === user.id)
+                  (friendIds.includes(att.user_id) || att.user_id === user.id)
               )
               .map((att: any) => ({
                 profileImage: att.profiles.profile_image_url,
@@ -174,6 +206,7 @@ const ExploreFoFriendsTab = () => {
       params: {
         event: JSON.stringify(event),
         eventAttendees: JSON.stringify(eventAttendees),
+        tab: "fof",
       },
     });
   };

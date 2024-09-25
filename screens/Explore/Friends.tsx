@@ -1,29 +1,22 @@
 import { router } from "expo-router";
 import moment from "moment";
-import Constants from "expo-constants";
 
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
-  Image,
   ImageBackground,
   Linking,
-  ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
   ActivityIndicator,
   FlatList,
 } from "react-native";
-import DropDownPicker from "react-native-dropdown-picker";
 import { supabase } from "../../supabaseClient";
 import PostCard from "@/components/card/post";
 import useExplore from "@/hooks/useExplore";
 
-const ExploreFriendsTab = () => {
-  const { selectedLocation, setSelectedLocation } = useExplore();
-
+const ExploreFoFriendsTab = () => {
+  const { selectedLocation } = useExplore();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [friends, setFriends] = useState<string[]>([]);
@@ -44,7 +37,7 @@ const ExploreFriendsTab = () => {
 
         // Fetch friends and events after the user is set
         await fetchFriends(userData.user.id);
-        await fetchEvents(userData.user);
+        // await fetchEvents(userData.user);
       } catch (error) {
         console.error("Error during initial data load:", error);
       }
@@ -55,6 +48,7 @@ const ExploreFriendsTab = () => {
 
   const fetchFriends = async (userId: string) => {
     try {
+      console.log("User ID:", friends);
       const { data: friendsData, error } = await supabase
         .from("friendships")
         .select("friend_id, user_id")
@@ -70,13 +64,14 @@ const ExploreFriendsTab = () => {
         );
         console.log("Friends Data:", friendIds);
         setFriends(friendIds);
+        await fetchEvents({ id: userId }, friendIds);
       }
     } catch (error) {
       console.error("Error fetching friends:", error);
     }
   };
 
-  const fetchEvents = async (user: any) => {
+  const fetchEvents = async (user: any, friendIds: string[]) => {
     setLoading(true);
     try {
       const { data: eventsData, error: eventsError } = await supabase
@@ -113,7 +108,7 @@ const ExploreFriendsTab = () => {
                 (att: any) =>
                   att.event_id === event.id &&
                   att.status === "going" &&
-                  (friends.includes(att.user_id) || att.user_id === user.id)
+                  (friendIds.includes(att.user_id) || att.user_id === user.id)
               )
               .map((att: any) => ({
                 profileImage: att.profiles.profile_image_url,
@@ -125,7 +120,7 @@ const ExploreFriendsTab = () => {
                 (att: any) =>
                   att.event_id === event.id &&
                   att.status === "interested" &&
-                  (friends.includes(att.user_id) || att.user_id === user.id)
+                  (friendIds.includes(att.user_id) || att.user_id === user.id)
               )
               .map((att: any) => ({
                 profileImage: att.profiles.profile_image_url,
@@ -175,6 +170,7 @@ const ExploreFriendsTab = () => {
       params: {
         event: JSON.stringify(event),
         eventAttendees: JSON.stringify(eventAttendees),
+        tab: "friends",
       },
     });
   };
@@ -366,4 +362,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ExploreFriendsTab;
+export default ExploreFoFriendsTab;

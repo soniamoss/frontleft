@@ -20,6 +20,7 @@ import { addFriend } from "../services/friendshipService";
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
 import SearchBar from "@/components/SearchBar";
+import { sendNotifications } from "@/utils/notification";
 
 interface Contact {
   id: string;
@@ -79,93 +80,104 @@ export default function ShowContacts() {
     const user = await getCurrentUser();
 
     setLoading(true);
-    const { status } = await Contacts.requestPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert(
-        "Permissions Denied",
-        "Access to contacts is required to find friends."
-      );
-      setLoading(false);
-      return;
-    }
-
-    const { data: deviceContacts } = await Contacts.getContactsAsync({
-      fields: [Contacts.Fields.PhoneNumbers],
-    });
-
-    if (!deviceContacts?.length) {
-      Alert.alert("No Contacts Found", "No contacts found on your device.");
-      setLoading(false);
-      return;
-    }
-
-    const phoneNumbers = deviceContacts
-      .flatMap((contact) =>
-        contact.phoneNumbers
-          ? contact.phoneNumbers.map((phoneNumber) =>
-              phoneNumber?.number
-                .replace(/[+() -]/g, "")
-                .replace(/^\d{10}$/, "1$&")
-            )
-          : []
-      )
-      .filter(Boolean);
-
-    const { data: profiles, error: profilesError } = await supabase.rpc(
-      "get_profiles_by_phonenumbers",
-      {
-        phone_numbers: phoneNumbers,
+    try {
+      const { status } = await Contacts.requestPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permissions Denied",
+          "Access to contacts is required to find friends."
+        );
+        setLoading(false);
+        return;
       }
-    );
 
-    if (profilesError) {
+      const { data: deviceContacts } = await Contacts.getContactsAsync({
+        fields: [Contacts.Fields.PhoneNumbers],
+      });
+
+      if (!deviceContacts?.length) {
+        Alert.alert("No Contacts Found", "No contacts found on your device.");
+        setLoading(false);
+        return;
+      }
+
+      const phoneNumbers = deviceContacts
+        .flatMap((contact) =>
+          contact.phoneNumbers
+            ? contact.phoneNumbers.map((phoneNumber) =>
+                phoneNumber?.number
+                  .replace(/[+() -]/g, "")
+                  .replace(/^\d{10}$/, "1$&")
+              )
+            : []
+        )
+        .filter(Boolean);
+
+      const { data: profiles, error: profilesError } = await supabase.rpc(
+        "get_profiles_by_phonenumbers",
+        {
+          phone_numbers: phoneNumbers,
+        }
+      );
+
+      if (profilesError) {
+        setLoading(false);
+        console.error(profilesError);
+      }
+
+      const { data: friendshipIds, error: friendshipError } = await supabase
+        .from("friendships")
+        .select("friend_id, user_id, status")
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+
+      if (friendshipError) {
+        setLoading(false);
+        console.error("Error fetching friendship IDs:", friendshipError);
+      } else {
+        console.log("friendshipIds:", friendshipIds);
+      }
+
+      const idsToExclude = friendshipIds.flatMap((friendship: any) => [
+        friendship.friend_id,
+        friendship.user_id,
+      ]);
+
+      const filteredProfiles = (profiles || []).filter(
+        (profile: Profile) =>
+          !idsToExclude.includes(profile.user_id) && profile.user_id !== user.id
+      );
+
+      const nonAppContactsSample = deviceContacts
+        .slice(0, 10)
+        .map((contact) => ({
+          id: contact.id,
+          first_name: contact.name,
+          phone_number: contact.phoneNumbers
+            ? contact.phoneNumbers[0].number
+            : "",
+          username: contact.phoneNumbers
+            ? "+1" + " " + contact.phoneNumbers[0].number
+            : "",
+          invite: true,
+        }));
+
+      setRequests(friendshipIds || []);
+      setAppContacts(filteredProfiles.concat(nonAppContactsSample));
       setLoading(false);
-      console.error(profilesError);
-    }
-
-    const { data: friendshipIds, error: friendshipError } = await supabase
-      .from("friendships")
-      .select("friend_id, user_id, status")
-      .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
-
-    if (friendshipError) {
+    } catch (error) {
+    } finally {
       setLoading(false);
-      console.error("Error fetching friendship IDs:", friendshipError);
-    } else {
-      console.log("friendshipIds:", friendshipIds);
     }
-
-    const idsToExclude = friendshipIds.flatMap((friendship: any) => [
-      friendship.friend_id,
-      friendship.user_id,
-    ]);
-
-    const filteredProfiles = (profiles || []).filter(
-      (profile: Profile) =>
-        !idsToExclude.includes(profile.user_id) && profile.user_id !== user.id
-    );
-
-    const nonAppContactsSample = deviceContacts.slice(0, 10).map((contact) => ({
-      id: contact.id,
-      first_name: contact.name,
-      phone_number: contact.phoneNumbers ? contact.phoneNumbers[0].number : "",
-      username: contact.phoneNumbers
-        ? "+1" + " " + contact.phoneNumbers[0].number
-        : "",
-      invite: true,
-    }));
-
-    setRequests(friendshipIds || []);
-    setAppContacts(filteredProfiles.concat(nonAppContactsSample));
-    setLoading(false);
   };
 
   const handleSearch = (text: string) => {
     setSearchText(text);
   };
 
-  const handleAddFriend = async (friendID: string) => {
+  const handleAddFriend = async (friendID: string, name: string) => {
     const user = await getCurrentUser();
+
+    console.log("Adding friend:", user?.user_metadata);
 
     const result = await addFriend(user.id, friendID);
     if (result.success) {
@@ -173,6 +185,16 @@ export default function ShowContacts() {
         type: "successToast",
         text1: "Friend request sent!",
         position: "bottom",
+      });
+
+      const res = await sendNotifications({
+        userId: friendID,
+        title: "Friend Request",
+        body: `${user?.user_metadata?.fullName} sent you a friend request!`,
+        data: {
+          url: "(tabs)/Friends",
+          params: { screen: "Requests" },
+        },
       });
 
       fetchContacts();

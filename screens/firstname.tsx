@@ -45,6 +45,14 @@ const FirstNameScreen = () => {
 
   const setFirstNameInDB = async () => {
     const user = await getCurrentUser();
+
+    await supabase.auth.updateUser({
+      data: {
+        firstName: firstName,
+        fullName: firstName,
+      },
+    });
+
     const { data, error }: any = await supabase
       .from("profiles")
       .upsert({

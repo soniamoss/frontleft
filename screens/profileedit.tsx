@@ -1,9 +1,11 @@
 import { useNavigation } from "@react-navigation/native";
 import * as ImagePicker from "expo-image-picker";
 import Constants from "expo-constants";
+import { decode } from "base64-arraybuffer";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Image,
   ImageBackground,
@@ -18,6 +20,7 @@ import { supabase } from "../supabaseClient";
 import BackButton from "@/components/backButton";
 import CameraIcon from "@/svg/camera";
 import Toast from "react-native-toast-message";
+import { useFocusEffect } from "expo-router";
 
 const EditProfilePage = () => {
   const navigation = useNavigation();
@@ -26,34 +29,47 @@ const EditProfilePage = () => {
   const [username, setUsername] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [profileImage, setProfileImage] = useState(""); // Placeholder profile image
+  const [avatar, setAvatar] = useState({});
+  const [initalLoading, setInitialLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const user = await getCurrentUser();
-      const { data, error }: any = await supabase
-        .from("profiles")
-        .select(
-          "first_name, last_name, username, phonenumber, profile_image_url"
-        )
-        .eq("user_id", user.id)
-        .single();
+  useFocusEffect(
+    useCallback(() => {
+      const fetchProfile = async () => {
+        setInitialLoading(true);
+        try {
+          const user = await getCurrentUser();
+          const { data, error }: any = await supabase
+            .from("profiles")
+            .select(
+              "first_name, last_name, username, phonenumber, profile_image_url"
+            )
+            .eq("user_id", user.id)
+            .single();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        return;
-      }
+          if (error) {
+            console.error("Error fetching profile:", error);
+            return;
+          }
 
-      setFirstName(data.first_name);
-      setLastName(data.last_name);
-      setUsername(data.username);
-      setProfileImage(
-        data.profile_image_url || "https://via.placeholder.com/100"
-      ); // Set a default placeholder if no image exists
-      setPhoneNumber(data.phonenumber);
-    };
+          console.log(data);
 
-    fetchProfile();
-  }, []);
+          setFirstName(data.first_name);
+          setLastName(data.last_name);
+          setUsername(data.username);
+          setProfileImage(
+            data.profile_image_url || "https://via.placeholder.com/100"
+          ); // Set a default placeholder if no image exists
+          setPhoneNumber(data.phonenumber);
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+        } finally {
+          setInitialLoading(false);
+        }
+      };
+
+      fetchProfile();
+    }, [])
+  );
 
   const pickImage = async () => {
     // Request permission to access photos
@@ -70,28 +86,120 @@ const EditProfilePage = () => {
       allowsEditing: true,
       aspect: [1, 1],
       quality: 1,
+      base64: true,
     });
 
     if (!result.canceled) {
       // @ts-ignore
-      setProfileImage(result.uri);
+      console.log(result.assets[0]?.fileName);
+      setAvatar(result.assets[0]);
+    }
+  };
+
+  const uploadImage = async (image: any, userId: any) => {
+    try {
+      const base64Image = image.base64;
+      const imageExtension = image.fileName.split(".").pop();
+      const base64Str = base64Image.includes("base64,")
+        ? base64Image.substring(
+            base64Image.indexOf("base64,") + "base64,".length
+          )
+        : base64Image;
+
+      const res = decode(base64Str);
+
+      if (!(res.byteLength > 0)) {
+        console.error("[uploadToSupabase] ArrayBuffer is null");
+        throw new Error("ArrayBuffer is null");
+      }
+
+      const { data, error } = await supabase.storage
+        .from("profile")
+        .upload(`${Date.now()}.${imageExtension}`, res, {
+          contentType: `image/${imageExtension}`,
+        });
+
+      if (!data) {
+        console.error("[uploadToSupabase] Data is null", error);
+        return null;
+      }
+
+      const res2 = await getDownloadUrl(data.path);
+
+      return {
+        success: true,
+        url: res2.data.publicUrl,
+      };
+    } catch (error: any) {
+      console.log("error", error);
+      return {
+        success: false,
+        message: error?.message,
+      };
+    }
+  };
+
+  const getDownloadUrl = async (path: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("profile")
+        .getPublicUrl(path);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return {
+        success: true,
+        data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.message,
+      };
     }
   };
 
   const saveProfile = async () => {
     try {
       const user = await getCurrentUser();
+
+      let pfp = profileImage;
+
+      if (avatar?.uri) {
+        const uploadedImage = await uploadImage(avatar, user.id);
+
+        if (!uploadedImage.url) {
+          return;
+        }
+
+        pfp = uploadedImage.url;
+      }
+
+      console.log(pfp);
+
       const { error }: any = await supabase
         .from("profiles")
         .update({
           first_name: firstName,
           last_name: lastName,
           username: username,
-          profile_image_url: profileImage,
+          profile_image_url: pfp,
         })
         .eq("user_id", user.id);
 
       if (error) throw error;
+
+      // console.log(user?.user_metadata);
+
+      await supabase.auth.updateUser({
+        data: {
+          firstName: firstName,
+          lastName: lastName,
+          fullName: firstName + " " + lastName,
+        },
+      });
 
       Alert.alert("Success", "Your profile has been updated!");
       navigation.goBack(); // Navigate back to the previous screen
@@ -105,6 +213,21 @@ const EditProfilePage = () => {
     }
   };
 
+  if (initalLoading && !username) {
+    return (
+      <ImageBackground
+        style={[
+          styles.container,
+          { alignItems: "center", justifyContent: "center" },
+        ]}
+        source={require("../assets/images/friends-back.png")}
+      >
+        <BackButton />
+        <ActivityIndicator size="large" color="#3F407C" />
+      </ImageBackground>
+    );
+  }
+
   return (
     <ImageBackground
       style={styles.container}
@@ -114,7 +237,10 @@ const EditProfilePage = () => {
 
       <View style={styles.profileContainer}>
         <TouchableOpacity onPress={pickImage}>
-          <Image source={{ uri: profileImage }} style={styles.profileImage} />
+          <Image
+            source={{ uri: avatar?.uri || profileImage }}
+            style={styles.profileImage}
+          />
           <View style={styles.cameraIcon}>
             <CameraIcon />
           </View>

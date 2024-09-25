@@ -10,9 +10,7 @@ import { ImageBackground, StyleSheet, Text, View } from "react-native";
 import Constants from "expo-constants";
 
 const IntroScreen = () => {
-  const onPress = () => {
-    // if (true) return router.push("/UsernameScreen");
-
+  const onPress = async () => {
     router.push("/PhoneLoginScreen"); // Navigate to the phone login screen
   };
 

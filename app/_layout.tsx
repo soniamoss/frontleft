@@ -7,10 +7,16 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import Toast from "react-native-toast-message";
+import * as Notifications from "expo-notifications";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Text, View } from "react-native";
 import ExploreProvider from "@/contexts/exploreContext";
+import { getCurrentUser } from "@/services/userService";
+import { useNotifications } from "@/hooks/useNotifcation";
+import { supabase } from "@/supabaseClient";
+
+import { router } from "expo-router";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -19,8 +25,15 @@ export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 const toastConfig = {
   tomatoToast: ({ text1 = "" }) => (
@@ -75,7 +88,44 @@ const toastConfig = {
   ),
 };
 
+function useNotificationObserver() {
+  useEffect(() => {
+    let isMounted = true;
+
+    function redirect(notification: Notifications.Notification) {
+      console.log(notification.request.content);
+      const url = notification.request.content.data?.url;
+      const params = notification.request.content.data?.params;
+      if (url) {
+        router.push({
+          pathname: url,
+          params: params,
+        });
+      }
+    }
+
+    Notifications.getLastNotificationResponseAsync().then((response) => {
+      if (!isMounted || !response?.notification) {
+        return;
+      }
+      redirect(response?.notification);
+    });
+
+    const subscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        redirect(response.notification);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      subscription.remove();
+    };
+  }, []);
+}
+
 export default function RootLayout() {
+  useNotificationObserver();
   const [loaded, error] = useFonts({
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
     Chicle: require("../assets/fonts/Chicle-Regular.ttf"),
@@ -97,6 +147,33 @@ export default function RootLayout() {
     PoppinsThin: require("../assets/fonts/Poppins-Thin.ttf"),
     PoppinsThinItalic: require("../assets/fonts/Poppins-ThinItalic.ttf"),
   });
+
+  const [isReady, setIsReady] = React.useState(false);
+  const { updateToken } = useNotifications();
+
+  useEffect(() => {
+    const saveToken = async () => {
+      try {
+        const user = await getCurrentUser();
+        console.log("user: ", user);
+
+        if (user) {
+          updateToken(user);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsReady(true);
+      }
+    };
+
+    supabase.auth.onAuthStateChange((event, session) => {
+      console.log("event: ", event);
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+        saveToken();
+      }
+    });
+  }, []);
 
   // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {

@@ -11,6 +11,7 @@ import FriendsTabScreen from "../findFriends";
 import FriendsListTabScreen from "../friendList";
 import RequestTabScreen from "../requests";
 import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
+import { useLocalSearchParams } from "expo-router";
 
 type FriendsTopTabParamList = {
   "Find Friends": undefined;
@@ -20,39 +21,41 @@ type FriendsTopTabParamList = {
 
 const FriendsTopTab = createMaterialTopTabNavigator<FriendsTopTabParamList>();
 
-const FriendsTab: React.FC = () => (
-  <ImageBackground
-    style={{
-      flex: 1,
-      paddingTop: 50,
-    }}
-    source={require("../../assets/images/friends-back.png")}
-  >
-    <FriendsTopTab.Navigator tabBar={(props) => <CustomTabBar {...props} />}>
-      <FriendsTopTab.Screen
-        name="Find Friends"
-        component={FriendsTabScreen}
-        options={{
-          tabBarLabel: "Find Friends",
-        }}
-      />
-      <FriendsTopTab.Screen
-        name="Friends List"
-        component={FriendsListTabScreen}
-        options={{
-          tabBarLabel: "Friends List",
-        }}
-      />
-      <FriendsTopTab.Screen
-        name="Requests"
-        component={RequestTabScreen}
-        options={{
-          tabBarLabel: "Requests",
-        }}
-      />
-    </FriendsTopTab.Navigator>
-  </ImageBackground>
-);
+const FriendsTab: React.FC = () => {
+  return (
+    <ImageBackground
+      style={{
+        flex: 1,
+        paddingTop: 50,
+      }}
+      source={require("../../assets/images/friends-back.png")}
+    >
+      <FriendsTopTab.Navigator tabBar={(props) => <CustomTabBar {...props} />}>
+        <FriendsTopTab.Screen
+          name="Find Friends"
+          component={FriendsTabScreen}
+          options={{
+            tabBarLabel: "Find Friends",
+          }}
+        />
+        <FriendsTopTab.Screen
+          name="Friends List"
+          component={FriendsListTabScreen}
+          options={{
+            tabBarLabel: "Friends List",
+          }}
+        />
+        <FriendsTopTab.Screen
+          name="Requests"
+          component={RequestTabScreen}
+          options={{
+            tabBarLabel: "Requests",
+          }}
+        />
+      </FriendsTopTab.Navigator>
+    </ImageBackground>
+  );
+};
 
 const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
   state,

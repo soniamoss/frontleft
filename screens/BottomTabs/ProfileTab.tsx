@@ -1,7 +1,8 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import Constants from "expo-constants";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Image,
@@ -21,15 +22,23 @@ import MusicIcon from "@/svg/music";
 const ProfilePage = () => {
   const [currentTab, setCurrentTab] = useState("going"); // State for tab selection
   const [loading, setLoading] = useState(true);
+  const [initalLoading, setInitalLoading] = useState<boolean>(true);
   const [profileData, setProfileData] = useState<any>({});
   const [eventsGoing, setEventsGoing] = useState<any>([]);
   const [eventsInterested, setEventsInterested] = useState([]);
 
-  useEffect(() => {
-    fetchProfileData();
-  }, []);
+  // useEffect(() => {
+  //   fetchProfileData();
+  // }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfileData();
+    }, [])
+  );
 
   const fetchProfileData = async () => {
+    setInitalLoading(true);
     try {
       const user: any = await supabase.auth.getUser();
 
@@ -86,6 +95,8 @@ const ProfilePage = () => {
       }
     } catch (error) {
       console.error("Error fetching profile data:", error);
+    } finally {
+      setInitalLoading(false);
     }
     setLoading(false);
   };
@@ -97,6 +108,26 @@ const ProfilePage = () => {
   const handleTabChange = (tab: any) => {
     setCurrentTab(tab);
   };
+
+  if (initalLoading && !profileData?.username) {
+    return (
+      <ImageBackground
+        style={{
+          flex: 1,
+        }}
+        source={require("../../assets/images/friends-back.png")}
+      >
+        <View
+          style={[
+            styles.container,
+            { justifyContent: "center", alignItems: "center" },
+          ]}
+        >
+          <ActivityIndicator size="large" color={"#3F407C"} />
+        </View>
+      </ImageBackground>
+    );
+  }
 
   return (
     <ImageBackground
@@ -213,7 +244,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingVertical: 40,
+    paddingTop: 40,
     paddingBottom: 0,
   },
   profilePicture: {

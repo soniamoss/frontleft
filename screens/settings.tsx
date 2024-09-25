@@ -1,10 +1,10 @@
-import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import Constants from "expo-constants";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Image,
   ImageBackground,
   Linking,
@@ -21,9 +21,7 @@ import ContactIcon from "@/svg/contact";
 import BackButton from "@/components/backButton";
 
 const ProfilePage = () => {
-  const navigation = useNavigation();
-  const [isEnabled, setIsEnabled] = useState(false);
-  const toggleSwitch = () => setIsEnabled((previousState) => !previousState);
+  const [initalLoading, setInitialLoading] = useState(true);
   const [profileData, setProfileData] = useState({
     profilePicture: "",
     firstName: "",
@@ -32,11 +30,14 @@ const ProfilePage = () => {
     numOfFriends: 0,
   });
 
-  useEffect(() => {
-    fetchProfileData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfileData();
+    }, [])
+  );
 
   const fetchProfileData = async () => {
+    setInitialLoading(true);
     try {
       const user: any = await getCurrentUser();
       const { data: profile, error }: any = await supabase
@@ -62,6 +63,8 @@ const ProfilePage = () => {
       });
     } catch (error) {
       console.error("Error fetching profile data:", error);
+    } finally {
+      setInitialLoading(false);
     }
   };
 
@@ -84,6 +87,21 @@ const ProfilePage = () => {
     await supabase.auth.signOut();
     router.push("/");
   };
+
+  if (initalLoading && !profileData.username) {
+    return (
+      <ImageBackground
+        style={[
+          styles.container,
+          { alignItems: "center", justifyContent: "center" },
+        ]}
+        source={require("../assets/images/friends-back.png")}
+      >
+        <BackButton />
+        <ActivityIndicator size="large" color="#3F407C" />
+      </ImageBackground>
+    );
+  }
 
   return (
     <ImageBackground
@@ -140,7 +158,7 @@ const ProfilePage = () => {
           justifyContent: "center",
         }}
       >
-        <Text style={styles.text}>Name</Text>
+        <Text style={styles.text}>Doost</Text>
         <Text style={styles.textsmaller}>Where events and friends meet</Text>
 
         <TouchableOpacity
@@ -164,7 +182,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: Constants.statusBarHeight + 100,
+    paddingTop: Constants.statusBarHeight + 80,
   },
   profilePicture: {
     width: 100,

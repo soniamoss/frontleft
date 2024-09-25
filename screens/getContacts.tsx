@@ -21,6 +21,7 @@ import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
 import SearchBar from "@/components/SearchBar";
 import { router } from "expo-router";
+import { sendNotifications } from "@/utils/notification";
 
 interface Contact {
   id: string;
@@ -174,6 +175,16 @@ export default function ShowContacts() {
         type: "successToast",
         text1: "Friend request sent!",
         position: "bottom",
+      });
+
+      const res = await sendNotifications({
+        userId: friendID,
+        title: "Friend Request",
+        body: `${user?.user_metadata?.fullName} sent you a friend request!`,
+        data: {
+          url: "(tabs)/Friends",
+          params: { screen: "Requests" },
+        },
       });
 
       fetchContacts();
