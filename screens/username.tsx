@@ -30,23 +30,32 @@ const UsernameScreen = ({ navigation }: any) => {
   const [fontSize, setFontSize] = useState(36); // Default font size
 
   useEffect(() => {
-    // Adjust font size based on the length of the text
-    const calculateFontSize = () => {
-      const maxLength = 20; // Maximum length for which the font size is large
-      const minSize = 16; // Minimum font size
-      const sizeReductionFactor = 0.5; // Amount to reduce font size for each character above the max length
+    const adjustFontSize = () => {
+      const maxFontSize = 36; // Max font size for shorter usernames
+      const minFontSize = 18; // Minimum font size to keep text readable
+      const maxCharacters = 10; // Max characters before scaling down
       const length = username.length;
 
-      if (length > maxLength) {
-        setFontSize(
-          Math.max(minSize, 36 - (length - maxLength) * sizeReductionFactor)
-        );
+      if (length <= maxCharacters) {
+        setFontSize(maxFontSize);
       } else {
-        setFontSize(36); // Reset to default size if length is within limit
+        const newSize = Math.max(
+          minFontSize,
+          maxFontSize - (length - maxCharacters) * 1.5 // Adjust this factor for smoothness
+        );
+        setFontSize(newSize);
       }
     };
 
-    calculateFontSize();
+    adjustFontSize();
+  }, [username]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      getUserName();
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timeoutId);
   }, [username]);
 
   const setUserNameInDB = async () => {
@@ -153,10 +162,8 @@ const UsernameScreen = ({ navigation }: any) => {
             } else {
               setError("");
             }
+
             setUsername(text);
-          }}
-          onBlur={() => {
-            getUserName();
           }}
         />
         {isUsernameCheck ? (
@@ -195,7 +202,7 @@ const UsernameScreen = ({ navigation }: any) => {
         <TouchableOpacity
           style={[styles.button, !isUsernameAvailable && { opacity: 0.5 }]}
           onPress={handleNext}
-          disabled={isUsernameAvailable && !unChecking}
+          disabled={!isUsernameAvailable && unChecking}
         >
           <Text style={styles.buttonText}>Continue</Text>
         </TouchableOpacity>
