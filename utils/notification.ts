@@ -11,8 +11,8 @@ export const sendNotifications = async ({userId,title,body,data}: NotificationPr
       "send-notifications",
       {
         body: {
-          // user_id: userId,
-          user_id: "da07c7d4-50fe-4082-96bd-ad4933dd1bf5",
+          user_id: userId,
+          // user_id: "da07c7d4-50fe-4082-96bd-ad4933dd1bf5",
           noti: {
             title,
             body,

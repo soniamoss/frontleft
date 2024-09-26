@@ -211,18 +211,15 @@ import { Ionicons } from "@expo/vector-icons";
 import Feather from "@expo/vector-icons/Feather";
 import { router } from "expo-router";
 import PhoneInput from "react-native-phone-number-input";
-import OTPInputView from "@twotalltotems/react-native-otp-input";
 import { OtpInput } from "react-native-otp-entry";
 
 import Constants from "expo-constants";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   Alert,
-  Image,
   Keyboard,
   Linking,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
