@@ -280,9 +280,9 @@ const PhoneLoginScreen = () => {
   const handleResendOtp = async () => {
     let phone = data.phNumWithCode
 
-    if (phone.includes("+")) {
-      phone = phone.slice(1)
-    }
+    // if (phone.includes("+")) {
+    //   phone = phone.slice(1)
+    // }
 
     const { error }: any = await supabase.auth.signInWithOtp({ phone })
     if (error) {
@@ -329,9 +329,9 @@ const PhoneLoginScreen = () => {
   const handleVerifyOtp = async () => {
     let phone = data.phNumWithCode
 
-    if (phone.includes("+")) {
-      phone = phone.slice(1)
-    }
+    // if (phone.includes("+")) {
+    //   phone = phone.slice(1)
+    // }
 
     const { error }: any = await supabase.auth.verifyOtp({
       phone,
