@@ -207,15 +207,15 @@
 
 // // export default PhoneLoginScreen;
 
-import { Ionicons } from "@expo/vector-icons";
-import Feather from "@expo/vector-icons/Feather";
-import { router } from "expo-router";
-import PhoneInput from "react-native-phone-number-input";
-import { OtpInput } from "react-native-otp-entry";
+import { Ionicons } from "@expo/vector-icons"
+import Feather from "@expo/vector-icons/Feather"
+import { router } from "expo-router"
+import PhoneInput from "react-native-phone-number-input"
+import { OtpInput } from "react-native-otp-entry"
 
-import Constants from "expo-constants";
+import Constants from "expo-constants"
 
-import React, { useState } from "react";
+import React, { useState } from "react"
 import {
   Alert,
   Keyboard,
@@ -226,145 +226,145 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
-} from "react-native";
+} from "react-native"
 
-import { supabase } from "../supabaseClient";
-import { Colors } from "@/constants/Colors";
-import Toast from "react-native-toast-message";
+import { supabase } from "../supabaseClient"
+import { Colors } from "@/constants/Colors"
+import Toast from "react-native-toast-message"
 
 // interface PhoneLoginScreenProps {
 //   navigation: any;
 // }
 
 interface Data {
-  phone: string;
-  countryCode: string;
-  phNumWithCode: string;
+  phone: string
+  countryCode: string
+  phNumWithCode: string
 }
 
 const PhoneLoginScreen = () => {
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [phone, setPhone] = useState("")
+  const [otp, setOtp] = useState("")
+  const [isOtpSent, setIsOtpSent] = useState(false)
   const [data, setData] = useState<Data>({
     phone: "",
     countryCode: "",
     phNumWithCode: "",
-  });
+  })
 
   const handleSendOtp = async () => {
-    let phone = data.phNumWithCode;
+    let phone = data.phNumWithCode
 
-    if (phone.includes("+")) {
-      phone = phone.slice(1);
-    }
+    // if (phone.includes("+")) {
+    //   phone = phone.slice(1);
+    // }
 
-    const { error }: any = await supabase.auth.signInWithOtp({ phone });
+    const { error }: any = await supabase.auth.signInWithOtp({ phone })
     if (error) {
       // Alert.alert("Error", error.message);
       Toast.show({
         type: "tomatoToast",
         text1: error.message,
         position: "bottom",
-      });
+      })
     } else {
-      setIsOtpSent(true);
+      setIsOtpSent(true)
       Toast.show({
         type: "successToast",
         text1: `Verification code on its way!`,
         position: "bottom",
-      });
+      })
     }
-  };
+  }
 
   const handleResendOtp = async () => {
-    let phone = data.phNumWithCode;
+    let phone = data.phNumWithCode
 
     if (phone.includes("+")) {
-      phone = phone.slice(1);
+      phone = phone.slice(1)
     }
 
-    const { error }: any = await supabase.auth.signInWithOtp({ phone });
+    const { error }: any = await supabase.auth.signInWithOtp({ phone })
     if (error) {
-      Alert.alert("Error", error.message);
+      Alert.alert("Error", error.message)
     } else {
-      Alert.alert("Success", "New code sent to your phone.");
+      Alert.alert("Success", "New code sent to your phone.")
     }
-  };
+  }
 
   const checkOnboardingStatus = async () => {
     try {
       const {
         data: { user },
         error: userError,
-      }: any = await supabase.auth.getUser();
-      if (userError) throw userError;
+      }: any = await supabase.auth.getUser()
+      if (userError) throw userError
 
       const { data: profile, error: profileError }: any = await supabase
         .from("profiles")
         .select("onboarding_complete")
         .eq("phonenumber", user.phone)
-        .select();
+        .select()
 
       if (profile.length === 0) {
         const { data, error }: any = await supabase
           .from("profiles")
           .upsert({ user_id: user.uid, phonenumber: user.phone })
-          .select();
-        router.push("/FirstNameScreen");
+          .select()
+        router.push("/FirstNameScreen")
       }
 
       if (profile.length > 0) {
         if (profile[0].onboarding_complete) {
-          router.push("/(tabs)");
+          router.push("/(tabs)")
         } else {
-          router.push("/FirstNameScreen");
+          router.push("/FirstNameScreen")
         }
       }
     } catch (error: any) {
-      console.error("Error checking onboarding status:", error.message);
+      console.error("Error checking onboarding status:", error.message)
     }
-  };
+  }
 
   const handleVerifyOtp = async () => {
-    let phone = data.phNumWithCode;
+    let phone = data.phNumWithCode
 
     if (phone.includes("+")) {
-      phone = phone.slice(1);
+      phone = phone.slice(1)
     }
 
     const { error }: any = await supabase.auth.verifyOtp({
       phone,
       token: otp,
       type: "sms",
-    });
+    })
     if (error) {
       Toast.show({
         type: "tomatoToast",
         text1: error.message,
         position: "bottom",
-      });
+      })
     } else {
       Toast.show({
         type: "successToast",
         text1: `Phone number verified!`,
         position: "bottom",
-      });
-      checkOnboardingStatus();
+      })
+      checkOnboardingStatus()
     }
-  };
+  }
 
   const handleBack = () => {
-    router.back();
-  };
+    router.back()
+  }
 
   const handleExit = () => {
-    router.push("/"); //go to intro screen.
-  };
+    router.push("/") //go to intro screen.
+  }
 
   const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
+    Keyboard.dismiss()
+  }
 
   return (
     <TouchableWithoutFeedback style={{ flex: 1 }} onPress={dismissKeyboard}>
@@ -398,15 +398,15 @@ const PhoneLoginScreen = () => {
               defaultValue={data.phone}
               onChangeText={(text) => {
                 // without country code
-                setPhone(text);
+                setPhone(text)
               }}
               defaultCode={"US"}
               onChangeFormattedText={(text) => {
                 // with countryCode
-                setData({ ...data, phNumWithCode: text });
+                setData({ ...data, phNumWithCode: text })
               }}
               onChangeCountry={(text) => {
-                setData({ ...data, countryCode: text.cca2 });
+                setData({ ...data, countryCode: text.cca2 })
               }}
               autoFocus
             />
@@ -505,8 +505,8 @@ const PhoneLoginScreen = () => {
               focusStickBlinkingDuration={500}
               onTextChange={(text) => console.log(text)}
               onFilled={(text) => {
-                setOtp(text);
-                Keyboard.dismiss();
+                setOtp(text)
+                Keyboard.dismiss()
               }}
               textInputProps={{
                 accessibilityLabel: "One-Time Password",
@@ -531,8 +531,8 @@ const PhoneLoginScreen = () => {
         )}
       </View>
     </TouchableWithoutFeedback>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -654,6 +654,6 @@ const styles = StyleSheet.create({
   pinCodeContainer: {
     borderRadius: 2,
   },
-});
+})
 
-export default PhoneLoginScreen;
+export default PhoneLoginScreen
