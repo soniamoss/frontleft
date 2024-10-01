@@ -119,6 +119,8 @@ const EmailScreen = () => {
 
             setEmail(text);
           }}
+          multiline={true}
+          autoFocus
         />
         {error && <Text style={styles.error}>{error}</Text>}
         <Text style={styles.textSmaller}>How can we reach you</Text>

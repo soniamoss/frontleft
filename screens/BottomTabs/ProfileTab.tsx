@@ -207,9 +207,12 @@ const ProfilePage = () => {
                 );
               })
             ) : (
-              <Text style={styles.noEventsText}>
-                No events you're going to at this time.
-              </Text>
+              <View style={styles.noEventsContainer}>
+                <Text style={[styles.noEventsText, { marginTop: 0 }]}>
+                  No events you're going to at this time.
+                </Text>
+                <MusicIcon />
+              </View>
             )
           ) : currentTab === "interested" ? (
             eventsInterested.length > 0 ? (

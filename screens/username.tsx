@@ -108,7 +108,7 @@ const UsernameScreen = ({ navigation }: any) => {
       const { data, error }: any = await supabase
         .from("profiles")
         .select("username")
-        .eq("username", username)
+        .ilike("username", username)
         .single();
 
       console.log(data);
@@ -165,6 +165,8 @@ const UsernameScreen = ({ navigation }: any) => {
 
             setUsername(text);
           }}
+          multiline={true}
+          autoFocus
         />
         {isUsernameCheck ? (
           <React.Fragment>

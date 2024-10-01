@@ -373,6 +373,7 @@ export default function ShowContacts() {
             data={sentRequests}
             keyExtractor={(item) => item.username}
             renderItem={({ item, index }) => {
+              const name = `${item?.profiles?.first_name} ${item?.profiles?.last_name}`;
               return (
                 <View key={index} style={styles.profileContainer}>
                   <Image
@@ -396,7 +397,7 @@ export default function ShowContacts() {
                     onPress={() =>
                       Alert.alert(
                         `Are you sure you want to delete the request sent  to ${item?.profiles?.username}?`,
-                        "You will no longer see this friend request.",
+                        `${name} will no longer see this friend request.`,
                         [
                           {
                             text: "Cancel",

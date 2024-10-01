@@ -1,7 +1,7 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import moment from "moment";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   Dimensions,
   ImageBackground,
@@ -22,29 +22,34 @@ const ExploreFoFriendsTab = () => {
   const [friends, setFriends] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        // Fetch the authenticated user's data
-        const { data: userData, error: userError } =
-          await supabase.auth.getUser();
-        if (userError || !userData.user) {
-          console.error("Error fetching user data 01:", userError);
-          return;
+  useFocusEffect(
+    useCallback(() => {
+      const loadUserData = async () => {
+        try {
+          // Fetch the authenticated user's data
+          const { data: userData, error: userError } =
+            await supabase.auth.getUser();
+          if (userError || !userData.user) {
+            console.error("Error fetching user data 01:", userError);
+            setLoading(false);
+            return;
+          }
+
+          setCurrentUser(userData.user);
+
+          // Fetch friends and events after the user is set
+          await fetchFriends(userData.user.id);
+          // await fetchEvents(userData.user);
+        } catch (error) {
+          console.error("Error during initial data load:", error);
+        } finally {
+          setLoading(false);
         }
+      };
 
-        setCurrentUser(userData.user);
-
-        // Fetch friends and events after the user is set
-        await fetchFriends(userData.user.id);
-        // await fetchEvents(userData.user);
-      } catch (error) {
-        console.error("Error during initial data load:", error);
-      }
-    };
-
-    loadUserData();
-  }, [selectedLocation]);
+      loadUserData();
+    }, [selectedLocation])
+  );
 
   const fetchFriends = async (userId: string) => {
     try {
@@ -58,6 +63,7 @@ const ExploreFoFriendsTab = () => {
 
       if (error) {
         console.error("Error fetching friends:", error);
+        setLoading(false);
       } else {
         const friendIds = friendsData.map((friend: any) =>
           friend.user_id === userId ? friend.friend_id : friend.user_id
@@ -85,6 +91,7 @@ const ExploreFoFriendsTab = () => {
 
       if (error) {
         console.error("Error fetching friends of friends:", error);
+        setLoading(false);
         return;
       }
 
@@ -95,13 +102,17 @@ const ExploreFoFriendsTab = () => {
           : relation.user_id
       );
 
+      const uniqueFriends = [...new Set(friendsOfFriends)];
       // Remove duplicates by creating a Set
       const uniqueFriendsOfFriends = [...new Set(friendsOfFriends)].filter(
         (id) => !friendIds.includes(id) // Exclude the friends we already know
       );
 
       // Optionally, you can set state with the friends of friends data or do other operations
-      fetchEvents({ id: userId }, uniqueFriendsOfFriends);
+      fetchEvents({ id: userId }, [
+        ...uniqueFriends,
+        ...uniqueFriendsOfFriends,
+      ]);
     } catch (error) {
       console.error("Error fetching friends of friends:", error);
     }
@@ -220,6 +231,15 @@ const ExploreFoFriendsTab = () => {
     );
   };
 
+  const openProfile = (userId: string) => {
+    if (currentUser.id === userId) return;
+
+    router.push({
+      pathname: "/FirendsProfile",
+      params: { user_id: userId },
+    });
+  };
+
   return (
     <ImageBackground
       style={styles.container}
@@ -234,6 +254,8 @@ const ExploreFoFriendsTab = () => {
             index={index}
             openEventDetailsPage={openEventDetailsPage}
             openLocationInMaps={openLocationInMaps}
+            onUserClick={openProfile}
+            userId={currentUser.id}
           />
         )}
         contentContainerStyle={styles.eventsContainer}

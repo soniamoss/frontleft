@@ -29,6 +29,7 @@ import GoingButton from "@/components/buttons/going";
 
 const EventDetails = () => {
   const params = useLocalSearchParams();
+  const [currentUser, setCurrentUser] = useState({});
   const eventString = params?.event || "";
   const eventAttendeesString = params?.eventAttendees || "";
 
@@ -51,6 +52,8 @@ const EventDetails = () => {
 
     const getData = async () => {
       const user = await getCurrentUser();
+
+      setCurrentUser(user);
       await fetchFriends(user.id);
     };
 
@@ -519,13 +522,25 @@ const EventDetails = () => {
                 attendeesData.attendingFriends
                   .slice(0, 3)
                   .map((friend, idx) => (
-                    <View key={idx} style={styles.friendInfo}>
+                    <TouchableOpacity
+                      key={idx}
+                      style={styles.friendInfo}
+                      onPress={() => {
+                        if (currentUser.id === friend.user_id) return;
+
+                        router.push({
+                          pathname: "/FirendsProfile",
+                          params: { user_id: friend.user_id },
+                        });
+                      }}
+                      disabled={currentUser.id === friend.user_id}
+                    >
                       <Image
                         source={{ uri: friend.profileImage }}
                         style={styles.friendProfileImage}
                       />
                       <Text style={styles.friendName}>{friend.firstName}</Text>
-                    </View>
+                    </TouchableOpacity>
                   ))}
               {attendeesData.attendingFriends &&
                 attendeesData.attendingFriends.length > 3 && (
@@ -534,19 +549,22 @@ const EventDetails = () => {
                   </Text>
                 )}
             </View>
-            <TouchableOpacity
-              onPress={() => {
-                router.push({
-                  pathname: "/EventUsers",
-                  params: {
-                    eventAttendees: JSON.stringify(attendeesData),
-                    currentTab: "attendingFriends",
-                  },
-                });
-              }}
-            >
-              <Text style={styles.seeMore}>See more &#62;</Text>
-            </TouchableOpacity>
+            {attendeesData.attendingFriends &&
+              attendeesData.attendingFriends.length > 3 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push({
+                      pathname: "/EventUsers",
+                      params: {
+                        eventAttendees: JSON.stringify(attendeesData),
+                        currentTab: "attendingFriends",
+                      },
+                    });
+                  }}
+                >
+                  <Text style={styles.seeMore}>See more &#62;</Text>
+                </TouchableOpacity>
+              )}
           </View>
           <View
             style={{
@@ -588,13 +606,25 @@ const EventDetails = () => {
                 attendeesData.interestedFriends
                   .slice(0, 3)
                   .map((friend, idx) => (
-                    <View key={idx} style={styles.friendInfo}>
+                    <TouchableOpacity
+                      key={idx}
+                      style={styles.friendInfo}
+                      onPress={() => {
+                        if (currentUser.id === friend.user_id) return;
+
+                        router.push({
+                          pathname: "/FirendsProfile",
+                          params: { user_id: friend.user_id },
+                        });
+                      }}
+                      disabled={currentUser.id === friend.user_id}
+                    >
                       <Image
                         source={{ uri: friend.profileImage }}
                         style={styles.friendProfileImage}
                       />
                       <Text style={styles.friendName}>{friend.firstName}</Text>
-                    </View>
+                    </TouchableOpacity>
                   ))}
               {attendeesData.interestedFriends &&
                 attendeesData.interestedFriends.length > 3 && (
@@ -603,19 +633,22 @@ const EventDetails = () => {
                   </Text>
                 )}
             </View>
-            <TouchableOpacity
-              onPress={() => {
-                router.push({
-                  pathname: "/EventUsers",
-                  params: {
-                    eventAttendees: JSON.stringify(attendeesData),
-                    currentTab: "interestedFriends",
-                  },
-                });
-              }}
-            >
-              <Text style={styles.seeMore}>See more &#62;</Text>
-            </TouchableOpacity>
+            {attendeesData.attendingFriends &&
+              attendeesData.attendingFriends.length > 3 && (
+                <TouchableOpacity
+                  onPress={() => {
+                    router.push({
+                      pathname: "/EventUsers",
+                      params: {
+                        eventAttendees: JSON.stringify(attendeesData),
+                        currentTab: "interestedFriends",
+                      },
+                    });
+                  }}
+                >
+                  <Text style={styles.seeMore}>See more &#62;</Text>
+                </TouchableOpacity>
+              )}
           </View>
 
           <GoingButton

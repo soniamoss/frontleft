@@ -1,6 +1,12 @@
 import { Colors } from "@/constants/Colors";
 import { scaleFont, scaleHeight } from "@/constants/layout";
-import { StyleSheet, Text } from "react-native";
+import {
+  Linking,
+  StyleSheet,
+  Text,
+  Touchable,
+  TouchableOpacity,
+} from "react-native";
 
 interface PrivacyAgreementProps {}
 
@@ -9,9 +15,21 @@ const PrivacyAgreement = ({}: PrivacyAgreementProps) => {
     <>
       <Text style={styles.textPrivacy}>
         By tapping ‘Sign in’ or ‘Create account’, you agree to our{" "}
-        <Text style={styles.textsmaller}>Terms of Service</Text>. Learn how we
-        process your {"\n"}data in our{" "}
-        <Text style={styles.textsmaller}>Privacy Policy.</Text>
+        <TouchableOpacity
+          onPress={() => {
+            Linking.openURL("https://www.doost.com/terms-of-service");
+          }}
+        >
+          <Text style={styles.textsmaller}>Terms of Service</Text>
+        </TouchableOpacity>
+        . Learn how we process your {"\n"}data in our{" "}
+        <TouchableOpacity
+          onPress={() => {
+            Linking.openURL("https://www.doost.com/privacy-policy");
+          }}
+        >
+          <Text style={styles.textsmaller}>Privacy Policy.</Text>
+        </TouchableOpacity>
       </Text>
     </>
   );

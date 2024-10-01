@@ -134,6 +134,8 @@ const LastNameScreen = ({ navigation }: any) => {
 
             setlastName(text);
           }}
+          multiline={true}
+          autoFocus
         />
         {error && <Text style={styles.error}>{error}</Text>}
         <Text style={styles.textSmaller}>Your family’s claim to fame</Text>

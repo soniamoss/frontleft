@@ -35,6 +35,8 @@ interface PostCardProps {
   index: number;
   openEventDetailsPage: (event: Event) => void;
   openLocationInMaps: (venue: string, city: string) => void;
+  onUserClick?: (userId: string) => void;
+  userId?: string;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -42,6 +44,8 @@ const PostCard: React.FC<PostCardProps> = ({
   index,
   openEventDetailsPage,
   openLocationInMaps,
+  onUserClick,
+  userId,
 }) => {
   return (
     <TouchableOpacity key={index} onPress={() => openEventDetailsPage(event)}>
@@ -110,12 +114,16 @@ const PostCard: React.FC<PostCardProps> = ({
               <View style={styles.interestedFriendsContainer}>
                 {event.attendingFriends &&
                   event.attendingFriends.slice(0, 3).map((friend, idx) => (
-                    <View key={idx} style={styles.friendInfo}>
+                    <TouchableOpacity
+                      disabled
+                      key={idx}
+                      style={styles.friendInfo}
+                    >
                       <Image
                         source={{ uri: friend.profileImage }}
                         style={styles.friendProfileImage}
                       />
-                    </View>
+                    </TouchableOpacity>
                   ))}
                 {event.attendingFriends &&
                   event.attendingFriends.length > 3 && (

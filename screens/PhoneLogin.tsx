@@ -408,6 +408,7 @@ const PhoneLoginScreen = () => {
               onChangeCountry={(text) => {
                 setData({ ...data, countryCode: text.cca2 });
               }}
+              autoFocus
             />
             <View
               style={{
@@ -514,6 +515,7 @@ const PhoneLoginScreen = () => {
                 containerStyle: styles.otpContainer,
                 pinCodeContainerStyle: styles.pinCodeContainer,
               }}
+              autoFocus
             />
 
             <TouchableOpacity

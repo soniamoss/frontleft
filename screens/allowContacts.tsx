@@ -91,8 +91,16 @@ const GetContacts = () => {
           marginTop: 50,
         }}
       >
-        <ButtonOutlined title="Skip for Now" onPress={handleSkip} />
-        <ButtonContained title="Allow Contacts" onPress={handleAllow} />
+        <ButtonOutlined
+          title="Skip for Now"
+          onPress={handleSkip}
+          cusStyle={{ flex: 1 }}
+        />
+        <ButtonContained
+          title="Allow Contacts"
+          onPress={handleAllow}
+          cusStyle={{ flex: 1 }}
+        />
       </View>
     </ImageBackground>
   );

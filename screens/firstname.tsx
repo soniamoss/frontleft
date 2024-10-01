@@ -135,6 +135,8 @@ const FirstNameScreen = () => {
             }
             setFirstName(text);
           }}
+          multiline={true}
+          autoFocus
         />
         {error && <Text style={styles.error}>{error}</Text>}
         <Text style={styles.textSmaller}>What your friends call you</Text>

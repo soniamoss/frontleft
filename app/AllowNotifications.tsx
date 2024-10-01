@@ -22,8 +22,8 @@ const AllowNotifications = () => {
 
   const handleAllow = () => {
     Alert.alert(
-      '"Doost" Would Like to Access Your Contacts',
-      "We’ll check your contacts to see who from your friends is already on the app. Your contacts won’t be stored.",
+      '"Allow Notifications',
+      "We’ll notify you when your friends are attending, interested in, or have tickets for an event, along with other exciting updates!",
       [
         {
           text: "Don’t Allow",
@@ -62,8 +62,16 @@ const AllowNotifications = () => {
           marginTop: 50,
         }}
       >
-        <ButtonOutlined title="Skip for Now" onPress={handleSkip} />
-        <ButtonContained title="Allow Notifications" onPress={handleAllow} />
+        <ButtonOutlined
+          title="Skip for Now"
+          onPress={handleSkip}
+          cusStyle={{ flex: 1 }}
+        />
+        <ButtonContained
+          title="Allow Notifications"
+          onPress={handleAllow}
+          cusStyle={{ flex: 1 }}
+        />
       </View>
     </ImageBackground>
   );

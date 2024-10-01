@@ -34,6 +34,7 @@ const ProfilePage = () => {
   const [eventsInterested, setEventsInterested] = useState([]);
   const [contacts, setContacts] = useState<any>([]);
   const [initalLoad, setInitalLoad] = useState(false);
+  const [canSee, setCanSee] = useState(false);
 
   useEffect(() => {
     fetchProfileData();
@@ -42,18 +43,6 @@ const ProfilePage = () => {
 
   const handleAddFriend = async () => {
     const user = await getCurrentUser();
-
-    const res = await sendNotifications({
-      userId: userId,
-      title: "Friend Request",
-      body: `${user?.user_metadata?.fullName} sent you a friend request!`,
-      data: {
-        url: "(tabs)/Friends",
-        params: { screen: "Requests" },
-      },
-    });
-
-    return;
 
     const result = await addFriend(user.id, userId);
     if (result.success) {
@@ -66,7 +55,7 @@ const ProfilePage = () => {
       const res = await sendNotifications({
         userId: userId,
         title: "Friend Request",
-        body: `${user.name} sent you a friend request!`,
+        body: `${user?.user_metadata?.fullName} sent you a friend request!`,
         data: {
           url: "(tabs)/Friends",
           params: { screen: "Requests" },
@@ -116,20 +105,24 @@ const ProfilePage = () => {
 
       const isFr = friendsData?.find(
         (friend: any) =>
-          friend.user_id === user.id || friend.friend_id === user.id
+          friend.user_id === user?.data?.user?.id ||
+          friend.friend_id === user?.data?.user?.id
       );
 
-      if (isFr?.status !== "accepted") {
+      if (isFr?.status !== "accepted" && profile.privacy === "friends_only") {
         setProfileData({
           profilePicture: profile.profile_image_url,
           name: `${profile.first_name} ${profile.last_name}`,
           username: `@${profile.username}`,
           numOfFriends: friendsData.length,
         });
+
         // setIsFriend(false);
         setLoading(false);
         return;
       }
+
+      setCanSee(true);
 
       const { data: eventsGoingData, error: eventsGoingError }: any =
         await supabase
@@ -292,7 +285,7 @@ const ProfilePage = () => {
         >
           {loading && <ActivityIndicator size="large" color="#0000ff" />}
 
-          {!loading && isFriend?.status === "accepted" && (
+          {!loading && canSee && (
             <React.Fragment>
               {currentTab === "going" &&
                 (eventsGoing.length > 0 ? (
@@ -302,13 +295,17 @@ const ProfilePage = () => {
                         key={event.id}
                         event={event}
                         index={index}
+                        isInterested={true}
                       />
                     );
                   })
                 ) : (
-                  <Text style={styles.noEventsText}>
-                    No events they're going to at this time.
-                  </Text>
+                  <View style={styles.noEventsContainer}>
+                    <Text style={[styles.noEventsText, { marginTop: 0 }]}>
+                      No events they're going to at this time.
+                    </Text>
+                    <MusicIcon />
+                  </View>
                 ))}
 
               {currentTab === "interested" &&
@@ -332,7 +329,7 @@ const ProfilePage = () => {
             </React.Fragment>
           )}
 
-          {!loading && isFriend?.status !== "accepted" && (
+          {!loading && !canSee && (
             <View style={styles.noEventsContainer}>
               <Text style={[styles.noEventsText, { marginTop: 0 }]}>
                 You gotta be friends to see their events!
