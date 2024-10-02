@@ -78,7 +78,9 @@ export default function ShowContacts() {
   }, []);
 
   const fetchContacts = async () => {
-    const user = await getCurrentUser();
+    // const user = await getCurrentUser();
+
+    const user = { id: "da07c7d4-50fe-4082-96bd-ad4933dd1bf5" };
 
     setLoading(true);
     const { status } = await Contacts.requestPermissionsAsync();
@@ -151,9 +153,7 @@ export default function ShowContacts() {
       id: contact.id,
       first_name: contact.name,
       phone_number: contact.phoneNumbers ? contact.phoneNumbers[0].number : "",
-      username: contact.phoneNumbers
-        ? "+1" + " " + contact.phoneNumbers[0].number
-        : "",
+      username: contact.phoneNumbers ? contact.phoneNumbers[0].number : "",
       invite: true,
     }));
 
