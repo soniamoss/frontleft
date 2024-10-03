@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
+import EmailIcon from "@/svg/email";
 
 const EmailScreen = () => {
   const [email, setEmail] = useState("");
@@ -95,33 +96,38 @@ const EmailScreen = () => {
             gap: 10,
           }}
         >
-          <Image
-            source={require("../assets/images/postcard.png")}
-            style={styles.image}
-          />
+          <EmailIcon />
           <Text style={styles.text}>What's your email?</Text>
         </View>
-        <TextInput
-          style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
-          placeholder=""
-          value={email}
-          onChangeText={(text) => {
-            // email validation
-            const regex = /\S+@\S+\.\S+/;
-
-            if (!text) {
-              setError("Please enter your email.");
-            } else if (!regex.test(text)) {
-              setError("Please enter a valid email.");
-            } else {
-              setError("");
-            }
-
-            setEmail(text);
+        <View
+          style={{
+            width: "74%",
+            height: 150,
+            justifyContent: "flex-end",
           }}
-          multiline={true}
-          autoFocus
-        />
+        >
+          <TextInput
+            style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
+            placeholder=""
+            value={email}
+            onChangeText={(text) => {
+              // email validation
+              const regex = /\S+@\S+\.\S+/;
+
+              if (!text) {
+                setError("Please enter your email.");
+              } else if (!regex.test(text)) {
+                setError("Please enter a valid email.");
+              } else {
+                setError("");
+              }
+
+              setEmail(text);
+            }}
+            multiline={true}
+            autoFocus
+          />
+        </View>
         {error && <Text style={styles.error}>{error}</Text>}
         <Text style={styles.textSmaller}>How can we reach you</Text>
         <TouchableOpacity style={styles.button} onPress={handleNext}>
@@ -161,14 +167,12 @@ const styles = StyleSheet.create({
     zIndex: 1, // Ensure the button is above the image
   },
   input: {
-    width: "74%",
+    width: "100%",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderColor: "black",
-    marginBottom: 60,
-    fontSize: 30, // Increased font size for larger text
-    textAlign: "center", // Center text within the input
+    textAlign: "center",
   },
   button: {
     width: "60%",

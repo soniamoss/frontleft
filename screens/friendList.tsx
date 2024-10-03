@@ -165,11 +165,13 @@ export default function ShowContacts() {
   const deleteFriend = async (friendID: string, name: string) => {
     const user = await getCurrentUser();
 
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from("friendships")
       .delete()
       .eq("user_id", user.id)
       .eq("friend_id", friendID);
+
+    console.log("Deleted friend:", friendID, user.id);
 
     if (error) {
       console.error("Error deleting friend:", error);
@@ -178,6 +180,28 @@ export default function ShowContacts() {
         text1: "That didn’t work, please try again!",
         position: "bottom",
       });
+
+      return;
+    }
+
+    if (!data) {
+      const { error: error2, data: data2 } = await supabase
+        .from("friendships")
+        .delete()
+        .eq("user_id", friendID)
+        .eq("friend_id", user.id);
+
+      console.log("Deleted friend:", data2);
+
+      if (error2) {
+        Toast.show({
+          type: "tomatoToast",
+          text1: "That didn’t work, please try again!",
+          position: "bottom",
+        });
+
+        return;
+      }
     }
 
     fetchAcceptedFriends();

@@ -37,7 +37,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       />
       {value?.length > 0 && (
         <TouchableOpacity onPress={() => setValue("")}>
-          <AntDesign name="closecircleo" size={18} color="#dc3545" />
+          <AntDesign name="closecircleo" size={18} color="#3D4353" />
         </TouchableOpacity>
       )}
     </View>

@@ -290,9 +290,17 @@ const PhoneLoginScreen = () => {
 
     const { error }: any = await supabase.auth.signInWithOtp({ phone });
     if (error) {
-      Alert.alert("Error", error.message);
+      Toast.show({
+        type: "tomatoToast",
+        text1: error.message,
+        position: "bottom",
+      });
     } else {
-      Alert.alert("Success", "New code sent to your phone.");
+      Toast.show({
+        type: "successToast",
+        text1: `New code sent to your phone.`,
+        position: "bottom",
+      });
     }
   };
 
@@ -359,6 +367,11 @@ const PhoneLoginScreen = () => {
   };
 
   const handleBack = () => {
+    if (isOtpSent) {
+      setIsOtpSent(false);
+      return;
+    }
+
     router.back();
   };
 

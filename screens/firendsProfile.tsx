@@ -234,6 +234,7 @@ const ProfilePage = () => {
                     cusStyle={{
                       borderRadius: 50,
                       alignSelf: "flex-end",
+                      minWidth: 100,
                     }}
                     onPress={() => handleAddFriend()}
                     disabled={

@@ -203,7 +203,12 @@ const ProfilePage = () => {
             eventsGoing.length > 0 ? (
               eventsGoing.map((event: any, index: number) => {
                 return (
-                  <ProfilePostCard key={event.id} event={event} index={index} />
+                  <ProfilePostCard
+                    key={event.id}
+                    event={event}
+                    index={index}
+                    isInterested={true}
+                  />
                 );
               })
             ) : (

@@ -18,6 +18,7 @@ import FriendsIcon from "@/svg/friends";
 import UserArrorDoubleIcon from "@/svg/userArrorDouble";
 import BookmarkIcon from "@/svg/bookmark";
 import BellIcon from "@/svg/bell";
+import Toast from "react-native-toast-message";
 
 const PrivacySettings = () => {
   const navigation = useNavigation();
@@ -57,16 +58,19 @@ const PrivacySettings = () => {
       if (error) throw error;
 
       setContactSyncEnabled(updatedValue);
-      Alert.alert(
-        "Success",
-        `Contact Sync is now ${updatedValue ? "enabled" : "disabled"}`
-      );
+
+      Toast.show({
+        type: "successToast",
+        text1: `Contact Sync is now ${updatedValue ? "enabled" : "disabled"}`,
+        position: "bottom",
+      });
     } catch (error) {
       console.error("Error updating contact sync:", error);
-      Alert.alert(
-        "Error",
-        "There was an issue updating your contact sync settings. Please try again."
-      );
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
     }
   };
 
@@ -107,16 +111,22 @@ const PrivacySettings = () => {
       if (error) throw error;
 
       setPrivacySetting(newPrivacySetting);
-      Alert.alert(
-        "Success",
-        `Your privacy setting is now ${newPrivacySetting.replace("_", " ")}`
-      );
+
+      Toast.show({
+        type: "successToast",
+        text1: `Your privacy setting is now ${newPrivacySetting.replace(
+          "_",
+          " "
+        )}`,
+        position: "bottom",
+      });
     } catch (error) {
       console.error("Error updating privacy setting:", error);
-      Alert.alert(
-        "Error",
-        "There was an issue updating your privacy setting. Please try again."
-      );
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
     }
   };
 

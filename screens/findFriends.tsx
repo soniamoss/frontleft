@@ -155,8 +155,10 @@ export default function ShowContacts() {
           phone_number: contact.phoneNumbers
             ? contact.phoneNumbers[0].number
             : "",
-          username: contact.phoneNumbers
-            ? "+1" + " " + contact.phoneNumbers[0].number
+          username: contact?.phoneNumbers
+            ? contact.phoneNumbers[0].number?.startsWith("+1")
+              ? contact.phoneNumbers[0].number
+              : "+1 " + contact.phoneNumbers[0].number
             : "",
           invite: true,
         }));
@@ -215,10 +217,12 @@ export default function ShowContacts() {
 
     if (result === "sent") {
       console.log("Invite sent to:", contact.first_name, contact.phone_number);
-      Alert.alert(
-        "Invite Sent",
-        `An invite has been sent to ${contact.first_name}`
-      );
+
+      Toast.show({
+        type: "successToast",
+        text1: `An invite has been sent to ${contact.first_name}`,
+        position: "bottom",
+      });
     }
   };
 

@@ -201,7 +201,11 @@ const EditProfilePage = () => {
         },
       });
 
-      Alert.alert("Success", "Your profile has been updated!");
+      Toast.show({
+        type: "successToast",
+        text1: "Your profile has been updated!",
+        position: "bottom",
+      });
       navigation.goBack(); // Navigate back to the previous screen
     } catch (error) {
       console.error("Error updating profile:", error);

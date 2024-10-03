@@ -1,7 +1,7 @@
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import moment from "moment";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   Dimensions,
   ImageBackground,
@@ -22,29 +22,31 @@ const ExploreFoFriendsTab = () => {
   const [friends, setFriends] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        // Fetch the authenticated user's data
-        const { data: userData, error: userError } =
-          await supabase.auth.getUser();
-        if (userError || !userData.user) {
-          console.error("Error fetching user data 01:", userError);
-          return;
+  useFocusEffect(
+    useCallback(() => {
+      const loadUserData = async () => {
+        try {
+          // Fetch the authenticated user's data
+          const { data: userData, error: userError } =
+            await supabase.auth.getUser();
+          if (userError || !userData.user) {
+            console.error("Error fetching user data 01:", userError);
+            return;
+          }
+
+          setCurrentUser(userData.user);
+
+          // Fetch friends and events after the user is set
+          await fetchFriends(userData.user.id);
+          // await fetchEvents(userData.user);
+        } catch (error) {
+          console.error("Error during initial data load:", error);
         }
+      };
 
-        setCurrentUser(userData.user);
-
-        // Fetch friends and events after the user is set
-        await fetchFriends(userData.user.id);
-        // await fetchEvents(userData.user);
-      } catch (error) {
-        console.error("Error during initial data load:", error);
-      }
-    };
-
-    loadUserData();
-  }, [selectedLocation]);
+      loadUserData();
+    }, [selectedLocation])
+  );
 
   const fetchFriends = async (userId: string) => {
     try {

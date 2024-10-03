@@ -151,23 +151,31 @@ const UsernameScreen = ({ navigation }: any) => {
           <UserIcon />
           <Text style={styles.text}>Create a username</Text>
         </View>
-        <TextInput
-          style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
-          placeholder=""
-          value={username}
-          onChangeText={(text) => {
-            setIsUsernameCheck(false);
-            if (text.length < 3) {
-              setError("Please enter at least 3 letters for your username.");
-            } else {
-              setError("");
-            }
-
-            setUsername(text);
+        <View
+          style={{
+            width: "74%",
+            height: 150,
+            justifyContent: "flex-end",
           }}
-          multiline={true}
-          autoFocus
-        />
+        >
+          <TextInput
+            style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
+            placeholder=""
+            value={username}
+            onChangeText={(text) => {
+              setIsUsernameCheck(false);
+              if (text.length < 3) {
+                setError("Please enter at least 3 letters for your username.");
+              } else {
+                setError("");
+              }
+
+              setUsername(text);
+            }}
+            multiline={true}
+            autoFocus
+          />
+        </View>
         {isUsernameCheck ? (
           <React.Fragment>
             <View
@@ -242,7 +250,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   input: {
-    width: "74%",
+    width: "100%",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,

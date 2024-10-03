@@ -117,27 +117,35 @@ const FirstNameScreen = () => {
           <UserIcon />
           <Text style={styles.text}>What's your first name?</Text>
         </View>
-        <TextInput
-          style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
-          placeholder=""
-          value={firstName}
-          onChangeText={(text) => {
-            const regex = /^[a-zA-Z\s]*$/;
-
-            if (!text) {
-              setError("Please enter at least 3 letters for your name.");
-            } else if (!regex.test(text)) {
-              setError("Please use letters only for your name.");
-            } else if (text.length < 3) {
-              setError("Please enter at least 3 letters for your name.");
-            } else {
-              setError("");
-            }
-            setFirstName(text);
+        <View
+          style={{
+            width: "74%",
+            height: 150,
+            justifyContent: "flex-end",
           }}
-          multiline={true}
-          autoFocus
-        />
+        >
+          <TextInput
+            style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
+            placeholder=""
+            value={firstName}
+            onChangeText={(text) => {
+              const regex = /^[a-zA-Z\s]*$/;
+
+              if (!text) {
+                setError("Please enter at least 3 letters for your name.");
+              } else if (!regex.test(text)) {
+                setError("Please use letters only for your name.");
+              } else if (text.length < 3) {
+                setError("Please enter at least 3 letters for your name.");
+              } else {
+                setError("");
+              }
+              setFirstName(text);
+            }}
+            multiline={true}
+            autoFocus
+          />
+        </View>
         {error && <Text style={styles.error}>{error}</Text>}
         <Text style={styles.textSmaller}>What your friends call you</Text>
         <TouchableOpacity style={styles.button} onPress={handleNext}>
@@ -177,7 +185,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   input: {
-    width: "74%",
+    width: "100%",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,

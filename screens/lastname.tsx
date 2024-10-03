@@ -114,29 +114,37 @@ const LastNameScreen = ({ navigation }: any) => {
           <UserIcon />
           <Text style={styles.text}>What's your last name?</Text>
         </View>
-        <TextInput
-          style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
-          placeholder=""
-          value={lastName}
-          onChangeText={(text) => {
-            // only allow letters and spaces
-            const regex = /^[a-zA-Z\s]*$/;
-
-            if (!text) {
-              setError("Please enter at least 3 letters for your name.");
-            } else if (!regex.test(text)) {
-              setError("Please use letters only for your name.");
-            } else if (text.length < 3) {
-              setError("Please enter at least 3 letters for your name.");
-            } else {
-              setError("");
-            }
-
-            setlastName(text);
+        <View
+          style={{
+            width: "74%",
+            height: 150,
+            justifyContent: "flex-end",
           }}
-          multiline={true}
-          autoFocus
-        />
+        >
+          <TextInput
+            style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
+            placeholder=""
+            value={lastName}
+            onChangeText={(text) => {
+              // only allow letters and spaces
+              const regex = /^[a-zA-Z\s]*$/;
+
+              if (!text) {
+                setError("Please enter at least 3 letters for your name.");
+              } else if (!regex.test(text)) {
+                setError("Please use letters only for your name.");
+              } else if (text.length < 3) {
+                setError("Please enter at least 3 letters for your name.");
+              } else {
+                setError("");
+              }
+
+              setlastName(text);
+            }}
+            multiline={true}
+            autoFocus
+          />
+        </View>
         {error && <Text style={styles.error}>{error}</Text>}
         <Text style={styles.textSmaller}>Your family’s claim to fame</Text>
         <TouchableOpacity style={styles.button} onPress={handleNext}>
@@ -176,7 +184,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   input: {
-    width: "74%",
+    width: "100%",
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderBottomWidth: 1,

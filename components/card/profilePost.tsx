@@ -13,6 +13,7 @@ import CalendarIcon from "@/svg/calendar";
 import PinIcon from "@/svg/pin";
 import CheckIcon from "@/svg/check";
 import StarIcon from "@/svg/star";
+import { useRouter } from "expo-router";
 
 interface Friend {
   profileImage: string;
@@ -41,8 +42,26 @@ const ProfilePostCard: React.FC<PostCardProps> = ({
   index,
   isInterested = false,
 }) => {
+  const router = useRouter();
+
+  const openEventDetailsPage = (event: any) => {
+    const eventAttendees = {
+      attendingFriends: event.attendingFriends,
+      interestedFriends: event.interestedFriends,
+    };
+
+    router.push({
+      pathname: "/EventDetailsScreen",
+      params: {
+        event: JSON.stringify(event),
+        eventAttendees: JSON.stringify(eventAttendees),
+        tab: "fof",
+      },
+    });
+  };
+
   return (
-    <View key={index}>
+    <TouchableOpacity key={index} onPress={() => openEventDetailsPage(event)}>
       <View style={styles.box}>
         <ImageBackground
           source={{
@@ -153,7 +172,7 @@ const ProfilePostCard: React.FC<PostCardProps> = ({
           )}
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 };
 
