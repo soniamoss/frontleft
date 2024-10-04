@@ -35,12 +35,14 @@ interface PostCardProps {
   event: Event;
   index: number;
   isInterested?: boolean;
+  isFriend?: boolean;
 }
 
 const ProfilePostCard: React.FC<PostCardProps> = ({
   event,
   index,
   isInterested = false,
+  isFriend = true,
 }) => {
   const router = useRouter();
 
@@ -51,7 +53,9 @@ const ProfilePostCard: React.FC<PostCardProps> = ({
     };
 
     router.push({
-      pathname: "/(tabs)/Home/EventDetailsScreen",
+      pathname: isFriend
+        ? "/(tabs)/Home/EventDetailsScreen"
+        : "/(tabs)/Profile/EventDetailsScreen",
       params: {
         event: JSON.stringify(event),
         eventAttendees: JSON.stringify(eventAttendees),

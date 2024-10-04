@@ -208,6 +208,7 @@ const ProfilePage = () => {
                     event={event}
                     index={index}
                     isInterested={true}
+                    isFriend={false}
                   />
                 );
               })
@@ -227,6 +228,7 @@ const ProfilePage = () => {
                   event={event}
                   index={index}
                   isInterested={true}
+                  isFriend={false}
                 />
               ))
             ) : (
