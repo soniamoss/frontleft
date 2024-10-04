@@ -138,7 +138,7 @@ const SearchPage = ({ navigation }: any) => {
 
   const handleEventPress = (event: any) => {
     router.push({
-      pathname: "/EventDetailsScreen",
+      pathname: "/(tabs)/Home/EventDetailsScreen",
       params: { event: JSON.stringify(event) },
     });
   };

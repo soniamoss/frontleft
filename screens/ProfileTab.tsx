@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { supabase } from "../../supabaseClient";
+import { supabase } from "../supabaseClient";
 import GroupUsersIcon from "@/svg/groupUsers";
 import PostCard from "@/components/card/post";
 import ProfilePostCard from "@/components/card/profilePost";
@@ -102,7 +102,7 @@ const ProfilePage = () => {
   };
 
   const handleSettings = () => {
-    router.push("/SettingsScreen");
+    router.push("/Profile/SettingsScreen");
   };
 
   const handleTabChange = (tab: any) => {
@@ -115,7 +115,7 @@ const ProfilePage = () => {
         style={{
           flex: 1,
         }}
-        source={require("../../assets/images/friends-back.png")}
+        source={require("../assets/images/friends-back.png")}
       >
         <View
           style={[
@@ -134,7 +134,7 @@ const ProfilePage = () => {
       style={{
         flex: 1,
       }}
-      source={require("../../assets/images/friends-back.png")}
+      source={require("../assets/images/friends-back.png")}
     >
       <View style={styles.container}>
         <TouchableOpacity style={styles.image} onPress={handleSettings}>

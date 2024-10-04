@@ -117,12 +117,12 @@ const LastNameScreen = ({ navigation }: any) => {
         <View
           style={{
             width: "74%",
-            height: 150,
+            height: 120,
             justifyContent: "flex-end",
           }}
         >
           <TextInput
-            style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
+            style={[styles.input, { fontSize, marginBottom: 30 }]} // Apply dynamic font size
             placeholder=""
             value={lastName}
             onChangeText={(text) => {
@@ -145,7 +145,9 @@ const LastNameScreen = ({ navigation }: any) => {
             autoFocus
           />
         </View>
-        {error && <Text style={styles.error}>{error}</Text>}
+        <View style={{ height: 40 }}>
+          {error && <Text style={styles.error}>{error}</Text>}
+        </View>
         <Text style={styles.textSmaller}>Your family’s claim to fame</Text>
         <TouchableOpacity style={styles.button} onPress={handleNext}>
           <Text style={styles.buttonText}>Continue</Text>
@@ -223,7 +225,6 @@ const styles = StyleSheet.create({
     fontFamily: "poppins",
     fontSize: 11,
     fontWeight: "400",
-    marginBottom: 30,
   },
 });
 

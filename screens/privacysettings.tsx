@@ -39,6 +39,7 @@ const PrivacySettings = () => {
         console.error("Error fetching settings:", error);
       } else {
         setContactSyncEnabled(data.contact_sync);
+        setNotificationSyncEnabled(data.notifications);
         setPrivacySetting(data.privacy);
       }
     };
@@ -48,16 +49,15 @@ const PrivacySettings = () => {
 
   const handleContactSyncToggle = async () => {
     try {
-      const user = await getCurrentUser();
       const updatedValue = !contactSyncEnabled;
+      setContactSyncEnabled(updatedValue);
+      const user = await getCurrentUser();
       const { error }: any = await supabase
         .from("profiles")
         .update({ contact_sync: updatedValue })
         .eq("user_id", user.id);
 
       if (error) throw error;
-
-      setContactSyncEnabled(updatedValue);
 
       Toast.show({
         type: "successToast",
@@ -66,6 +66,7 @@ const PrivacySettings = () => {
       });
     } catch (error) {
       console.error("Error updating contact sync:", error);
+      setContactSyncEnabled(!contactSyncEnabled);
       Toast.show({
         type: "tomatoToast",
         text1: "That didn’t work, please try again!",
@@ -78,25 +79,29 @@ const PrivacySettings = () => {
     try {
       const updatedValue = !notificationSyncEnabled;
       setNotificationSyncEnabled(updatedValue);
-      // const user = await getCurrentUser();
-      // const { error }: any = await supabase
-      //   .from("profiles")
-      //   .update({ contact_sync: updatedValue })
-      //   .eq("user_id", user.id);
+      const user = await getCurrentUser();
+      const { error }: any = await supabase
+        .from("profiles")
+        .update({ notifications: updatedValue })
+        .eq("user_id", user.id);
 
-      // if (error) throw error;
+      if (error) throw error;
 
-      // setContactSyncEnabled(updatedValue);
-      // Alert.alert(
-      //   "Success",
-      //   `Contact Sync is now ${updatedValue ? "enabled" : "disabled"}`
-      // );
+      Toast.show({
+        type: "successToast",
+        text1: `Notification Sync is now ${
+          updatedValue ? "enabled" : "disabled"
+        }`,
+        position: "bottom",
+      });
     } catch (error) {
-      // console.error("Error updating contact sync:", error);
-      // Alert.alert(
-      //   "Error",
-      //   "There was an issue updating your contact sync settings. Please try again."
-      // );
+      console.error("Error updating notification sync:", error);
+      setNotificationSyncEnabled(!notificationSyncEnabled);
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
     }
   };
 

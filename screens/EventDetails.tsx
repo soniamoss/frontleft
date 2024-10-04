@@ -80,6 +80,10 @@ const EventDetails = () => {
         if (currentTab === "friends") {
           await fetchEventAttendees(friendIds);
         } else {
+          if (friendIds.length === 0) {
+            fetchEventAttendees([]);
+            return;
+          }
           await getFriendsofFriends(friendIds);
         }
       }
@@ -166,7 +170,7 @@ const EventDetails = () => {
           .filter(
             (att: any) =>
               att.status === "interested" &&
-              (friends.includes(att.profiles.user_id) ||
+              (friendIds.includes(att.profiles.user_id) ||
                 att.profiles.user_id === user.id)
           )
           .map((att: any) => ({
@@ -529,7 +533,7 @@ const EventDetails = () => {
                         if (currentUser.id === friend.user_id) return;
 
                         router.push({
-                          pathname: "/FirendsProfile",
+                          pathname: "/(tabs)/Home/FirendsProfile",
                           params: { user_id: friend.user_id },
                         });
                       }}
@@ -554,7 +558,7 @@ const EventDetails = () => {
                 <TouchableOpacity
                   onPress={() => {
                     router.push({
-                      pathname: "/EventUsers",
+                      pathname: "/(tabs)/Home/EventUsers",
                       params: {
                         eventAttendees: JSON.stringify(attendeesData),
                         currentTab: "attendingFriends",

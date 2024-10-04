@@ -83,10 +83,11 @@ export default function ShowContacts() {
     try {
       const { status } = await Contacts.requestPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert(
-          "Permissions Denied",
-          "Access to contacts is required to find friends."
-        );
+        Toast.show({
+          type: "tomatoToast",
+          text1: "Access to contacts is required to find friends.",
+          position: "bottom",
+        });
         setLoading(false);
         return;
       }
@@ -96,7 +97,13 @@ export default function ShowContacts() {
       });
 
       if (!deviceContacts?.length) {
-        Alert.alert("No Contacts Found", "No contacts found on your device.");
+        // TODO
+
+        Toast.show({
+          type: "tomatoToast",
+          text1: "No contacts found on your device.",
+          position: "bottom",
+        });
         setLoading(false);
         return;
       }

@@ -1,23 +1,23 @@
 import ButtonContained from "@/components/buttons/contained";
 import ButtonOutlined from "@/components/buttons/outlined";
-import { router } from "expo-router";
+import { getCurrentUser } from "@/services/userService";
+import { supabase } from "@/supabaseClient";
+import { router, useNavigation } from "expo-router";
 import React, { useEffect } from "react";
-import {
-  Alert,
-  ImageBackground,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { Alert, ImageBackground, StyleSheet, Text, View } from "react-native";
+import Toast from "react-native-toast-message";
 
 const AllowNotifications = () => {
+  const navigation = useNavigation();
   // useEffect(() => {
 
   // }, []);
 
   const handleSkip = () => {
-    router.push("/(tabs)");
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "(tabs)" }], // your stack screen name
+    });
   };
 
   const handleAllow = () => {
@@ -40,8 +40,35 @@ const AllowNotifications = () => {
     );
   };
 
-  const allowNotifications = () => {
-    router.push("/(tabs)");
+  const allowNotifications = async () => {
+    try {
+      const user = await getCurrentUser();
+      const { error }: any = await supabase
+        .from("profiles")
+        .update({ notifications: true })
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      Toast.show({
+        type: "successToast",
+        text1: `Notification Sync is now enabled`,
+        position: "bottom",
+      });
+    } catch (error) {
+      console.error("Error updating notification sync:", error);
+
+      Toast.show({
+        type: "tomatoToast",
+        text1: "That didn’t work, please try again!",
+        position: "bottom",
+      });
+    } finally {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "(tabs)" }], // your stack screen name
+      });
+    }
   };
 
   return (

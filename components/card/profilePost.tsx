@@ -51,7 +51,7 @@ const ProfilePostCard: React.FC<PostCardProps> = ({
     };
 
     router.push({
-      pathname: "/EventDetailsScreen",
+      pathname: "/(tabs)/Home/EventDetailsScreen",
       params: {
         event: JSON.stringify(event),
         eventAttendees: JSON.stringify(eventAttendees),

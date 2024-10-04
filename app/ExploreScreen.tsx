@@ -1,3 +1,3 @@
-import ExploreTab from "@/app/(tabs)";
+import ExploreTab from "@/app/(tabs)/Home";
 
 export default ExploreTab;

@@ -1,8 +1,9 @@
-import { router } from "expo-router";
+import { router, useNavigation } from "expo-router";
 import React, { useEffect } from "react";
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 const Notifications = () => {
+  const navigation = useNavigation();
   useEffect(() => {
     Alert.alert(
       '"Doost" Would Like to Send You Notifications',
@@ -24,7 +25,10 @@ const Notifications = () => {
   }, []);
 
   const handleNext = () => {
-    router.push("/(tabs)");
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "(tabs)" }], // your stack screen name
+    });
   };
 
   return (

@@ -68,13 +68,20 @@ const ExploreFoFriendsTab = () => {
         const friendIds = friendsData.map((friend: any) =>
           friend.user_id === userId ? friend.friend_id : friend.user_id
         );
-        console.log("Friends Data:", friendIds);
 
         // setFriends(friendIds);
+
+        if (friendIds.length === 0) {
+          fetchEvents({ id: userId }, []);
+          return;
+        }
+
         await getFriendsofFriends(userId, friendIds);
       }
     } catch (error) {
       console.error("Error fetching friends:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -213,7 +220,7 @@ const ExploreFoFriendsTab = () => {
     };
 
     router.push({
-      pathname: "/EventDetailsScreen",
+      pathname: "/(tabs)/Home/EventDetailsScreen",
       params: {
         event: JSON.stringify(event),
         eventAttendees: JSON.stringify(eventAttendees),

@@ -159,7 +159,7 @@ const UsernameScreen = ({ navigation }: any) => {
           }}
         >
           <TextInput
-            style={[styles.input, { fontSize, marginBottom: error ? 30 : 60 }]} // Apply dynamic font size
+            style={[styles.input, { fontSize, marginBottom: 30 }]} // Apply dynamic font size
             placeholder=""
             value={username}
             onChangeText={(text) => {
@@ -176,39 +176,37 @@ const UsernameScreen = ({ navigation }: any) => {
             autoFocus
           />
         </View>
-        {isUsernameCheck ? (
-          <React.Fragment>
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 5,
-                marginBottom: 30,
-              }}
-            >
-              {/* <SimpleLineIcons
-                name={isUsernameAvailable ? "user-following" : "user-unfollow"}
-                size={20}
-                color={isUsernameAvailable ? "#009C5F" : "#DF5A76"}
-              /> */}
-              {isUsernameAvailable ? <UserCheckIcon /> : <UserExclaimIcon />}
-              <Text
-                style={[
-                  styles.textSmaller,
-                  { marginBottom: 0 },
-                  { color: isUsernameAvailable ? "#009C5F" : "#DF5A76" },
-                ]}
+        <View style={{ height: 40 }}>
+          {isUsernameCheck ? (
+            <React.Fragment>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 5,
+                }}
               >
-                {isUsernameAvailable ? "Available" : "Not Available"}
-              </Text>
-            </View>
-          </React.Fragment>
-        ) : (
-          <React.Fragment>
-            {error && <Text style={styles.error}>{error}</Text>}
-          </React.Fragment>
-        )}
-        <Text style={styles.textSmaller}>Have fun with it</Text>
+                {isUsernameAvailable ? <UserCheckIcon /> : <UserExclaimIcon />}
+                <Text
+                  style={[
+                    styles.textSmaller,
+                    { marginBottom: 0 },
+                    { color: isUsernameAvailable ? "#009C5F" : "#DF5A76" },
+                  ]}
+                >
+                  {isUsernameAvailable ? "Available" : "Not Available"}
+                </Text>
+              </View>
+            </React.Fragment>
+          ) : (
+            <React.Fragment>
+              {error && (
+                <Text style={[styles.error, { marginBottom: 0 }]}>{error}</Text>
+              )}
+            </React.Fragment>
+          )}
+        </View>
+        <Text style={[styles.textSmaller]}>Have fun with it</Text>
         <TouchableOpacity
           style={[styles.button, !isUsernameAvailable && { opacity: 0.5 }]}
           onPress={handleNext}

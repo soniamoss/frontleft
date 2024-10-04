@@ -76,7 +76,13 @@ const EditProfilePage = () => {
     const permissionResult =
       await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (permissionResult.granted === false) {
-      Alert.alert("Permission to access the gallery is required!");
+      // TODO
+      Toast.show({
+        type: "tomatoToast",
+        text1: "Permission to access the gallery was denied",
+        position: "bottom",
+      });
+
       return;
     }
 

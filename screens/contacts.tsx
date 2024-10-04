@@ -17,6 +17,7 @@ import {
 import { addFriend } from "../services/friendshipService";
 import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
+import Toast from "react-native-toast-message";
 
 export default function ShowContacts() {
   const [matchingProfiles, setMatchingProfiles] = useState([]);
@@ -83,9 +84,18 @@ export default function ShowContacts() {
     // @ts-ignore
     const result = await addFriend(user.user_id, profile.user_id);
     if (result.success) {
-      Alert.alert("Success", "Friend request sent successfully!");
+      // TODO
+      Toast.show({
+        type: "successToast",
+        text1: "Friend request sent successfully!",
+        position: "bottom",
+      });
     } else {
-      Alert.alert("Error", result.message || "Failed to send friend request.");
+      Toast.show({
+        type: "errorToast",
+        text1: "Error sending friend request",
+        position: "bottom",
+      });
     }
   };
 

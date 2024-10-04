@@ -69,11 +69,11 @@ const ProfilePage = () => {
   };
 
   const handleProfileEdit = () => {
-    router.push("/ProfileEditScreen"); // Navigate to the profile edit page
+    router.push("/Profile/ProfileEditScreen"); // Navigate to the profile edit page
   };
 
   const handlePrivacySettings = () => {
-    router.push("/PrivacySettingsScreen"); // Navigate to the privacy settings page
+    router.push("/Profile/PrivacySettingsScreen"); // Navigate to the privacy settings page
   };
 
   const handleContactUs = () => {
