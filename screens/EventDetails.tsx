@@ -548,7 +548,7 @@ const EventDetails = () => {
                   ))}
               {attendeesData.attendingFriends &&
                 attendeesData.attendingFriends.length > 3 && (
-                  <Text style={styles.seeMore}>
+                  <Text style={[styles.seeMore, { color: "#3D4353" }]}>
                     +{attendeesData.attendingFriends.length - 3} more
                   </Text>
                 )}
@@ -632,7 +632,7 @@ const EventDetails = () => {
                   ))}
               {attendeesData.interestedFriends &&
                 attendeesData.interestedFriends.length > 3 && (
-                  <Text style={styles.seeMore}>
+                  <Text style={[styles.seeMore, { color: "#3D4353" }]}>
                     +{attendeesData.interestedFriends.length - 3} more
                   </Text>
                 )}

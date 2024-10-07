@@ -20,7 +20,7 @@ const IntroScreen = () => {
       style={styles.container}
       source={require("../../assets/images/friends-back.png")}
     >
-      <HeaderText>Doost</HeaderText>
+      <HeaderText>FrontLeft</HeaderText>
       <Text style={styles.textsmaller}>Where events and friends meet</Text>
 
       <View

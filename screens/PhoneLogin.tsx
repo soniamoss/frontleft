@@ -405,8 +405,9 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: "#3D4353",
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 15,
+    fontWeight: "400",
+    fontFamily: "Poppins",
   },
   closeButton: {
     position: "absolute",

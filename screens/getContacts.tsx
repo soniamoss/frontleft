@@ -157,11 +157,7 @@ export default function ShowContacts() {
       id: contact.id,
       first_name: contact.name,
       phone_number: contact.phoneNumbers ? contact.phoneNumbers[0].number : "",
-      username: contact?.phoneNumbers
-        ? contact.phoneNumbers[0].number?.startsWith("+1")
-          ? contact.phoneNumbers[0].number
-          : "+1 " + contact.phoneNumbers[0].number
-        : "",
+      username: contact?.phoneNumbers ? contact.phoneNumbers[0].number : "",
       invite: true,
     }));
 

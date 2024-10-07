@@ -31,7 +31,7 @@ const PrivacySettings = () => {
       const user = await getCurrentUser();
       const { data, error }: any = await supabase
         .from("profiles")
-        .select("contact_sync, privacy")
+        .select("contact_sync, privacy, notifications")
         .eq("user_id", user.id)
         .single();
 

@@ -6,7 +6,7 @@ const Notifications = () => {
   const navigation = useNavigation();
   useEffect(() => {
     Alert.alert(
-      '"Doost" Would Like to Send You Notifications',
+      '"FrontLeft" Would Like to Send You Notifications',
       "Notifications may include alerts, sounds and icon badges. These can be configured in Settings.",
       [
         {

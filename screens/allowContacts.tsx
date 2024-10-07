@@ -26,7 +26,7 @@ const GetContacts = () => {
 
   const handleAllow = async () => {
     Alert.alert(
-      '"Doost" Would Like to Access Your Contacts',
+      '"FrontLeft" Would Like to Access Your Contacts',
       "We’ll check your contacts to see who from your friends is already on the app. Your contacts won’t be stored.",
       [
         {
@@ -80,7 +80,7 @@ const GetContacts = () => {
     >
       <Text style={styles.text}>Find Friends</Text>
       <Text style={styles.textother}>
-        Let’s find friends already on Doost to{"\n"} see what events they’re
+        Let’s find friends already on FrontLeft to{"\n"} see what events they’re
         going to!
       </Text>
       <View

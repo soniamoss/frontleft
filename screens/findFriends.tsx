@@ -79,6 +79,19 @@ export default function ShowContacts() {
   const fetchContacts = async () => {
     const user = await getCurrentUser();
 
+    const { data, error }: any = await supabase
+      .from("profiles")
+      .select("contact_sync")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+      console.error("Error fetching contacts:", error);
+    } else if (!data.contact_sync) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const { status } = await Contacts.requestPermissionsAsync();
@@ -162,11 +175,7 @@ export default function ShowContacts() {
           phone_number: contact.phoneNumbers
             ? contact.phoneNumbers[0].number
             : "",
-          username: contact?.phoneNumbers
-            ? contact.phoneNumbers[0].number?.startsWith("+1")
-              ? contact.phoneNumbers[0].number
-              : "+1 " + contact.phoneNumbers[0].number
-            : "",
+          username: contact?.phoneNumbers ? contact.phoneNumbers[0].number : "",
           invite: true,
         }));
 

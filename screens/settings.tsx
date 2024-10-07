@@ -158,7 +158,7 @@ const ProfilePage = () => {
           justifyContent: "center",
         }}
       >
-        <Text style={styles.text}>Doost</Text>
+        <Text style={styles.text}>FrontLeft</Text>
         <Text style={styles.textsmaller}>Where events and friends meet</Text>
 
         <TouchableOpacity

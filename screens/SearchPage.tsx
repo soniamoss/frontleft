@@ -145,7 +145,7 @@ const SearchPage = ({ navigation }: any) => {
 
   const handleContactUs = () => {
     const email = "faryar48@gmail.com";
-    const subject = "[Doost]: I’d like to add an event!";
+    const subject = "[FrontLeft: I’d like to add an event!";
     const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
     Linking.openURL(mailtoUrl);
   };
