@@ -109,17 +109,14 @@ const ExploreFoFriendsTab = () => {
           : relation.user_id
       );
 
-      const uniqueFriends = [...new Set(friendsOfFriends)];
       // Remove duplicates by creating a Set
       const uniqueFriendsOfFriends = [...new Set(friendsOfFriends)].filter(
         (id) => !friendIds.includes(id) // Exclude the friends we already know
       );
 
       // Optionally, you can set state with the friends of friends data or do other operations
-      fetchEvents({ id: userId }, [
-        ...uniqueFriends,
-        ...uniqueFriendsOfFriends,
-      ]);
+      console.log("Friends of Friends:", friendIds);
+      fetchEvents({ id: userId }, [...friendIds, ...uniqueFriendsOfFriends]);
     } catch (error) {
       console.error("Error fetching friends of friends:", error);
     }

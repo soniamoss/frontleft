@@ -54,6 +54,7 @@ export default function ShowContacts() {
 
   useFocusEffect(
     useCallback(() => {
+      console.log("fetching contacts");
       fetchContacts();
     }, [])
   );
@@ -88,6 +89,7 @@ export default function ShowContacts() {
     if (error) {
       console.error("Error fetching contacts:", error);
     } else if (!data.contact_sync) {
+      setAppContacts([]);
       setLoading(false);
       return;
     }

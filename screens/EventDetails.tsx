@@ -30,6 +30,7 @@ import GoingButton from "@/components/buttons/going";
 const EventDetails = () => {
   const params = useLocalSearchParams();
   const [currentUser, setCurrentUser] = useState({});
+
   const eventString = params?.event || "";
   const eventAttendeesString = params?.eventAttendees || "";
 
@@ -122,7 +123,7 @@ const EventDetails = () => {
 
       // Optionally, you can set state with the friends of friends data or do other operations
       setFriendsOfFriends(uniqueFriendsOfFriends);
-      fetchEventAttendees(uniqueFriendsOfFriends);
+      fetchEventAttendees([...friendIds, ...uniqueFriendsOfFriends]);
     } catch (error) {
       console.error("Error fetching friends of friends:", error);
     }
@@ -637,12 +638,12 @@ const EventDetails = () => {
                   </Text>
                 )}
             </View>
-            {attendeesData.attendingFriends &&
-              attendeesData.attendingFriends.length > 3 && (
+            {attendeesData.interestedFriends &&
+              attendeesData.interestedFriends.length > 3 && (
                 <TouchableOpacity
                   onPress={() => {
                     router.push({
-                      pathname: "/EventUsers",
+                      pathname: "/(tabs)/Home/EventUsers",
                       params: {
                         eventAttendees: JSON.stringify(attendeesData),
                         currentTab: "interestedFriends",

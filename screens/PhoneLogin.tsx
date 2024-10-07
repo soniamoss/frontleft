@@ -19,6 +19,7 @@ import {
 
 import { supabase } from "../supabaseClient";
 import Toast from "react-native-toast-message";
+import ShieldIcon from "@/svg/shield";
 
 interface Data {
   phone: string;
@@ -285,7 +286,7 @@ const PhoneLoginScreen = () => {
                 marginBottom: 20,
               }}
             >
-              <Ionicons name="shield-outline" size={40} color="#3F407C" />
+              <ShieldIcon />
               <Text style={styles.text2}>Verify your number</Text>
             </View>
 
@@ -397,8 +398,9 @@ const styles = StyleSheet.create({
   },
   button: {
     // width: "60%",
-    paddingVertical: 15,
-    paddingHorizontal: 30,
+    paddingVertical: 10,
+    minWidth: 200,
+    paddingHorizontal: 50,
     backgroundColor: "#F5F5F5",
     borderRadius: 30,
     alignItems: "center",

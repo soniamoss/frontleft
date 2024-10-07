@@ -108,7 +108,7 @@ const ExploreFoFriendsTab = () => {
             const attendingFriends = attendeesData
               .filter(
                 (att: any) =>
-                  att.event_id === event.id &&
+                  att.event_id == event.id &&
                   att.status === "going" &&
                   (friendIds.includes(att.user_id) || att.user_id === user.id)
               )

@@ -19,6 +19,8 @@ import Toast from "react-native-toast-message";
 import { addFriend } from "@/services/friendshipService";
 import { supabase } from "@/supabaseClient";
 import { sendNotifications } from "@/utils/notification";
+import FriendsIcon from "@/svg/friends";
+import FriendsTwo from "@/svg/friendsTwo";
 
 const EventDetails = () => {
   const params = useLocalSearchParams();
@@ -203,6 +205,20 @@ const EventDetails = () => {
                           {isAdded?.status === "pending" ? "Pending" : "Add"}
                         </Text>
                       </TouchableOpacity>
+                    )}
+
+                  {currentUser.id !== item.user_id &&
+                    isAdded?.status === "accepted" && (
+                      <View
+                        style={{
+                          width: "34%",
+                          flexDirection: "row",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <FriendsTwo />
+                      </View>
                     )}
                 </TouchableOpacity>
               </>
