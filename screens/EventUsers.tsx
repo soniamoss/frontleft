@@ -154,7 +154,7 @@ const EventDetails = () => {
                     if (currentUser.id === item.user_id) return;
 
                     router.push({
-                      pathname: "/FirendsProfile",
+                      pathname: "/(tabs)/Home/FirendsProfile",
                       params: { user_id: item.user_id },
                     });
                   }}
@@ -224,6 +224,7 @@ const EventDetails = () => {
               </>
             );
           }}
+          showsVerticalScrollIndicator={false}
         />
       </View>
     </ImageBackground>

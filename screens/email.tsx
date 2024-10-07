@@ -177,18 +177,19 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   button: {
-    width: "60%",
-    paddingVertical: 15,
+    width: 280,
+    paddingVertical: 10,
+    paddingHorizontal: 50,
     backgroundColor: "#F5F5F5",
     borderRadius: 30,
     alignItems: "center",
-    top: 16,
-    zIndex: 1, // Ensure the button is above the image
+    marginTop: 10,
   },
   buttonText: {
     color: "#3D4353",
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 15,
+    fontWeight: "400",
+    fontFamily: "Poppins",
   },
   closeButton: {
     position: "absolute",
