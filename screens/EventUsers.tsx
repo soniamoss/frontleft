@@ -3,6 +3,7 @@ import Constants from "expo-constants";
 
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Image,
@@ -31,6 +32,7 @@ const EventDetails = () => {
   const [currentUser, setCurrentUser] = useState({});
   const [requests, setRequests] = useState([]);
   const [contacts, setContacts] = useState<any>([]);
+  const [initalLoading, setInitialLoading] = useState(true);
 
   // const data = JSON.parse(eventAttendeesString);
 
@@ -85,20 +87,45 @@ const EventDetails = () => {
   };
 
   const fetchContacts = async () => {
-    const user = await getCurrentUser();
+    try {
+      const user = await getCurrentUser();
 
-    const { data, error }: any = await supabase
-      .from("friendships")
-      .select("*")
-      .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+      const { data, error }: any = await supabase
+        .from("friendships")
+        .select("*")
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
 
-    if (error) {
-      console.error("Error fetching contacts:", error);
-    } else {
-      console.log("Contacts Data:", data);
-      setContacts(data);
+      if (error) {
+        console.error("Error fetching contacts:", error);
+      } else {
+        console.log("Contacts Data:", data);
+        setContacts(data);
+      }
+    } catch (error) {
+    } finally {
+      setInitialLoading(false);
     }
   };
+
+  if (initalLoading) {
+    return (
+      <ImageBackground
+        style={styles.container}
+        source={require("../assets/images/friends-back.png")}
+      >
+        <BackButton />
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ActivityIndicator size="large" color="#3F407C" />
+        </View>
+      </ImageBackground>
+    );
+  }
 
   return (
     <ImageBackground

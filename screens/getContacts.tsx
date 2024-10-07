@@ -22,6 +22,7 @@ import { supabase } from "../supabaseClient";
 import SearchBar from "@/components/SearchBar";
 import { router } from "expo-router";
 import { sendNotifications } from "@/utils/notification";
+import { formatPhoneNumber } from "@/utils/formatter";
 
 interface Contact {
   id: string;
@@ -156,8 +157,12 @@ export default function ShowContacts() {
     const nonAppContactsSample = deviceContacts.slice(0, 10).map((contact) => ({
       id: contact.id,
       first_name: contact.name,
-      phone_number: contact.phoneNumbers ? contact.phoneNumbers[0].number : "",
-      username: contact?.phoneNumbers ? contact.phoneNumbers[0].number : "",
+      phone_number: contact.phoneNumbers
+        ? formatPhoneNumber(contact.phoneNumbers[0].number || "")
+        : "",
+      username: contact?.phoneNumbers
+        ? formatPhoneNumber(contact.phoneNumbers[0].number || "")
+        : "",
       invite: true,
     }));
 

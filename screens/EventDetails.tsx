@@ -47,12 +47,32 @@ const EventDetails = () => {
   const [loading, setLoading] = useState(!eventAttendees);
   const [friends, setFriends] = useState<any[]>([]);
   const [friendsOfFriends, setFriendsOfFriends] = useState<any[]>([]);
+  const [initalLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
     // fetchEventAttendees();
 
     const getData = async () => {
+      if (currentUser?.id) {
+        return await fetchFriends(currentUser?.id);
+      }
+
       const user = await getCurrentUser();
+
+      setInitialLoading(false);
+
+      const isGoing = eventAttendees?.attendingFriends?.some(
+        (friend: any) => friend.user_id === user.id
+      );
+      const isInterested = eventAttendees?.interestedFriends?.some(
+        (friend: any) => friend.user_id === user.id
+      );
+
+      setGoingStatus(isGoing);
+      setInterestedStatus(isInterested);
+      if (isGoing || isInterested) {
+        setAttendeesData(eventAttendees);
+      }
 
       setCurrentUser(user);
       await fetchFriends(user.id);
@@ -378,6 +398,25 @@ const EventDetails = () => {
     }
   };
 
+  if (initalLoading) {
+    return (
+      <ImageBackground
+        style={styles.container}
+        source={require("../assets/images/friends-back.png")}
+      >
+        <BackButton />
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ActivityIndicator size="large" color="#3F407C" />
+        </View>
+      </ImageBackground>
+    );
+  }
   return (
     <ImageBackground
       style={styles.container}

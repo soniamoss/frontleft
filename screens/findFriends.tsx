@@ -21,6 +21,7 @@ import { getCurrentUser } from "../services/userService";
 import { supabase } from "../supabaseClient";
 import SearchBar from "@/components/SearchBar";
 import { sendNotifications } from "@/utils/notification";
+import { formatPhoneNumber } from "@/utils/formatter";
 
 interface Contact {
   id: string;
@@ -175,9 +176,11 @@ export default function ShowContacts() {
           id: contact.id,
           first_name: contact.name,
           phone_number: contact.phoneNumbers
-            ? contact.phoneNumbers[0].number
+            ? formatPhoneNumber(contact.phoneNumbers[0].number || "")
             : "",
-          username: contact?.phoneNumbers ? contact.phoneNumbers[0].number : "",
+          username: contact?.phoneNumbers
+            ? formatPhoneNumber(contact.phoneNumbers[0].number || "")
+            : "",
           invite: true,
         }));
 

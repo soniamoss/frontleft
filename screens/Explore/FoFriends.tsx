@@ -145,7 +145,7 @@ const ExploreFoFriendsTab = () => {
         const { data: attendeesData, error: attendeesError } = await supabase
           .from("event_attendees")
           .select(
-            "event_id, status, user_id, profiles!event_attendees_user_id_fkey(profile_image_url, first_name, username, last_name)"
+            "event_id, status, user_id, profiles!event_attendees_user_id_fkey(profile_image_url, first_name, username, last_name, user_id)"
           )
           .in("event_id", eventIds)
           .or("status.eq.going,status.eq.interested");
@@ -162,8 +162,12 @@ const ExploreFoFriendsTab = () => {
                   (friendIds.includes(att.user_id) || att.user_id === user.id)
               )
               .map((att: any) => ({
+                user_id: att.profiles.user_id,
                 profileImage: att.profiles.profile_image_url,
                 firstName: att.profiles.first_name,
+                lastName: att.profiles.last_name,
+                username: att.profiles.username,
+                status: att.status,
               }));
 
             const interestedFriends = attendeesData
@@ -174,8 +178,12 @@ const ExploreFoFriendsTab = () => {
                   (friendIds.includes(att.user_id) || att.user_id === user.id)
               )
               .map((att: any) => ({
+                user_id: att.profiles.user_id,
                 profileImage: att.profiles.profile_image_url,
                 firstName: att.profiles.first_name,
+                lastName: att.profiles.last_name,
+                username: att.profiles.username,
+                status: att.status,
               }));
 
             return { ...event, attendingFriends, interestedFriends };
