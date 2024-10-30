@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Doost",
+    "name": "FrontLeft",
     "slug": "Doost",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,9 +13,18 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "buildNumber": "1.0.1",
+      "bundleIdentifier": "com.frontleft.ios",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSPhotoLibraryAddUsageDescription": "We need your photos library permission, so you can pick your profile picture.",
+        "NSPhotoLibraryUsageDescription": "We need your photos library permission, so you can pick your profile picture",
+        "NSCameraUsageDescription": "We need your camera permission, so you can take your profile picture"
+      }
     },
     "android": {
+      "versionCode": 102,
+      "package": "com.frontleft.android",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
@@ -31,7 +40,7 @@
       [
         "expo-contacts",
         {
-          "contactsPermission": "“Doost” Would Like to Send You Notifications"
+          "contactsPermission": "We need your contacts permission, so you can add your friends."
         }
       ]
     ],
