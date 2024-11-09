@@ -19,6 +19,7 @@ import PrivacyIcon from "@/svg/privacy";
 import ChevronIcon from "@/svg/chevron";
 import ContactIcon from "@/svg/contact";
 import BackButton from "@/components/backButton";
+import { deleteUser } from "@/utils/delete-user";
 
 const ProfilePage = () => {
   const [initalLoading, setInitialLoading] = useState(true);
@@ -88,6 +89,28 @@ const ProfilePage = () => {
     router.push("/");
   };
 
+  const handleDeleteAccount = async () => {
+
+    try {
+
+      const user = await getCurrentUser();
+
+      const userId = user.id;
+
+      await deleteUser({ userId: userId });
+
+      await supabase.auth.signOut();
+      router.push("/");
+
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      return
+    }
+
+    
+
+  };
+
   if (initalLoading && !profileData.username) {
     return (
       <ImageBackground
@@ -144,6 +167,14 @@ const ProfilePage = () => {
           <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
             <ContactIcon />
             <Text style={styles.buttonText}>Contact Us</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleDeleteAccount}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
+            {/* <ContactIcon /> */}
+            <Text style={styles.buttonText}>
+            Delete Account
+            </Text>
           </View>
         </TouchableOpacity>
       </View>
