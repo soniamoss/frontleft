@@ -1,5 +1,5 @@
-import { useFocusEffect } from "@react-navigation/native";
-import React, { useCallback, useEffect, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native"
+import React, { useCallback, useEffect, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -10,43 +10,43 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import { getCurrentUser } from "../services/userService";
-import { supabase } from "../supabaseClient";
-import SearchBar from "@/components/SearchBar";
-import { AntDesign } from "@expo/vector-icons";
-import Toast from "react-native-toast-message";
+} from "react-native"
+import { getCurrentUser } from "../services/userService"
+import { supabase } from "../supabaseClient"
+import SearchBar from "@/components/SearchBar"
+import { AntDesign } from "@expo/vector-icons"
+import Toast from "react-native-toast-message"
 
 // Define the profile and friendship types
 interface Profile {
-  first_name: string;
-  last_name: string;
-  username: string;
-  profile_image_url: string | null;
-  user_id: string;
+  first_name: string
+  last_name: string
+  username: string
+  profile_image_url: string | null
+  user_id: string
 }
 
 interface Friendship {
-  user_profile: Profile;
-  friend_profile: Profile;
+  user_profile: Profile
+  friend_profile: Profile
 }
 
 export default function ShowContacts() {
-  const [acceptedFriends, setAcceptedFriends] = useState<Profile[]>([]);
+  const [acceptedFriends, setAcceptedFriends] = useState<Profile[]>([])
 
-  const [searchText, setSearchText] = useState<string>("");
-  const [filteredProfiles, setFilteredProfiles] = useState<Profile[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [searchText, setSearchText] = useState<string>("")
+  const [filteredProfiles, setFilteredProfiles] = useState<Profile[]>([])
+  const [loading, setLoading] = useState<boolean>(false)
 
   useFocusEffect(
     useCallback(() => {
-      fetchAcceptedFriends();
+      fetchAcceptedFriends()
     }, [])
-  );
+  )
 
   useEffect(() => {
     const setupRealTimeSubscription = async () => {
-      const user = await getCurrentUser();
+      const user = await getCurrentUser()
 
       const subscription = supabase
         .channel("public:friendships")
@@ -59,8 +59,8 @@ export default function ShowContacts() {
             filter: `friend_id=eq.${user.id},user_id=eq.${user.id}`,
           },
           (payload: any) => {
-            console.log("Insert event detected:", payload);
-            fetchAcceptedFriends();
+            console.log("Insert event detected:", payload)
+            fetchAcceptedFriends()
           }
         )
         .on(
@@ -72,8 +72,8 @@ export default function ShowContacts() {
             filter: `friend_id=eq.${user.id},user_id=eq.${user.id}`,
           },
           (payload: any) => {
-            console.log("Update event detected:", payload);
-            fetchAcceptedFriends();
+            console.log("Update event detected:", payload)
+            fetchAcceptedFriends()
           }
         )
         .on(
@@ -85,25 +85,25 @@ export default function ShowContacts() {
             filter: `friend_id=eq.${user.id},user_id=eq.${user.id}`,
           },
           (payload: any) => {
-            console.log("Delete event detected:", payload);
-            fetchAcceptedFriends();
+            console.log("Delete event detected:", payload)
+            fetchAcceptedFriends()
           }
         )
         .subscribe((status: string) => {
-          console.log("Subscription status:", status);
-        });
+          console.log("Subscription status:", status)
+        })
 
       return () => {
-        supabase.removeChannel(subscription);
-      };
-    };
+        supabase.removeChannel(subscription)
+      }
+    }
 
-    setupRealTimeSubscription();
-  }, []);
+    setupRealTimeSubscription()
+  }, [])
 
   const fetchAcceptedFriends = async () => {
-    setLoading(true);
-    const user = await getCurrentUser();
+    setLoading(true)
+    const user = await getCurrentUser()
 
     const { data: friendships, error } = await supabase
       .from("friendships")
@@ -127,61 +127,61 @@ export default function ShowContacts() {
       `
       )
       .eq("status", "accepted")
-      .or(`friend_id.eq.${user.id},user_id.eq.${user.id}`);
+      .or(`friend_id.eq.${user.id},user_id.eq.${user.id}`)
 
-    setLoading(false);
+    setLoading(false)
 
     if (error) {
-      console.error("Error fetching accepted friends:", error);
+      console.error("Error fetching accepted friends:", error)
     } else {
       const allProfiles = (friendships as Friendship[]).flatMap(
         (friendship) => [friendship.user_profile, friendship.friend_profile]
-      );
+      )
 
       const filteredFriends = allProfiles.filter(
         (profile) => profile.user_id !== user.id
-      );
+      )
 
-      setAcceptedFriends(filteredFriends);
-      setFilteredProfiles(filteredFriends);
+      setAcceptedFriends(filteredFriends)
+      setFilteredProfiles(filteredFriends)
     }
-  };
+  }
 
   const handleSearch = (text: string) => {
-    setSearchText(text);
+    setSearchText(text)
     if (text) {
       const filtered = acceptedFriends.filter(
         (profile) =>
           profile.first_name.toLowerCase().includes(text.toLowerCase()) ||
           profile.last_name.toLowerCase().includes(text.toLowerCase()) ||
           profile.username.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredProfiles(filtered);
+      )
+      setFilteredProfiles(filtered)
     } else {
-      setFilteredProfiles(acceptedFriends);
+      setFilteredProfiles(acceptedFriends)
     }
-  };
+  }
 
   const deleteFriend = async (friendID: string, name: string) => {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
 
     const { error, data } = await supabase
       .from("friendships")
       .delete()
       .eq("user_id", user.id)
-      .eq("friend_id", friendID);
+      .eq("friend_id", friendID)
 
-    console.log("Deleted friend:", friendID, user.id);
+    console.log("Deleted friend:", friendID, user.id)
 
     if (error) {
-      console.error("Error deleting friend:", error);
+      console.error("Error deleting friend:", error)
       Toast.show({
         type: "tomatoToast",
         text1: "That didn’t work, please try again!",
         position: "bottom",
-      });
+      })
 
-      return;
+      return
     }
 
     if (!data) {
@@ -189,29 +189,29 @@ export default function ShowContacts() {
         .from("friendships")
         .delete()
         .eq("user_id", friendID)
-        .eq("friend_id", user.id);
+        .eq("friend_id", user.id)
 
-      console.log("Deleted friend:", data2);
+      console.log("Deleted friend:", data2)
 
       if (error2) {
         Toast.show({
           type: "tomatoToast",
           text1: "That didn’t work, please try again!",
           position: "bottom",
-        });
+        })
 
-        return;
+        return
       }
     }
 
-    fetchAcceptedFriends();
+    fetchAcceptedFriends()
 
     Toast.show({
       type: "successToast",
       text1: `${name} has been removed as a friend!`,
       position: "bottom",
-    });
-  };
+    })
+  }
 
   return (
     <ImageBackground
@@ -274,7 +274,7 @@ export default function ShowContacts() {
                   </TouchableOpacity>
                 </View>
               </View>
-            );
+            )
           }}
           ListHeaderComponent={
             <View style={styles.headerContainer}>
@@ -300,7 +300,7 @@ export default function ShowContacts() {
         />
       </View>
     </ImageBackground>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -376,4 +376,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginVertical: 20,
   },
-});
+})

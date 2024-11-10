@@ -1,6 +1,6 @@
-import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import Constants from "expo-constants";
-import React, { useState } from "react";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs"
+import Constants from "expo-constants"
+import React, { useState } from "react"
 import {
   Image,
   ImageBackground,
@@ -8,23 +8,23 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import FriendsTabScreen from "../findFriends";
-import FriendsListTabScreen from "../friendList";
-import RequestTabScreen from "../requests";
-import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
-import ExploreFriendsTab from "../Explore/Friends";
-import DropDownPicker from "react-native-dropdown-picker";
-import ExploreFoFriendsTab from "../Explore/FoFriends";
-import useExplore from "@/hooks/useExplore";
+} from "react-native"
+import FriendsTabScreen from "../findFriends"
+import FriendsListTabScreen from "../friendList"
+import RequestTabScreen from "../requests"
+import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs"
+import ExploreFriendsTab from "../Explore/Friends"
+import DropDownPicker from "react-native-dropdown-picker"
+import ExploreFoFriendsTab from "../Explore/FoFriends"
+import useExplore from "@/hooks/useExplore"
 
 type FriendsTopTabParamList = {
-  "Friends of Friends": undefined;
-  "My Friends": undefined;
-  Requests: undefined;
-};
+  "Friends of Friends": undefined
+  "My Friends": undefined
+  Requests: undefined
+}
 
-const FriendsTopTab = createMaterialTopTabNavigator<FriendsTopTabParamList>();
+const FriendsTopTab = createMaterialTopTabNavigator<FriendsTopTabParamList>()
 
 const FriendsTab: React.FC = () => (
   <ImageBackground
@@ -51,7 +51,7 @@ const FriendsTab: React.FC = () => (
       />
     </FriendsTopTab.Navigator>
   </ImageBackground>
-);
+)
 
 const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
   state,
@@ -59,17 +59,17 @@ const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
   navigation,
 }) => {
   const openSearchPage = () => {
-    navigation.navigate("SearchScreen");
-  };
+    navigation.navigate("SearchScreen")
+  }
 
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
   const [items, setItems] = useState([
     { label: "Los Angeles", value: "Los Angeles" },
     { label: "New York", value: "New York" },
     { label: "San Francisco", value: "San Francisco" },
-  ]);
+  ])
 
-  const { selectedLocation, setSelectedLocation } = useExplore();
+  const { selectedLocation, setSelectedLocation } = useExplore()
 
   return (
     <View
@@ -97,22 +97,22 @@ const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
       </View>
       <View style={styles.container}>
         {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
-          const label = options.tabBarLabel as string;
+          const { options } = descriptors[route.key]
+          const label = options.tabBarLabel as string
 
-          const isFocused = state.index === index;
+          const isFocused = state.index === index
 
           const onPress = () => {
             const event = navigation.emit({
               type: "tabPress",
               target: route.key,
               canPreventDefault: true,
-            });
+            })
 
             if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+              navigation.navigate(route.name)
             }
-          };
+          }
 
           return (
             <TouchableOpacity
@@ -134,7 +134,7 @@ const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
                 {label}
               </Text>
             </TouchableOpacity>
-          );
+          )
         })}
 
         <TouchableOpacity
@@ -152,8 +152,8 @@ const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
         </TouchableOpacity>
       </View>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -193,6 +193,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 15,
   },
-});
+})
 
-export default FriendsTab;
+export default FriendsTab

@@ -1,8 +1,8 @@
-import { router, useLocalSearchParams } from "expo-router";
-import moment from "moment";
-import Constants from "expo-constants";
+import { router, useLocalSearchParams } from "expo-router"
+import moment from "moment"
+import Constants from "expo-constants"
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -14,72 +14,72 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import { getCurrentUser } from "../services/userService";
-import { supabase } from "../supabaseClient";
-import BackButton from "@/components/backButton";
-import CalendarIcon from "@/svg/calendar";
-import PinIcon from "@/svg/pin";
-import CheckIcon from "@/svg/check";
-import StarIcon from "@/svg/star";
-import ButtonContained from "@/components/buttons/contained";
-import StarFillIcon from "@/svg/starfill";
-import Toast from "react-native-toast-message";
-import GoingButton from "@/components/buttons/going";
+} from "react-native"
+import { getCurrentUser } from "../services/userService"
+import { supabase } from "../supabaseClient"
+import BackButton from "@/components/backButton"
+import CalendarIcon from "@/svg/calendar"
+import PinIcon from "@/svg/pin"
+import CheckIcon from "@/svg/check"
+import StarIcon from "@/svg/star"
+import ButtonContained from "@/components/buttons/contained"
+import StarFillIcon from "@/svg/starfill"
+import Toast from "react-native-toast-message"
+import GoingButton from "@/components/buttons/going"
 
 const EventDetails = () => {
-  const params = useLocalSearchParams();
-  const [currentUser, setCurrentUser] = useState({});
+  const params = useLocalSearchParams()
+  const [currentUser, setCurrentUser] = useState({})
 
-  const eventString = params?.event || "";
-  const eventAttendeesString = params?.eventAttendees || "";
+  const eventString = params?.event || ""
+  const eventAttendeesString = params?.eventAttendees || ""
 
-  const event = eventString ? JSON.parse(eventString) : {};
+  const event = eventString ? JSON.parse(eventString) : {}
   const eventAttendees = eventAttendeesString
     ? JSON.parse(eventAttendeesString)
-    : {};
+    : {}
 
-  const [goingStatus, setGoingStatus] = useState(false);
-  const [interestedStatus, setInterestedStatus] = useState(false);
+  const [goingStatus, setGoingStatus] = useState(false)
+  const [interestedStatus, setInterestedStatus] = useState(false)
 
-  const [currentTab, setCurrentTab] = useState(params?.tab || "friends");
-  const [attendeesData, setAttendeesData] = useState(eventAttendees);
-  const [loading, setLoading] = useState(!eventAttendees);
-  const [friends, setFriends] = useState<any[]>([]);
-  const [friendsOfFriends, setFriendsOfFriends] = useState<any[]>([]);
-  const [initalLoading, setInitialLoading] = useState(true);
+  const [currentTab, setCurrentTab] = useState(params?.tab || "friends")
+  const [attendeesData, setAttendeesData] = useState(eventAttendees)
+  const [loading, setLoading] = useState(!eventAttendees)
+  const [friends, setFriends] = useState<any[]>([])
+  const [friendsOfFriends, setFriendsOfFriends] = useState<any[]>([])
+  const [initalLoading, setInitialLoading] = useState(true)
 
   useEffect(() => {
     // fetchEventAttendees();
 
     const getData = async () => {
       if (currentUser?.id) {
-        return await fetchFriends(currentUser?.id);
+        return await fetchFriends(currentUser?.id)
       }
 
-      const user = await getCurrentUser();
+      const user = await getCurrentUser()
 
-      setInitialLoading(false);
+      setInitialLoading(false)
 
       const isGoing = eventAttendees?.attendingFriends?.some(
         (friend: any) => friend.user_id === user.id
-      );
+      )
       const isInterested = eventAttendees?.interestedFriends?.some(
         (friend: any) => friend.user_id === user.id
-      );
+      )
 
-      setGoingStatus(isGoing);
-      setInterestedStatus(isInterested);
+      setGoingStatus(isGoing)
+      setInterestedStatus(isInterested)
       if (isGoing || isInterested) {
-        setAttendeesData(eventAttendees);
+        setAttendeesData(eventAttendees)
       }
 
-      setCurrentUser(user);
-      await fetchFriends(user.id);
-    };
+      setCurrentUser(user)
+      await fetchFriends(user.id)
+    }
 
-    getData();
-  }, [currentTab]);
+    getData()
+  }, [currentTab])
 
   const fetchFriends = async (userId: string) => {
     try {
@@ -87,31 +87,31 @@ const EventDetails = () => {
         .from("friendships")
         .select("friend_id, user_id")
         .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
-        .eq("status", "accepted");
+        .eq("status", "accepted")
 
       if (error) {
-        console.error("Error fetching friends:", error);
+        console.error("Error fetching friends:", error)
       } else {
         // Extracting the friend's ID based on which field doesn't match the userId
         const friendIds = friendsData.map((friend: any) =>
           friend.user_id === userId ? friend.friend_id : friend.user_id
-        );
+        )
 
-        setFriends(friendIds);
+        setFriends(friendIds)
         if (currentTab === "friends") {
-          await fetchEventAttendees(friendIds);
+          await fetchEventAttendees(friendIds)
         } else {
           if (friendIds.length === 0) {
-            fetchEventAttendees([]);
-            return;
+            fetchEventAttendees([])
+            return
           }
-          await getFriendsofFriends(friendIds);
+          await getFriendsofFriends(friendIds)
         }
       }
     } catch (error) {
-      console.error("Error fetching friends:", error);
+      console.error("Error fetching friends:", error)
     }
-  };
+  }
 
   const getFriendsofFriends = async (friendIds: string[]) => {
     try {
@@ -122,11 +122,11 @@ const EventDetails = () => {
         .or(
           friendIds.map((id) => `user_id.eq.${id},friend_id.eq.${id}`).join(",")
         )
-        .eq("status", "accepted");
+        .eq("status", "accepted")
 
       if (error) {
-        console.error("Error fetching friends of friends:", error);
-        return;
+        console.error("Error fetching friends of friends:", error)
+        return
       }
 
       // Extract the friend IDs while excluding the original friends (friendIds)
@@ -134,35 +134,35 @@ const EventDetails = () => {
         friendIds.includes(relation.user_id)
           ? relation.friend_id
           : relation.user_id
-      );
+      )
 
       // Remove duplicates by creating a Set
       const uniqueFriendsOfFriends = [...new Set(friendsOfFriends)].filter(
         (id) => !friendIds.includes(id) // Exclude the friends we already know
-      );
+      )
 
       // Optionally, you can set state with the friends of friends data or do other operations
-      setFriendsOfFriends(uniqueFriendsOfFriends);
-      fetchEventAttendees([...friendIds, ...uniqueFriendsOfFriends]);
+      setFriendsOfFriends(uniqueFriendsOfFriends)
+      fetchEventAttendees([...friendIds, ...uniqueFriendsOfFriends])
     } catch (error) {
-      console.error("Error fetching friends of friends:", error);
+      console.error("Error fetching friends of friends:", error)
     }
-  };
+  }
 
   const fetchEventAttendees = async (friendIds: any[]) => {
-    setLoading(true);
+    setLoading(true)
     try {
-      const user = await getCurrentUser();
+      const user = await getCurrentUser()
       const { data: fetchedAttendees, error }: any = await supabase
         .from("event_attendees")
         .select(
           "event_id, status, profiles!event_attendees_user_id_fkey(profile_image_url, first_name, last_name, username, user_id)"
         )
         .eq("event_id", event.id)
-        .or("status.eq.going,status.eq.interested");
+        .or("status.eq.going,status.eq.interested")
 
       if (error) {
-        console.error("Error fetching event attendees:", error);
+        console.error("Error fetching event attendees:", error)
       } else {
         const attendingFriends = fetchedAttendees
           .filter(
@@ -177,14 +177,14 @@ const EventDetails = () => {
             lastName: att.profiles.last_name,
             username: att.profiles.username,
             profileImage: att.profiles.profile_image_url,
-          }));
+          }))
 
         if (
           attendingFriends.findIndex(
             (friend: any) => friend.user_id === user.id
           ) !== -1
         ) {
-          setGoingStatus(true);
+          setGoingStatus(true)
         }
 
         const interestedFriends = fetchedAttendees
@@ -200,77 +200,77 @@ const EventDetails = () => {
             lastName: att.profiles.last_name,
             username: att.profiles.username,
             profileImage: att.profiles.profile_image_url,
-          }));
+          }))
 
         if (
           interestedFriends.findIndex(
             (friend: any) => friend.user_id === user.id
           ) !== -1
         ) {
-          setInterestedStatus(true);
+          setInterestedStatus(true)
         }
 
-        setAttendeesData({ attendingFriends, interestedFriends });
+        setAttendeesData({ attendingFriends, interestedFriends })
       }
     } catch (error) {
-      console.error("Error fetching event attendees:", error);
+      console.error("Error fetching event attendees:", error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   const handleGoing = async () => {
     try {
-      setLoading(true);
-      const user = await getCurrentUser();
+      setLoading(true)
+      const user = await getCurrentUser()
       const { data, error }: any = await supabase
         .from("event_attendees")
-        .insert([{ event_id: event.id, user_id: user.id, status: "going" }]);
+        .insert([{ event_id: event.id, user_id: user.id, status: "going" }])
 
       if (error) {
         if (error.code === "23505") {
-          console.log(error);
+          console.log(error)
           Toast.show({
             type: "tomatoToast",
             text1: "You're already going to the show!",
             position: "bottom",
-          });
+          })
         } else {
           Toast.show({
             type: "tomatoToast",
             text1: "That didn’t work, please try again!",
             position: "bottom",
-          });
-          console.error(error);
+          })
+          console.error(error)
         }
       } else {
-        setGoingStatus(true);
+        setGoingStatus(true)
         Toast.show({
           type: "successToast",
           text1: `You’re going to the show!`,
           position: "bottom",
-        });
+        })
         fetchEventAttendees(
           currentTab === "friends" ? friends : friendsOfFriends
-        ); // Refresh the attendees list
+        ) // Refresh the attendees list
       }
     } catch (err) {
-      console.error("Error going to event:", err);
+      console.error("Error going to event:", err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleInterested = async () => {
     try {
-      setLoading(true);
-      const user = await getCurrentUser();
+      setLoading(true)
+      const user = await getCurrentUser()
       const { data, error }: any = await supabase
         .from("event_attendees")
         .insert([
           { event_id: event.id, user_id: user.id, status: "interested" },
-        ]);
+        ])
 
       if (error) {
         if (error.code === "23505") {
@@ -278,125 +278,125 @@ const EventDetails = () => {
             type: "tomatoToast",
             text1: "You're already interested in the show!",
             position: "bottom",
-          });
+          })
         } else {
           Toast.show({
             type: "tomatoToast",
             text1: "That didn’t work, please try again!",
             position: "bottom",
-          });
-          console.error(error);
+          })
+          console.error(error)
         }
       } else {
-        setInterestedStatus(true);
+        setInterestedStatus(true)
         Toast.show({
           type: "successToast",
           text1: `You’re interested in the show!`,
           position: "bottom",
-        });
+        })
         fetchEventAttendees(
           currentTab === "friends" ? friends : friendsOfFriends
-        ); // Refresh the attendees list
+        ) // Refresh the attendees list
       }
     } catch (err) {
-      console.error("Error marking interest in event:", err);
+      console.error("Error marking interest in event:", err)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const openLocationInMaps = (venue: any, city: any) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
       `${venue}, ${city}`
-    )}`;
+    )}`
     Linking.openURL(url).catch((err) =>
       console.error("Couldn't open Google Maps", err)
-    );
-  };
+    )
+  }
 
   const unInterested = async () => {
     try {
-      setLoading(true);
-      const user = await getCurrentUser();
-      console.log(event.id, user.id);
+      setLoading(true)
+      const user = await getCurrentUser()
+      console.log(event.id, user.id)
       const { data, error }: any = await supabase
         .from("event_attendees")
         .delete()
         .eq("event_id", event.id)
         .eq("user_id", user.id)
-        .eq("status", "interested");
+        .eq("status", "interested")
 
-      console.log(data, error);
+      console.log(data, error)
 
       if (error) {
         Toast.show({
           type: "tomatoToast",
           text1: "That didn’t work, please try again!",
           position: "bottom",
-        });
+        })
       } else {
-        setInterestedStatus(false);
+        setInterestedStatus(false)
         fetchEventAttendees(
           currentTab === "friends" ? friends : friendsOfFriends
-        ); // Refresh the attendees list
+        ) // Refresh the attendees list
         Toast.show({
           type: "successToast",
           text1: `Someone lost interest`,
           position: "bottom",
-        });
+        })
       }
     } catch (err) {
       Toast.show({
         type: "tomatoToast",
         text1: "That didn’t work, please try again!",
         position: "bottom",
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleNotGoing = async () => {
     try {
-      setLoading(true);
-      const user = await getCurrentUser();
-      console.log(event.id, user.id);
+      setLoading(true)
+      const user = await getCurrentUser()
+      console.log(event.id, user.id)
       const { data, error }: any = await supabase
         .from("event_attendees")
         .delete()
         .eq("event_id", event.id)
         .eq("user_id", user.id)
-        .eq("status", "going");
+        .eq("status", "going")
 
-      console.log(data, error);
+      console.log(data, error)
 
       if (error) {
         Toast.show({
           type: "tomatoToast",
           text1: "That didn’t work, please try again!",
           position: "bottom",
-        });
+        })
       } else {
-        setGoingStatus(false);
+        setGoingStatus(false)
         fetchEventAttendees(
           currentTab === "friends" ? friends : friendsOfFriends
-        ); // Refresh the attendees list
+        ) // Refresh the attendees list
         Toast.show({
           type: "successToast",
           text1: `Aww you’re not going :(`,
           position: "bottom",
-        });
+        })
       }
     } catch (err) {
       Toast.show({
         type: "tomatoToast",
         text1: "That didn’t work, please try again!",
         position: "bottom",
-      });
+      })
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   if (initalLoading) {
     return (
@@ -415,7 +415,7 @@ const EventDetails = () => {
           <ActivityIndicator size="large" color="#3F407C" />
         </View>
       </ImageBackground>
-    );
+    )
   }
   return (
     <ImageBackground
@@ -570,12 +570,12 @@ const EventDetails = () => {
                       key={idx}
                       style={styles.friendInfo}
                       onPress={() => {
-                        if (currentUser.id === friend.user_id) return;
+                        if (currentUser.id === friend.user_id) return
 
                         router.push({
                           pathname: "/(tabs)/Home/FirendsProfile",
                           params: { user_id: friend.user_id },
-                        });
+                        })
                       }}
                       disabled={currentUser.id === friend.user_id}
                     >
@@ -603,7 +603,7 @@ const EventDetails = () => {
                         eventAttendees: JSON.stringify(attendeesData),
                         currentTab: "attendingFriends",
                       },
-                    });
+                    })
                   }}
                 >
                   <Text style={styles.seeMore}>See more &#62;</Text>
@@ -654,12 +654,12 @@ const EventDetails = () => {
                       key={idx}
                       style={styles.friendInfo}
                       onPress={() => {
-                        if (currentUser.id === friend.user_id) return;
+                        if (currentUser.id === friend.user_id) return
 
                         router.push({
                           pathname: "/FirendsProfile",
                           params: { user_id: friend.user_id },
-                        });
+                        })
                       }}
                       disabled={currentUser.id === friend.user_id}
                     >
@@ -687,7 +687,7 @@ const EventDetails = () => {
                         eventAttendees: JSON.stringify(attendeesData),
                         currentTab: "interestedFriends",
                       },
-                    });
+                    })
                   }}
                 >
                   <Text style={styles.seeMore}>See more &#62;</Text>
@@ -703,17 +703,17 @@ const EventDetails = () => {
               paddingHorizontal: 20,
             }}
             onPress={() => {
-              goingStatus ? handleNotGoing() : handleGoing();
+              goingStatus ? handleNotGoing() : handleGoing()
             }}
             disabled={loading}
           />
         </View>
       </View>
     </ImageBackground>
-  );
-};
+  )
+}
 
-const { width } = Dimensions.get("window");
+const { width } = Dimensions.get("window")
 
 const styles = StyleSheet.create({
   container: {
@@ -863,6 +863,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     fontFamily: "poppins",
   },
-});
+})
 
-export default EventDetails;
+export default EventDetails

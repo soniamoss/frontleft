@@ -1,7 +1,7 @@
-import { router, useLocalSearchParams } from "expo-router";
-import Constants from "expo-constants";
+import { router, useLocalSearchParams } from "expo-router"
+import Constants from "expo-constants"
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react"
 import {
   ActivityIndicator,
   Dimensions,
@@ -12,59 +12,59 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import BackButton from "@/components/backButton";
-import { AntDesign } from "@expo/vector-icons";
-import { getCurrentUser } from "@/services/userService";
-import Toast from "react-native-toast-message";
-import { addFriend } from "@/services/friendshipService";
-import { supabase } from "@/supabaseClient";
-import { sendNotifications } from "@/utils/notification";
-import FriendsIcon from "@/svg/friends";
-import FriendsTwo from "@/svg/friendsTwo";
+} from "react-native"
+import BackButton from "@/components/backButton"
+import { AntDesign } from "@expo/vector-icons"
+import { getCurrentUser } from "@/services/userService"
+import Toast from "react-native-toast-message"
+import { addFriend } from "@/services/friendshipService"
+import { supabase } from "@/supabaseClient"
+import { sendNotifications } from "@/utils/notification"
+import FriendsIcon from "@/svg/friends"
+import FriendsTwo from "@/svg/friendsTwo"
 
 const EventDetails = () => {
-  const params = useLocalSearchParams();
-  const eventAttendeesString = params?.eventAttendees || "";
-  const ct = params?.currentTab || "attendingFriends";
+  const params = useLocalSearchParams()
+  const eventAttendeesString = params?.eventAttendees || ""
+  const ct = params?.currentTab || "attendingFriends"
 
-  const [currentTab, setCurrentTab] = useState(ct);
-  const [currentUser, setCurrentUser] = useState({});
-  const [requests, setRequests] = useState([]);
-  const [contacts, setContacts] = useState<any>([]);
-  const [initalLoading, setInitialLoading] = useState(true);
+  const [currentTab, setCurrentTab] = useState(ct)
+  const [currentUser, setCurrentUser] = useState({})
+  const [requests, setRequests] = useState([])
+  const [contacts, setContacts] = useState<any>([])
+  const [initalLoading, setInitialLoading] = useState(true)
 
   // const data = JSON.parse(eventAttendeesString);
 
   useEffect(() => {
     const getUser = async () => {
-      const user = await getCurrentUser();
+      const user = await getCurrentUser()
 
-      setCurrentUser(user);
-    };
+      setCurrentUser(user)
+    }
 
-    getUser();
-    fetchContacts();
-  }, []);
+    getUser()
+    fetchContacts()
+  }, [])
 
   const data = useMemo(() => {
-    const dt = JSON.parse(eventAttendeesString);
+    const dt = JSON.parse(eventAttendeesString)
 
-    console.log(dt[currentTab]);
+    console.log(dt[currentTab])
 
-    return dt[currentTab];
-  }, [eventAttendeesString, currentTab]);
+    return dt[currentTab]
+  }, [eventAttendeesString, currentTab])
 
   const handleAddFriend = async (userId: string) => {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
 
-    const result = await addFriend(user.id, userId);
+    const result = await addFriend(user.id, userId)
     if (result.success) {
       Toast.show({
         type: "successToast",
         text1: "Friend request sent!",
         position: "bottom",
-      });
+      })
 
       const res = await sendNotifications({
         userId: userId,
@@ -74,38 +74,38 @@ const EventDetails = () => {
           url: "(tabs)/Friends",
           params: { screen: "Requests" },
         },
-      });
+      })
 
-      fetchContacts();
+      fetchContacts()
     } else {
       Toast.show({
         type: "tomatoToast",
         text1: "That didn’t work, please try again!",
         position: "bottom",
-      });
+      })
     }
-  };
+  }
 
   const fetchContacts = async () => {
     try {
-      const user = await getCurrentUser();
+      const user = await getCurrentUser()
 
       const { data, error }: any = await supabase
         .from("friendships")
         .select("*")
-        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
 
       if (error) {
-        console.error("Error fetching contacts:", error);
+        console.error("Error fetching contacts:", error)
       } else {
-        console.log("Contacts Data:", data);
-        setContacts(data);
+        console.log("Contacts Data:", data)
+        setContacts(data)
       }
     } catch (error) {
     } finally {
-      setInitialLoading(false);
+      setInitialLoading(false)
     }
-  };
+  }
 
   if (initalLoading) {
     return (
@@ -124,7 +124,7 @@ const EventDetails = () => {
           <ActivityIndicator size="large" color="#3F407C" />
         </View>
       </ImageBackground>
-    );
+    )
   }
 
   return (
@@ -173,17 +173,17 @@ const EventDetails = () => {
             const isAdded = contacts.find(
               (r) =>
                 r?.friend_id === item.user_id || r?.user_id === item.user_id
-            );
+            )
             return (
               <>
                 <TouchableOpacity
                   onPress={() => {
-                    if (currentUser.id === item.user_id) return;
+                    if (currentUser.id === item.user_id) return
 
                     router.push({
                       pathname: "/(tabs)/Home/FirendsProfile",
                       params: { user_id: item.user_id },
-                    });
+                    })
                   }}
                   style={styles.profileContainer}
                   disabled={currentUser.id === item.user_id}
@@ -249,16 +249,16 @@ const EventDetails = () => {
                     )}
                 </TouchableOpacity>
               </>
-            );
+            )
           }}
           showsVerticalScrollIndicator={false}
         />
       </View>
     </ImageBackground>
-  );
-};
+  )
+}
 
-const { width } = Dimensions.get("window");
+const { width } = Dimensions.get("window")
 
 const styles = StyleSheet.create({
   container: {
@@ -370,6 +370,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
   },
-});
+})
 
-export default EventDetails;
+export default EventDetails

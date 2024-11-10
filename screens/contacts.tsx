@@ -1,7 +1,7 @@
-import profile from "@/app/(tabs)/profile";
-import * as Contacts from "expo-contacts";
-import { router } from "expo-router";
-import React, { useEffect, useState } from "react";
+import profile from "@/app/(tabs)/profile"
+import * as Contacts from "expo-contacts"
+import { router } from "expo-router"
+import React, { useEffect, useState } from "react"
 import {
   Alert,
   Image,
@@ -13,24 +13,24 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
-} from "react-native";
-import { addFriend } from "../services/friendshipService";
-import { getCurrentUser } from "../services/userService";
-import { supabase } from "../supabaseClient";
-import Toast from "react-native-toast-message";
+} from "react-native"
+import { addFriend } from "../services/friendshipService"
+import { getCurrentUser } from "../services/userService"
+import { supabase } from "../supabaseClient"
+import Toast from "react-native-toast-message"
 
 export default function ShowContacts() {
-  const [matchingProfiles, setMatchingProfiles] = useState([]);
-  const [filteredProfiles, setFilteredProfiles] = useState([]);
-  const [searchText, setSearchText] = useState("");
+  const [matchingProfiles, setMatchingProfiles] = useState([])
+  const [filteredProfiles, setFilteredProfiles] = useState([])
+  const [searchText, setSearchText] = useState("")
 
   useEffect(() => {
-    (async () => {
-      const { status } = await Contacts.requestPermissionsAsync();
+    ;(async () => {
+      const { status } = await Contacts.requestPermissionsAsync()
       if (status === "granted") {
         const { data } = await Contacts.getContactsAsync({
           fields: [Contacts.Fields.PhoneNumbers],
-        });
+        })
 
         if (data.length > 0) {
           const numbers = data
@@ -43,74 +43,74 @@ export default function ShowContacts() {
                   )
                 : []
             )
-            .flat(2);
+            .flat(2)
 
-          fetchMatchingProfiles(numbers);
+          fetchMatchingProfiles(numbers)
         }
       }
-    })();
-  }, []);
+    })()
+  }, [])
 
   const fetchMatchingProfiles = async (numbers: any) => {
     const { data: profiles, error }: any = await supabase
       .from("profiles")
       .select("*")
-      .in("phonenumber", numbers);
+      .in("phonenumber", numbers)
 
     if (error) {
-      console.error("Error fetching profiles:", error);
+      console.error("Error fetching profiles:", error)
     } else {
-      setMatchingProfiles(profiles);
-      setFilteredProfiles(profiles);
+      setMatchingProfiles(profiles)
+      setFilteredProfiles(profiles)
     }
-  };
+  }
 
   const handleSearch = (text: any) => {
-    setSearchText(text);
+    setSearchText(text)
     if (text) {
       const filtered = matchingProfiles.filter(
         (profile: any) =>
           profile.first_name.toLowerCase().includes(text.toLowerCase()) ||
           profile.last_name.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredProfiles(filtered);
+      )
+      setFilteredProfiles(filtered)
     } else {
-      setFilteredProfiles(matchingProfiles);
+      setFilteredProfiles(matchingProfiles)
     }
-  };
+  }
 
   const handleAddFriend = async () => {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
     // @ts-ignore
-    const result = await addFriend(user.user_id, profile.user_id);
+    const result = await addFriend(user.user_id, profile.user_id)
     if (result.success) {
       // TODO
       Toast.show({
         type: "successToast",
         text1: "Friend request sent successfully!",
         position: "bottom",
-      });
+      })
     } else {
       Toast.show({
         type: "errorToast",
         text1: "Error sending friend request",
         position: "bottom",
-      });
+      })
     }
-  };
+  }
 
   const handleNext = () => {
-    router.push("/NotificationsScreen");
-  };
+    router.push("/NotificationsScreen")
+  }
 
   const handleAddProfile = (profile: any) => {
     // Implement your logic to add the profile
-    console.log("Add profile:", profile);
-  };
+    console.log("Add profile:", profile)
+  }
 
   const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
+    Keyboard.dismiss()
+  }
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
@@ -176,7 +176,7 @@ export default function ShowContacts() {
         </View>
       </View>
     </TouchableWithoutFeedback>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -288,4 +288,4 @@ const styles = StyleSheet.create({
     marginLeft: 60,
     justifyContent: "center",
   },
-});
+})

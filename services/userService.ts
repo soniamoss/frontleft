@@ -1,9 +1,9 @@
-import { supabase } from "../supabaseClient";
+import { supabase } from "../supabaseClient"
 
 export async function getCurrentUser() {
   const {
     data: { user },
-  }: any = await supabase.auth.getUser();
+  }: any = await supabase.auth.getUser()
 
-  return user;
+  return user
 }

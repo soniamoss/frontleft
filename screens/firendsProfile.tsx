@@ -1,7 +1,7 @@
-import { router, useLocalSearchParams } from "expo-router";
-import Ionicons from "@expo/vector-icons/Ionicons";
+import { router, useLocalSearchParams } from "expo-router"
+import Ionicons from "@expo/vector-icons/Ionicons"
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react"
 import {
   ActivityIndicator,
   Image,
@@ -11,47 +11,47 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import { supabase } from "../supabaseClient";
-import GroupUsersIcon from "@/svg/groupUsers";
-import PostCard from "@/components/card/post";
-import ProfilePostCard from "@/components/card/profilePost";
-import MusicIcon from "@/svg/music";
-import ButtonContained from "@/components/buttons/contained";
-import BackButton from "@/components/backButton";
-import { getCurrentUser } from "@/services/userService";
-import { addFriend } from "@/services/friendshipService";
-import Toast from "react-native-toast-message";
-import { sendNotifications } from "@/utils/notification";
+} from "react-native"
+import { supabase } from "../supabaseClient"
+import GroupUsersIcon from "@/svg/groupUsers"
+import PostCard from "@/components/card/post"
+import ProfilePostCard from "@/components/card/profilePost"
+import MusicIcon from "@/svg/music"
+import ButtonContained from "@/components/buttons/contained"
+import BackButton from "@/components/backButton"
+import { getCurrentUser } from "@/services/userService"
+import { addFriend } from "@/services/friendshipService"
+import Toast from "react-native-toast-message"
+import { sendNotifications } from "@/utils/notification"
 
 const ProfilePage = () => {
-  const params = useLocalSearchParams();
-  const userId = params?.user_id || "";
-  const [currentTab, setCurrentTab] = useState("going"); // State for tab selection
-  const [loading, setLoading] = useState(true);
-  const [profileData, setProfileData] = useState<any>({});
-  const [eventsGoing, setEventsGoing] = useState<any>([]);
-  const [eventsInterested, setEventsInterested] = useState([]);
-  const [contacts, setContacts] = useState<any>([]);
-  const [initalLoad, setInitalLoad] = useState(false);
-  const [canSee, setCanSee] = useState(false);
+  const params = useLocalSearchParams()
+  const userId = params?.user_id || ""
+  const [currentTab, setCurrentTab] = useState("going") // State for tab selection
+  const [loading, setLoading] = useState(true)
+  const [profileData, setProfileData] = useState<any>({})
+  const [eventsGoing, setEventsGoing] = useState<any>([])
+  const [eventsInterested, setEventsInterested] = useState([])
+  const [contacts, setContacts] = useState<any>([])
+  const [initalLoad, setInitalLoad] = useState(false)
+  const [canSee, setCanSee] = useState(false)
 
   useEffect(() => {
-    fetchProfileData();
-    fetchContacts();
-  }, []);
+    fetchProfileData()
+    fetchContacts()
+  }, [])
 
   const handleAddFriend = async () => {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
 
-    const result = await addFriend(user.id, userId);
+    const result = await addFriend(user.id, userId)
     if (result.success) {
       Toast.show({
         type: "successToast",
         text1: "Friend request sent!",
         position: "bottom",
-      });
-      fetchContacts();
+      })
+      fetchContacts()
       const res = await sendNotifications({
         userId: userId,
         title: "Friend Request",
@@ -60,54 +60,54 @@ const ProfilePage = () => {
           url: "(tabs)/Friends",
           params: { screen: "Requests" },
         },
-      });
+      })
     } else {
       Toast.show({
         type: "tomatoToast",
         text1: "That didn’t work, please try again!",
         position: "bottom",
-      });
+      })
     }
-  };
+  }
 
   const fetchContacts = async () => {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
 
     const { data, error }: any = await supabase
       .from("friendships")
       .select("*")
-      .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+      .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
 
     if (error) {
-      console.error("Error fetching contacts:", error);
+      console.error("Error fetching contacts:", error)
     } else {
-      console.log("Contacts Data:", data);
-      setContacts(data);
+      console.log("Contacts Data:", data)
+      setContacts(data)
     }
-  };
+  }
 
   const fetchProfileData = async () => {
     try {
-      setInitalLoad(true);
-      const user: any = await supabase.auth.getUser();
+      setInitalLoad(true)
+      const user: any = await supabase.auth.getUser()
 
       const { data: profile, error: profileError }: any = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .single()
 
       const { data: friendsData, error: friendsError }: any = await supabase
         .from("friendships")
         .select("*")
         .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
-        .eq("status", "accepted");
+        .eq("status", "accepted")
 
       const isFr = friendsData?.find(
         (friend: any) =>
           friend.user_id === user?.data?.user?.id ||
           friend.friend_id === user?.data?.user?.id
-      );
+      )
 
       if (isFr?.status !== "accepted" && profile.privacy === "friends_only") {
         setProfileData({
@@ -115,28 +115,28 @@ const ProfilePage = () => {
           name: `${profile.first_name} ${profile.last_name}`,
           username: `@${profile.username}`,
           numOfFriends: friendsData.length,
-        });
+        })
 
         // setIsFriend(false);
-        setLoading(false);
-        return;
+        setLoading(false)
+        return
       }
 
-      setCanSee(true);
+      setCanSee(true)
 
       const { data: eventsGoingData, error: eventsGoingError }: any =
         await supabase
           .from("event_attendees")
           .select("event_id, events!event_attendees_event_id_fkey(*), status")
           .eq("user_id", userId)
-          .eq("status", "going");
+          .eq("status", "going")
 
       const { data: eventsInterestedData, error: eventsInterestedError } =
         await supabase
           .from("event_attendees")
           .select("event_id, events!event_attendees_event_id_fkey(*), status")
           .eq("user_id", userId)
-          .eq("status", "interested");
+          .eq("status", "interested")
 
       if (
         profileError ||
@@ -149,38 +149,38 @@ const ProfilePage = () => {
             friendsError ||
             eventsGoingError ||
             eventsInterestedError
-        );
+        )
       } else {
         setProfileData({
           profilePicture: profile.profile_image_url,
           name: `${profile.first_name} ${profile.last_name}`,
           username: `@${profile.username}`,
           numOfFriends: friendsData.length,
-        });
-        setEventsGoing(eventsGoingData.map((event: any) => event.events));
+        })
+        setEventsGoing(eventsGoingData.map((event: any) => event.events))
         setEventsInterested(
           // @ts-ignore
           eventsInterestedData.map((event: any) => event.events)
-        );
+        )
       }
     } catch (error) {
-      console.error("Error fetching profile data:", error);
+      console.error("Error fetching profile data:", error)
     } finally {
-      setInitalLoad(false);
+      setInitalLoad(false)
     }
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   const handleTabChange = (tab: any) => {
-    setCurrentTab(tab);
-  };
+    setCurrentTab(tab)
+  }
 
   const isFriend = useMemo(() => {
     return contacts?.find(
       (contact: any) =>
         contact?.friend_id === userId || contact?.user_id === userId
-    );
-  }, [contacts, userId]);
+    )
+  }, [contacts, userId])
 
   if (initalLoad) {
     return (
@@ -192,7 +192,7 @@ const ProfilePage = () => {
 
         <ActivityIndicator size="large" color="#0000ff" />
       </ImageBackground>
-    );
+    )
   }
   return (
     <ImageBackground
@@ -298,7 +298,7 @@ const ProfilePage = () => {
                         index={index}
                         isInterested={true}
                       />
-                    );
+                    )
                   })
                 ) : (
                   <View style={styles.noEventsContainer}>
@@ -348,8 +348,8 @@ const ProfilePage = () => {
         </ScrollView>
       </View>
     </ImageBackground>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -482,6 +482,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     gap: 10,
   },
-});
+})
 
-export default ProfilePage;
+export default ProfilePage

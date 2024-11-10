@@ -1,25 +1,25 @@
-import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-import React from "react";
+import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs"
+import React from "react"
 import {
   ImageBackground,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import FriendsTabScreen from "../findFriends";
-import FriendsListTabScreen from "../friendList";
-import RequestTabScreen from "../requests";
-import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs";
-import { useLocalSearchParams } from "expo-router";
+} from "react-native"
+import FriendsTabScreen from "../findFriends"
+import FriendsListTabScreen from "../friendList"
+import RequestTabScreen from "../requests"
+import type { MaterialTopTabBarProps } from "@react-navigation/material-top-tabs"
+import { useLocalSearchParams } from "expo-router"
 
 type FriendsTopTabParamList = {
-  "Find Friends": undefined;
-  "Friends List": undefined;
-  Requests: undefined;
-};
+  "Find Friends": undefined
+  "Friends List": undefined
+  Requests: undefined
+}
 
-const FriendsTopTab = createMaterialTopTabNavigator<FriendsTopTabParamList>();
+const FriendsTopTab = createMaterialTopTabNavigator<FriendsTopTabParamList>()
 
 const FriendsTab: React.FC = () => {
   return (
@@ -54,8 +54,8 @@ const FriendsTab: React.FC = () => {
         />
       </FriendsTopTab.Navigator>
     </ImageBackground>
-  );
-};
+  )
+}
 
 const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
   state,
@@ -71,22 +71,22 @@ const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
     >
       <View style={styles.container}>
         {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
-          const label = options.tabBarLabel as string;
+          const { options } = descriptors[route.key]
+          const label = options.tabBarLabel as string
 
-          const isFocused = state.index === index;
+          const isFocused = state.index === index
 
           const onPress = () => {
             const event = navigation.emit({
               type: "tabPress",
               target: route.key,
               canPreventDefault: true,
-            });
+            })
 
             if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+              navigation.navigate(route.name)
             }
-          };
+          }
 
           return (
             <TouchableOpacity
@@ -108,12 +108,12 @@ const CustomTabBar: React.FC<MaterialTopTabBarProps> = ({
                 {label}
               </Text>
             </TouchableOpacity>
-          );
+          )
         })}
       </View>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -133,6 +133,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "bold",
   },
-});
+})
 
-export default FriendsTab;
+export default FriendsTab

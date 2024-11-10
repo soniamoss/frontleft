@@ -1,10 +1,10 @@
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import AntDesign from "@expo/vector-icons/AntDesign";
-import Toast from "react-native-toast-message";
+import { useFocusEffect, useNavigation } from "@react-navigation/native"
+import AntDesign from "@expo/vector-icons/AntDesign"
+import Toast from "react-native-toast-message"
 
-import * as Contacts from "expo-contacts";
-import * as SMS from "expo-sms";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import * as Contacts from "expo-contacts"
+import * as SMS from "expo-sms"
+import React, { useCallback, useEffect, useMemo, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
@@ -15,50 +15,50 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import { addFriend } from "../services/friendshipService";
-import { getCurrentUser } from "../services/userService";
-import { supabase } from "../supabaseClient";
-import SearchBar from "@/components/SearchBar";
-import { sendNotifications } from "@/utils/notification";
-import { formatPhoneNumber } from "@/utils/formatter";
+} from "react-native"
+import { addFriend } from "../services/friendshipService"
+import { getCurrentUser } from "../services/userService"
+import { supabase } from "../supabaseClient"
+import SearchBar from "@/components/SearchBar"
+import { sendNotifications } from "@/utils/notification"
+import { formatPhoneNumber } from "@/utils/formatter"
 
 interface Contact {
-  id: string;
-  first_name: string;
-  last_name?: string;
-  phone_number: string;
-  invite?: boolean;
+  id: string
+  first_name: string
+  last_name?: string
+  phone_number: string
+  invite?: boolean
 }
 
 interface Profile {
-  user_id: string;
-  first_name: string;
-  last_name?: string;
-  username: string;
-  profile_image_url?: string;
-  invite?: boolean;
+  user_id: string
+  first_name: string
+  last_name?: string
+  username: string
+  profile_image_url?: string
+  invite?: boolean
 }
 
 interface Friendship {
-  friend_id: string;
-  user_id: string;
-  status: string;
+  friend_id: string
+  user_id: string
+  status: string
 }
 
 export default function ShowContacts() {
-  const [appContacts, setAppContacts] = useState<Profile[]>([]);
-  const [searchText, setSearchText] = useState<string>("");
-  const [requests, setRequests] = useState<Friendship[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const navigation = useNavigation();
+  const [appContacts, setAppContacts] = useState<Profile[]>([])
+  const [searchText, setSearchText] = useState<string>("")
+  const [requests, setRequests] = useState<Friendship[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const navigation = useNavigation()
 
   useFocusEffect(
     useCallback(() => {
-      console.log("fetching contacts");
-      fetchContacts();
+      console.log("fetching contacts")
+      fetchContacts()
     }, [])
-  );
+  )
 
   useEffect(() => {
     const subscription = supabase
@@ -67,50 +67,50 @@ export default function ShowContacts() {
         "postgres_changes",
         { event: "*", schema: "public", table: "profiles" },
         (payload) => {
-          console.log("Real-time change:", payload);
-          fetchContacts();
+          console.log("Real-time change:", payload)
+          fetchContacts()
         }
       )
-      .subscribe();
+      .subscribe()
 
     return () => {
-      supabase.removeChannel(subscription);
-    };
-  }, []);
+      supabase.removeChannel(subscription)
+    }
+  }, [])
 
   const fetchContacts = async () => {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
 
     const { data, error }: any = await supabase
       .from("profiles")
       .select("contact_sync")
       .eq("user_id", user.id)
-      .single();
+      .single()
 
     if (error) {
-      console.error("Error fetching contacts:", error);
+      console.error("Error fetching contacts:", error)
     } else if (!data.contact_sync) {
-      setAppContacts([]);
-      setLoading(false);
-      return;
+      setAppContacts([])
+      setLoading(false)
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
     try {
-      const { status } = await Contacts.requestPermissionsAsync();
+      const { status } = await Contacts.requestPermissionsAsync()
       if (status !== "granted") {
         Toast.show({
           type: "tomatoToast",
           text1: "Access to contacts is required to find friends.",
           position: "bottom",
-        });
-        setLoading(false);
-        return;
+        })
+        setLoading(false)
+        return
       }
 
       const { data: deviceContacts } = await Contacts.getContactsAsync({
         fields: [Contacts.Fields.PhoneNumbers],
-      });
+      })
 
       if (!deviceContacts?.length) {
         // TODO
@@ -119,9 +119,9 @@ export default function ShowContacts() {
           type: "tomatoToast",
           text1: "No contacts found on your device.",
           position: "bottom",
-        });
-        setLoading(false);
-        return;
+        })
+        setLoading(false)
+        return
       }
 
       const phoneNumbers = deviceContacts
@@ -134,41 +134,41 @@ export default function ShowContacts() {
               )
             : []
         )
-        .filter(Boolean);
+        .filter(Boolean)
 
       const { data: profiles, error: profilesError } = await supabase.rpc(
         "get_profiles_by_phonenumbers",
         {
           phone_numbers: phoneNumbers,
         }
-      );
+      )
 
       if (profilesError) {
-        setLoading(false);
-        console.error(profilesError);
+        setLoading(false)
+        console.error(profilesError)
       }
 
       const { data: friendshipIds, error: friendshipError } = await supabase
         .from("friendships")
         .select("friend_id, user_id, status")
-        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
 
       if (friendshipError) {
-        setLoading(false);
-        console.error("Error fetching friendship IDs:", friendshipError);
+        setLoading(false)
+        console.error("Error fetching friendship IDs:", friendshipError)
       } else {
-        console.log("friendshipIds:", friendshipIds);
+        console.log("friendshipIds:", friendshipIds)
       }
 
       const idsToExclude = friendshipIds.flatMap((friendship: any) => [
         friendship.friend_id,
         friendship.user_id,
-      ]);
+      ])
 
       const filteredProfiles = (profiles || []).filter(
         (profile: Profile) =>
           !idsToExclude.includes(profile.user_id) && profile.user_id !== user.id
-      );
+      )
 
       const nonAppContactsSample = deviceContacts
         .slice(0, 10)
@@ -182,33 +182,33 @@ export default function ShowContacts() {
             ? formatPhoneNumber(contact.phoneNumbers[0].number || "")
             : "",
           invite: true,
-        }));
+        }))
 
-      setRequests(friendshipIds || []);
-      setAppContacts(filteredProfiles.concat(nonAppContactsSample));
-      setLoading(false);
+      setRequests(friendshipIds || [])
+      setAppContacts(filteredProfiles.concat(nonAppContactsSample))
+      setLoading(false)
     } catch (error) {
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleSearch = (text: string) => {
-    setSearchText(text);
-  };
+    setSearchText(text)
+  }
 
   const handleAddFriend = async (friendID: string, name: string) => {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
 
-    console.log("Adding friend:", user?.user_metadata);
+    console.log("Adding friend:", user?.user_metadata)
 
-    const result = await addFriend(user.id, friendID);
+    const result = await addFriend(user.id, friendID)
     if (result.success) {
       Toast.show({
         type: "successToast",
         text1: "Friend request sent!",
         position: "bottom",
-      });
+      })
 
       const res = await sendNotifications({
         userId: friendID,
@@ -218,37 +218,37 @@ export default function ShowContacts() {
           url: "(tabs)/Friends",
           params: { screen: "Requests" },
         },
-      });
+      })
 
-      fetchContacts();
+      fetchContacts()
     } else {
       Toast.show({
         type: "tomatoToast",
         text1: "That didn’t work, please try again!",
         position: "bottom",
-      });
+      })
     }
-  };
+  }
 
   const handleInvite = async (contact: Contact) => {
-    const message = `Hi ${contact.first_name}, I invite you to join our app! Click the link to download: [Your App Link]`;
-    console.log("set up the app link");
+    const message = `Hi ${contact.first_name}, I invite you to join our app! Click the link to download: [Your App Link]`
+    console.log("set up the app link")
 
-    const { result } = await SMS.sendSMSAsync([contact.phone_number], message);
+    const { result } = await SMS.sendSMSAsync([contact.phone_number], message)
 
     if (result === "sent") {
-      console.log("Invite sent to:", contact.first_name, contact.phone_number);
+      console.log("Invite sent to:", contact.first_name, contact.phone_number)
 
       Toast.show({
         type: "successToast",
         text1: `An invite has been sent to ${contact.first_name}`,
         position: "bottom",
-      });
+      })
     }
-  };
+  }
 
   const filteredProfiles = useMemo(() => {
-    let filData = appContacts;
+    let filData = appContacts
 
     if (searchText) {
       filData = filData.filter(
@@ -259,11 +259,11 @@ export default function ShowContacts() {
               .toLowerCase()
               .includes(searchText.toLowerCase())) ||
           profile.username.toLowerCase().includes(searchText.toLowerCase())
-      );
+      )
     }
 
-    return filData;
-  }, [appContacts, searchText]);
+    return filData
+  }, [appContacts, searchText])
 
   return (
     <ImageBackground
@@ -283,7 +283,7 @@ export default function ShowContacts() {
           renderItem={({ item, index }) => {
             const isAdded = item?.invite
               ? false
-              : requests.findIndex((r) => r?.friend_id === item.user_id) >= 0;
+              : requests.findIndex((r) => r?.friend_id === item.user_id) >= 0
 
             return (
               <View style={styles.profileContainer}>
@@ -336,7 +336,7 @@ export default function ShowContacts() {
                   </TouchableOpacity>
                 )}
               </View>
-            );
+            )
           }}
           ListHeaderComponent={
             <View style={styles.headerContainer}>
@@ -358,7 +358,7 @@ export default function ShowContacts() {
         />
       </View>
     </ImageBackground>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -478,4 +478,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginVertical: 20,
   },
-});
+})

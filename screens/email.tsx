@@ -1,8 +1,8 @@
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import Constants from "expo-constants";
+import { Ionicons } from "@expo/vector-icons"
+import { router } from "expo-router"
+import Constants from "expo-constants"
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react"
 import {
   Image,
   Keyboard,
@@ -12,67 +12,67 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
-} from "react-native";
-import { getCurrentUser } from "../services/userService";
-import { supabase } from "../supabaseClient";
-import EmailIcon from "@/svg/email";
+} from "react-native"
+import { getCurrentUser } from "../services/userService"
+import { supabase } from "../supabaseClient"
+import EmailIcon from "@/svg/email"
 
 const EmailScreen = () => {
-  const [email, setEmail] = useState("");
-  const [fontSize, setFontSize] = useState(36); // Default font size
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState("")
+  const [fontSize, setFontSize] = useState(36) // Default font size
+  const [error, setError] = useState("")
 
   useEffect(() => {
     const adjustFontSize = () => {
-      const maxFontSize = 36; // Max font size for shorter usernames
-      const minFontSize = 18; // Minimum font size to keep text readable
-      const maxCharacters = 10; // Max characters before scaling down
-      const length = email.length;
+      const maxFontSize = 36 // Max font size for shorter usernames
+      const minFontSize = 18 // Minimum font size to keep text readable
+      const maxCharacters = 10 // Max characters before scaling down
+      const length = email.length
 
       if (length <= maxCharacters) {
-        setFontSize(maxFontSize);
+        setFontSize(maxFontSize)
       } else {
         const newSize = Math.max(
           minFontSize,
           maxFontSize - (length - maxCharacters) * 1.5 // Adjust this factor for smoothness
-        );
-        setFontSize(newSize);
+        )
+        setFontSize(newSize)
       }
-    };
+    }
 
-    adjustFontSize();
-  }, [email]);
+    adjustFontSize()
+  }, [email])
 
   const setEmailInDB = async () => {
-    const user = await getCurrentUser();
+    const user = await getCurrentUser()
 
     const { data, error }: any = await supabase
       .from("profiles")
       .upsert({ user_id: user.uid, phonenumber: user.phone, email: email })
-      .select();
-  };
+      .select()
+  }
 
   const handleNext = async () => {
-    const regex = /\S+@\S+\.\S+/;
+    const regex = /\S+@\S+\.\S+/
     if (!email) {
-      setError("Please enter your email.");
-      return;
+      setError("Please enter your email.")
+      return
     } else if (!regex.test(email)) {
-      setError("Please enter a valid email.");
-      return;
+      setError("Please enter a valid email.")
+      return
     } else {
-      setError("");
+      setError("")
     }
 
-    await setEmailInDB();
-    router.push("/UsernameScreen");
-  };
+    await setEmailInDB()
+    router.push("/UsernameScreen")
+  }
   const handleExit = () => {
-    router.push("/"); //go to introscreen.
-  };
+    router.push("/") //go to introscreen.
+  }
   const dismissKeyboard = () => {
-    Keyboard.dismiss();
-  };
+    Keyboard.dismiss()
+  }
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
@@ -112,17 +112,17 @@ const EmailScreen = () => {
             value={email}
             onChangeText={(text) => {
               // email validation
-              const regex = /\S+@\S+\.\S+/;
+              const regex = /\S+@\S+\.\S+/
 
               if (!text) {
-                setError("Please enter your email.");
+                setError("Please enter your email.")
               } else if (!regex.test(text)) {
-                setError("Please enter a valid email.");
+                setError("Please enter a valid email.")
               } else {
-                setError("");
+                setError("")
               }
 
-              setEmail(text);
+              setEmail(text)
             }}
             multiline={true}
             autoFocus
@@ -137,8 +137,8 @@ const EmailScreen = () => {
         </TouchableOpacity>
       </View>
     </TouchableWithoutFeedback>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -218,6 +218,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     zIndex: 1,
   },
-});
+})
 
-export default EmailScreen;
+export default EmailScreen

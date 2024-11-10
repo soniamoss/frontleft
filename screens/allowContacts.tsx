@@ -1,9 +1,9 @@
-import ButtonContained from "@/components/buttons/contained";
-import ButtonOutlined from "@/components/buttons/outlined";
-import { router } from "expo-router";
-import * as Contacts from "expo-contacts";
+import ButtonContained from "@/components/buttons/contained"
+import ButtonOutlined from "@/components/buttons/outlined"
+import { router } from "expo-router"
+import * as Contacts from "expo-contacts"
 
-import React, { useEffect } from "react";
+import React, { useEffect } from "react"
 import {
   Alert,
   ImageBackground,
@@ -11,9 +11,9 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import { supabase } from "@/supabaseClient";
-import { getCurrentUser } from "@/services/userService";
+} from "react-native"
+import { supabase } from "@/supabaseClient"
+import { getCurrentUser } from "@/services/userService"
 
 const GetContacts = () => {
   // useEffect(() => {
@@ -21,8 +21,8 @@ const GetContacts = () => {
   // }, []);
 
   const handleSkip = () => {
-    router.push("/AllowNotifications");
-  };
+    router.push("/AllowNotifications")
+  }
 
   const handleAllow = async () => {
     Alert.alert(
@@ -41,37 +41,37 @@ const GetContacts = () => {
         },
       ],
       { cancelable: false } // wont be dismissed by tapping outside
-    );
-  };
+    )
+  }
 
   const saveContact = async () => {
     // update the contact status to "accepted"
 
-    console.log("saving contacts");
+    console.log("saving contacts")
 
     try {
-      const user = await getCurrentUser();
+      const user = await getCurrentUser()
 
       const { data, error } = await supabase
         .from("profiles")
         .update({
           contact_sync: true,
         })
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
 
       if (error) {
-        console.error("Error updating profile:", error);
-        return null;
+        console.error("Error updating profile:", error)
+        return null
       }
 
-      router.push("/GetContactsScreen");
+      router.push("/GetContactsScreen")
 
-      console.log("Profile updated successfully:", data);
-      return data;
+      console.log("Profile updated successfully:", data)
+      return data
     } catch (err) {
-      console.error("Error updating profile:", err);
+      console.error("Error updating profile:", err)
     }
-  };
+  }
 
   return (
     <ImageBackground
@@ -103,8 +103,8 @@ const GetContacts = () => {
         />
       </View>
     </ImageBackground>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -140,6 +140,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 400,
   },
-});
+})
 
-export default GetContacts;
+export default GetContacts

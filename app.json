@@ -2,7 +2,7 @@
   "expo": {
     "name": "FrontLeft",
     "slug": "Doost",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
@@ -13,7 +13,7 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "buildNumber": "1.0.1",
+      "buildNumber": "1.0.4",
       "bundleIdentifier": "com.frontleft.ios",
       "supportsTablet": false,
       "infoPlist": {
@@ -23,7 +23,7 @@
       }
     },
     "android": {
-      "versionCode": 102,
+      "versionCode": 103,
       "package": "com.frontleft.android",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",

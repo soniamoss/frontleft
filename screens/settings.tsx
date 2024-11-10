@@ -1,10 +1,12 @@
-import { useNavigation } from "@react-navigation/native";
-import { router, useFocusEffect } from "expo-router";
-import Constants from "expo-constants";
+import { useNavigation } from "@react-navigation/native"
+import { router, useFocusEffect } from "expo-router"
+import Constants from "expo-constants"
+import AntDesign from "@expo/vector-icons/AntDesign"
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react"
 import {
   ActivityIndicator,
+  Alert,
   Image,
   ImageBackground,
   Linking,
@@ -12,48 +14,48 @@ import {
   Text,
   TouchableOpacity,
   View,
-} from "react-native";
-import { getCurrentUser } from "../services/userService";
-import { supabase } from "../supabaseClient";
-import PrivacyIcon from "@/svg/privacy";
-import ChevronIcon from "@/svg/chevron";
-import ContactIcon from "@/svg/contact";
-import BackButton from "@/components/backButton";
-import { deleteUser } from "@/utils/delete-user";
+} from "react-native"
+import { getCurrentUser } from "../services/userService"
+import { supabase } from "../supabaseClient"
+import PrivacyIcon from "@/svg/privacy"
+import ChevronIcon from "@/svg/chevron"
+import ContactIcon from "@/svg/contact"
+import BackButton from "@/components/backButton"
+import { deleteUser } from "@/utils/delete-user"
 
 const ProfilePage = () => {
-  const [initalLoading, setInitialLoading] = useState(true);
+  const [initalLoading, setInitialLoading] = useState(true)
   const [profileData, setProfileData] = useState({
     profilePicture: "",
     firstName: "",
     lastName: "",
     username: "",
     numOfFriends: 0,
-  });
+  })
 
   useFocusEffect(
     useCallback(() => {
-      fetchProfileData();
+      fetchProfileData()
     }, [])
-  );
+  )
 
   const fetchProfileData = async () => {
-    setInitialLoading(true);
+    setInitialLoading(true)
     try {
-      const user: any = await getCurrentUser();
+      const user: any = await getCurrentUser()
       const { data: profile, error }: any = await supabase
         .from("profiles")
         .select("profile_image_url, first_name, last_name, username")
         .eq("user_id", user.id)
-        .single();
+        .single()
 
       const { data: friendsCount, error: friendsError }: any = await supabase
         .from("friendships")
         .select("*", { count: "exact" })
         .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`)
-        .eq("status", "accepted");
+        .eq("status", "accepted")
 
-      if (error || friendsError) throw error || friendsError;
+      if (error || friendsError) throw error || friendsError
 
       setProfileData({
         profilePicture: profile.profile_image_url,
@@ -61,55 +63,66 @@ const ProfilePage = () => {
         lastName: profile.last_name,
         username: profile.username,
         numOfFriends: friendsCount.length || 0,
-      });
+      })
     } catch (error) {
-      console.error("Error fetching profile data:", error);
+      console.error("Error fetching profile data:", error)
     } finally {
-      setInitialLoading(false);
+      setInitialLoading(false)
     }
-  };
+  }
 
   const handleProfileEdit = () => {
-    router.push("/Profile/ProfileEditScreen"); // Navigate to the profile edit page
-  };
+    router.push("/Profile/ProfileEditScreen") // Navigate to the profile edit page
+  }
 
   const handlePrivacySettings = () => {
-    router.push("/Profile/PrivacySettingsScreen"); // Navigate to the privacy settings page
-  };
+    router.push("/Profile/PrivacySettingsScreen") // Navigate to the privacy settings page
+  }
 
   const handleContactUs = () => {
-    const email = "faryar48@gmail.com";
-    const subject = "[App Name]: I have a question...";
-    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
-    Linking.openURL(mailtoUrl);
-  };
+    const email = "faryar48@gmail.com"
+    const subject = "[App Name]: I have a question..."
+    const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}`
+    Linking.openURL(mailtoUrl)
+  }
 
   const logout = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
-  };
+    await supabase.auth.signOut()
+    router.push("/")
+  }
 
   const handleDeleteAccount = async () => {
-
     try {
+      Alert.alert(
+        "Delete Account",
+        "Are you sure you want to delete your account?",
+        [
+          {
+            text: "Cancel",
+            onPress: () => {},
+            style: "cancel",
+          },
+          {
+            text: "Delete",
+            onPress: async () => {
+              const user = await getCurrentUser()
+              const userId = user.id
 
-      const user = await getCurrentUser();
+              await deleteUser({ userId: userId })
+              await supabase.auth.signOut()
 
-      const userId = user.id;
-
-      await deleteUser({ userId: userId });
-
-      await supabase.auth.signOut();
-      router.push("/");
-
+              router.push("/")
+            },
+            style: "destructive",
+          },
+        ],
+        { cancelable: false }
+      )
     } catch (error) {
-      console.error("Error deleting user:", error);
+      console.error("Error deleting user:", error)
       return
     }
-
-    
-
-  };
+  }
 
   if (initalLoading && !profileData.username) {
     return (
@@ -123,7 +136,7 @@ const ProfilePage = () => {
         <BackButton />
         <ActivityIndicator size="large" color="#3F407C" />
       </ImageBackground>
-    );
+    )
   }
 
   return (
@@ -169,11 +182,20 @@ const ProfilePage = () => {
             <Text style={styles.buttonText}>Contact Us</Text>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={handleDeleteAccount}>
+
+        <TouchableOpacity
+          style={{ paddingHorizontal: 20 }}
+          onPress={handleDeleteAccount}
+        >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 15 }}>
-            {/* <ContactIcon /> */}
-            <Text style={styles.buttonText}>
-            Delete Account
+            <AntDesign name="deleteuser" size={24} color="tomato" />
+            <Text
+              style={[
+                styles.buttonText,
+                { color: "tomato", fontWeight: "normal" },
+              ]}
+            >
+              Delete Account
             </Text>
           </View>
         </TouchableOpacity>
@@ -195,7 +217,7 @@ const ProfilePage = () => {
         <TouchableOpacity
           style={styles.buttonLog}
           onPress={() => {
-            logout();
+            logout()
           }}
         >
           <Text style={styles.buttonTextLog}>Log Out</Text>
@@ -204,8 +226,8 @@ const ProfilePage = () => {
         <Text style={styles.versionText}>Version 2.1.12</Text>
       </View>
     </ImageBackground>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -307,6 +329,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     zIndex: 1,
   },
-});
+})
 
-export default ProfilePage;
+export default ProfilePage

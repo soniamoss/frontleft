@@ -1,7 +1,7 @@
-import { router, useFocusEffect } from "expo-router";
-import moment from "moment";
+import { router, useFocusEffect } from "expo-router"
+import moment from "moment"
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react"
 import {
   Dimensions,
   ImageBackground,
@@ -10,17 +10,17 @@ import {
   View,
   ActivityIndicator,
   FlatList,
-} from "react-native";
-import { supabase } from "../../supabaseClient";
-import PostCard from "@/components/card/post";
-import useExplore from "@/hooks/useExplore";
+} from "react-native"
+import { supabase } from "../../supabaseClient"
+import PostCard from "@/components/card/post"
+import useExplore from "@/hooks/useExplore"
 
 const ExploreFoFriendsTab = () => {
-  const { selectedLocation } = useExplore();
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [friends, setFriends] = useState<string[]>([]);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const { selectedLocation } = useExplore()
+  const [events, setEvents] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [friends, setFriends] = useState<string[]>([])
+  const [currentUser, setCurrentUser] = useState<any>(null)
 
   useFocusEffect(
     useCallback(() => {
@@ -28,61 +28,61 @@ const ExploreFoFriendsTab = () => {
         try {
           // Fetch the authenticated user's data
           const { data: userData, error: userError } =
-            await supabase.auth.getUser();
+            await supabase.auth.getUser()
           if (userError || !userData.user) {
-            console.error("Error fetching user data 01:", userError);
-            return;
+            console.error("Error fetching user data 01:", userError)
+            return
           }
 
-          setCurrentUser(userData.user);
+          setCurrentUser(userData.user)
 
           // Fetch friends and events after the user is set
-          await fetchFriends(userData.user.id);
+          await fetchFriends(userData.user.id)
           // await fetchEvents(userData.user);
         } catch (error) {
-          console.error("Error during initial data load:", error);
+          console.error("Error during initial data load:", error)
         }
-      };
+      }
 
-      loadUserData();
+      loadUserData()
     }, [selectedLocation])
-  );
+  )
 
   const fetchFriends = async (userId: string) => {
     try {
-      console.log("User ID:", friends);
+      console.log("User ID:", friends)
       const { data: friendsData, error } = await supabase
         .from("friendships")
         .select("friend_id, user_id")
         .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
-        .eq("status", "accepted");
+        .eq("status", "accepted")
 
       if (error) {
-        console.error("Error fetching friends:", error);
+        console.error("Error fetching friends:", error)
       } else {
         // Extracting the friend's ID based on which field doesn't match the userId
         const friendIds = friendsData.map((friend: any) =>
           friend.user_id === userId ? friend.friend_id : friend.user_id
-        );
-        console.log("Friends Data:", friendIds);
-        setFriends(friendIds);
-        await fetchEvents({ id: userId }, friendIds);
+        )
+        console.log("Friends Data:", friendIds)
+        setFriends(friendIds)
+        await fetchEvents({ id: userId }, friendIds)
       }
     } catch (error) {
-      console.error("Error fetching friends:", error);
+      console.error("Error fetching friends:", error)
     }
-  };
+  }
 
   const fetchEvents = async (user: any, friendIds: string[]) => {
-    setLoading(true);
+    setLoading(true)
     try {
       const { data: eventsData, error: eventsError } = await supabase
         .from("events")
         .select("*")
-        .eq("city", selectedLocation);
+        .eq("city", selectedLocation)
 
       if (eventsError) {
-        console.error("Error fetching events:", eventsError);
+        console.error("Error fetching events:", eventsError)
       } else {
         const upcomingEvents = eventsData
           .filter((event: any) =>
@@ -90,19 +90,19 @@ const ExploreFoFriendsTab = () => {
           )
           .sort((a: any, b: any) =>
             moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`))
-          );
+          )
 
-        const eventIds = upcomingEvents.map((event: any) => event.id);
+        const eventIds = upcomingEvents.map((event: any) => event.id)
         const { data: attendeesData, error: attendeesError } = await supabase
           .from("event_attendees")
           .select(
             "event_id, status, user_id, profiles!event_attendees_user_id_fkey(profile_image_url, first_name)"
           )
           .in("event_id", eventIds)
-          .or("status.eq.going,status.eq.interested");
+          .or("status.eq.going,status.eq.interested")
 
         if (attendeesError) {
-          console.error("Error fetching attendees:", attendeesError);
+          console.error("Error fetching attendees:", attendeesError)
         } else {
           const eventsWithAttendees = upcomingEvents.map((event: any) => {
             const attendingFriends = attendeesData
@@ -115,7 +115,7 @@ const ExploreFoFriendsTab = () => {
               .map((att: any) => ({
                 profileImage: att.profiles.profile_image_url,
                 firstName: att.profiles.first_name,
-              }));
+              }))
 
             const interestedFriends = attendeesData
               .filter(
@@ -127,21 +127,21 @@ const ExploreFoFriendsTab = () => {
               .map((att: any) => ({
                 profileImage: att.profiles.profile_image_url,
                 firstName: att.profiles.first_name,
-              }));
+              }))
 
-            return { ...event, attendingFriends, interestedFriends };
-          });
+            return { ...event, attendingFriends, interestedFriends }
+          })
 
           const eventsWithFriends = eventsWithAttendees.filter(
             (event: any) =>
               event.attendingFriends.length > 0 ||
               event.interestedFriends.length > 0
-          );
+          )
           const eventsWithoutFriends = eventsWithAttendees.filter(
             (event: any) =>
               event.attendingFriends.length === 0 &&
               event.interestedFriends.length === 0
-          );
+          )
 
           const finalSortedEvents = [
             ...eventsWithFriends.sort((a: any, b: any) =>
@@ -150,22 +150,22 @@ const ExploreFoFriendsTab = () => {
             ...eventsWithoutFriends.sort((a: any, b: any) =>
               moment(`${a.date} ${a.time}`).diff(moment(`${b.date} ${b.time}`))
             ),
-          ];
+          ]
 
-          setEvents(finalSortedEvents);
+          setEvents(finalSortedEvents)
         }
       }
     } catch (error) {
-      console.error("Error fetching events:", error);
+      console.error("Error fetching events:", error)
     }
-    setLoading(false);
-  };
+    setLoading(false)
+  }
 
   const openEventDetailsPage = (event: any) => {
     const eventAttendees = {
       attendingFriends: event.attendingFriends,
       interestedFriends: event.interestedFriends,
-    };
+    }
 
     router.push({
       pathname: "/(tabs)/Home/EventDetailsScreen",
@@ -174,17 +174,17 @@ const ExploreFoFriendsTab = () => {
         eventAttendees: JSON.stringify(eventAttendees),
         tab: "friends",
       },
-    });
-  };
+    })
+  }
 
   const openLocationInMaps = (venue: string, city: string) => {
     const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
       `${venue}, ${city}`
-    )}`;
+    )}`
     Linking.openURL(url).catch((err) =>
       console.error("Couldn't open Google Maps", err)
-    );
-  };
+    )
+  }
 
   return (
     <ImageBackground
@@ -213,10 +213,10 @@ const ExploreFoFriendsTab = () => {
         }
       />
     </ImageBackground>
-  );
-};
+  )
+}
 
-const { width } = Dimensions.get("window");
+const { width } = Dimensions.get("window")
 
 const styles = StyleSheet.create({
   container: {
@@ -362,6 +362,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#3D4353",
   },
-});
+})
 
-export default ExploreFoFriendsTab;
+export default ExploreFoFriendsTab
