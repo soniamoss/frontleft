@@ -7,9 +7,11 @@ import React, { useCallback, useEffect, useState } from "react"
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
   Image,
   ImageBackground,
   Linking,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -145,6 +147,13 @@ const ProfilePage = () => {
       source={require("../assets/images/friends-back.png")}
     >
       <BackButton />
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        style={{ width: "100%" }}
+        contentContainerStyle={{ flexGrow: 1 }}
+      >
+
+      
 
       {/* Profile Details */}
       <TouchableOpacity
@@ -203,12 +212,9 @@ const ProfilePage = () => {
 
       <View
         style={{
-          position: "absolute",
-          bottom: 20,
-          left: 0,
-          right: 0,
           alignItems: "center",
           justifyContent: "center",
+          marginTop:10,
         }}
       >
         <Text style={styles.text}>FrontLeft</Text>
@@ -225,6 +231,8 @@ const ProfilePage = () => {
 
         <Text style={styles.versionText}>Version 2.1.12</Text>
       </View>
+     
+      </ScrollView>
     </ImageBackground>
   )
 }
@@ -272,6 +280,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     width: "100%",
     marginTop: 20,
+    flex:1,
   },
   button: {
     flexDirection: "row",
